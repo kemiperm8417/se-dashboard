@@ -2054,16 +2054,26 @@ function renderQ1Tracker() {
   const qtdCount = qtdRecords.length;
   const qtdNR    = qtdRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
 
+  // ── Quarterly Revenue formula: (NR × 50%) / 12 × remaining months in quarter
+  // Jan go-live → ×3, Feb go-live → ×2, Mar go-live → ×1
+  function calcQRev(nr, moNum) {          // moNum: 1=Jan, 2=Feb, 3=Mar
+    const mult = 4 - moNum;               // 3, 2, 1
+    return (nr * 0.5) / 12 * mult;
+  }
+
   // ── Monthly breakdown ─────────────────────────────────────────────────
   const months = [
     { name: 'January',  short: 'Jan', yr: 2026, mo: 1 },
     { name: 'February', short: 'Feb', yr: 2026, mo: 2 },
     { name: 'March',    short: 'Mar', yr: 2026, mo: 3 },
   ].map(m => {
-    const recs = qtdRecords.filter(r => inMonth(r['Actual Live Date'], m.yr, m.mo));
-    const nr   = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-    return { ...m, count: recs.length, nr };
+    const recs  = qtdRecords.filter(r => inMonth(r['Actual Live Date'], m.yr, m.mo));
+    const nr    = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+    const qrev  = recs.reduce((s,r) => s + calcQRev(parseRev(r['Opportunity Net Revenue (converted)']), m.mo), 0);
+    return { ...m, count: recs.length, nr, qrev };
   });
+
+  const qtdQRev    = months.reduce((s,m) => s + m.qrev, 0);
 
   const remaining  = Math.max(ltsCount - qtdCount, 0);
   const pct        = ltsCount > 0 ? Math.round((qtdCount / ltsCount) * 100) : 0;
@@ -2095,7 +2105,7 @@ function renderQ1Tracker() {
     <div class="q1-stat green">
       <div class="q1-val">${qtdCount}</div>
       <div class="q1-lbl">QTD Live</div>
-      <div class="q1-sub">${fmtRev(qtdNR)} unlocked</div>
+      <div class="q1-sub">${fmtRev(qtdNR)} NR &nbsp;·&nbsp; ~${fmtRev(qtdQRev)} Q rev</div>
     </div>
     <div class="q1-stat ${remaining === 0 ? 'green' : pct >= 70 ? 'amber' : 'red'}">
       <div class="q1-val">${remaining}</div>
@@ -2143,7 +2153,8 @@ function renderQ1Tracker() {
       <div class="month-count" style="color:${col}">${m.count}</div>
       <div style="font-size:11px;color:var(--sub);margin-bottom:4px">projects live</div>
       <div class="month-bar-wrap"><div class="month-bar-fill" style="width:${barPct}%;background:${col}"></div></div>
-      <div class="month-nr">${fmtRev(m.nr)} NR unlocked</div>
+      <div class="month-nr">${fmtRev(m.nr)} NR</div>
+      <div style="font-size:11px;color:var(--green);margin-top:2px">~${fmtRev(m.qrev)} Q rev <span style="color:var(--sub)">(×${4-m.mo})</span></div>
     </div>`;
   });
   h += `</div>`;
