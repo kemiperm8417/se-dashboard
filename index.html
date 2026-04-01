@@ -901,9 +901,15 @@
     <div class="upload-area">
       <label class="upload-btn" id="btn-active">
         <span>📁</span>
-        <span>Upload Active &amp; Live Records</span>
+        <span>Upload Active Records</span>
         <span class="check">✓</span>
         <input type="file" accept=".csv" onchange="handleFileUpload(event, 'active')">
+      </label>
+      <label class="upload-btn" id="btn-live">
+        <span>📁</span>
+        <span>Upload Live Records</span>
+        <span class="check">✓</span>
+        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'live')">
       </label>
       <label class="upload-btn" id="btn-presales">
         <span>📁</span>
@@ -948,9 +954,10 @@
   <div id="placeholder">
     <div class="big-icon">📊</div>
     <h2>No data loaded yet</h2>
-    <p>Upload your CSV files using the buttons in the header to populate the dashboard. Both files can be uploaded in any order — the dashboard will auto-detect the file type.</p>
+    <p>Upload your CSV files using the buttons in the header to populate the dashboard. Files can be uploaded in any order — the dashboard will auto-detect the file type.</p>
     <div class="upload-hint">
-      <span class="hint-chip">📁 Active &amp; Live Records CSV</span>
+      <span class="hint-chip">📁 Active Records CSV</span>
+      <span class="hint-chip">📁 Live Records CSV</span>
       <span class="hint-chip">📁 Presales Records CSV</span>
     </div>
   </div>
@@ -1311,10 +1318,18 @@
 const TODAY = new Date('2026-04-01');
 const CURRENT_QTR = 'Q1-2026';
 
-let activeData   = null;
-let presalesData = null;
-let pipelineStore = null;          // loaded SE_Pipeline_Data.json
-let pendingImport = null;          // { type, rawData } waiting for merge modal decision
+let _rawActiveData  = null;   // Active Records CSV rows (In Progress)
+let _rawLiveData    = null;   // Live Records CSV rows (Live Completed)
+let activeData      = null;   // Combined _rawActiveData + _rawLiveData (used by all render functions)
+let presalesData    = null;
+let pipelineStore   = null;   // loaded SE_Pipeline_Data.json
+let pendingImport   = null;   // { type, rawData } waiting for merge modal decision
+
+function rebuildActiveData() {
+  const a = _rawActiveData || [];
+  const l = _rawLiveData   || [];
+  activeData = (a.length || l.length) ? [...a, ...l] : null;
+}
 
 // Chart instances
 let charts = {};
@@ -1403,8 +1418,12 @@ function handleFileUpload(event, hint) {
     complete: function(results) {
       const headers = results.meta.fields || [];
       let type = hint;
+      // Auto-detect file type from column headers
       if (headers.includes('Implementation Owner') && headers.includes('Projected Go-Live Status')) {
         type = 'active';
+      } else if (headers.includes('Actual Live Date') && headers.includes('Implementation Owner') &&
+                 !headers.includes('Projected Go-Live Status') && !headers.includes('Opportunity: Probability (%)')) {
+        type = 'live';
       } else if (headers.includes('Presales Engineer') && headers.includes('Opportunity: Probability (%)')) {
         type = 'presales';
       }
@@ -1423,8 +1442,13 @@ function handleFileUpload(event, hint) {
 
 function applyImport(type, rawData) {
   if (type === 'active') {
-    activeData = rawData;
+    _rawActiveData = rawData;
+    rebuildActiveData();
     document.getElementById('btn-active').classList.add('loaded');
+  } else if (type === 'live') {
+    _rawLiveData = rawData;
+    rebuildActiveData();
+    document.getElementById('btn-live').classList.add('loaded');
   } else {
     presalesData = rawData;
     document.getElementById('btn-presales').classList.add('loaded');
@@ -1453,7 +1477,11 @@ function handleStoreUpload(event) {
       document.getElementById('btn-download-md').style.display   = '';
       // Populate dashboard from store if no CSVs loaded yet
       if (!activeData && pipelineStore.active_records?.length) {
-        activeData = storeRecordsToCSVRows(pipelineStore.active_records, 'active');
+        _rawActiveData = storeRecordsToCSVRows(
+          pipelineStore.active_records.filter(r => r.record_type !== 'live'), 'active');
+        _rawLiveData   = storeRecordsToCSVRows(
+          pipelineStore.active_records.filter(r => r.record_type === 'live'), 'active');
+        rebuildActiveData();
       }
       if (!presalesData && pipelineStore.presales_records?.length) {
         presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
@@ -1537,7 +1565,7 @@ function storeRecordsToCSVRows(records, type) {
 function normName(n) { return (n||'').trim().toLowerCase(); }
 
 function detectGoLiveChanges(type, newRows) {
-  if (type !== 'active' || !pipelineStore) return [];
+  if ((type !== 'active' && type !== 'live') || !pipelineStore) return [];
   const existing = {};
   for (const r of (pipelineStore.active_records || [])) {
     existing[normName(r.opportunity_name)] = r;
@@ -1558,7 +1586,7 @@ function detectGoLiveChanges(type, newRows) {
 
 function openMergeModal(type, newRows, fileName) {
   const changes = detectGoLiveChanges(type, newRows);
-  const storeCount = type === 'active'
+  const storeCount = (type === 'active' || type === 'live')
     ? (pipelineStore.active_records||[]).length
     : (pipelineStore.presales_records||[]).length;
   const newCount  = newRows.length;
@@ -1608,18 +1636,21 @@ function confirmImport(mode) {
   const now = new Date().toISOString().slice(0,10);
   const nowISO = new Date().toISOString().slice(0,19);
 
+  // 'live' records are stored in active_records in the store (same schema, record_type='live')
+  const storeKey = (type === 'active' || type === 'live') ? 'active_records' : 'presales_records';
+
   if (mode === 'overwrite') {
     // Overwrite store records but PRESERVE existing go-live history where name matches
     const existing = {};
-    for (const r of (pipelineStore[type==='active'?'active_records':'presales_records']||[])) {
+    for (const r of (pipelineStore[storeKey]||[])) {
       existing[normName(r.opportunity_name)] = r;
     }
     const newRecords = rawData.map(row => buildStoreRecord(row, type, existing, now, 'overwrite', fileName));
-    pipelineStore[type==='active'?'active_records':'presales_records'] = newRecords;
+    pipelineStore[storeKey] = newRecords;
     pipelineStore.change_log.push({ timestamp: nowISO, action: 'overwrite', description: `Overwrite of ${type} records from ${fileName} (${newRecords.length} records)`, uploaded_by: 'user' });
 
   } else { // merge
-    const existingArr = pipelineStore[type==='active'?'active_records':'presales_records'] || [];
+    const existingArr = pipelineStore[storeKey] || [];
     const existingMap = {};
     for (const r of existingArr) existingMap[normName(r.opportunity_name)] = r;
 
@@ -1630,7 +1661,6 @@ function confirmImport(mode) {
       if (stored) {
         updated++;
         const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
-        // Count date changes
         if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
         return newRec;
       } else {
@@ -1638,21 +1668,26 @@ function confirmImport(mode) {
         return buildStoreRecord(row, type, {}, now, 'merge', fileName);
       }
     });
-    // Keep store records not present in new CSV
+    // Keep store records not present in new CSV (preserve records from other type)
     const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
     const kept = existingArr.filter(r => !newNames.has(normName(r.opportunity_name)));
-    pipelineStore[type==='active'?'active_records':'presales_records'] = [...newRecords, ...kept];
+    pipelineStore[storeKey] = [...newRecords, ...kept];
     pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
   }
 
   pipelineStore._meta.last_updated_on = now;
-  pipelineStore._meta[type==='active'?'total_active':'total_presales'] =
-    pipelineStore[type==='active'?'active_records':'presales_records'].length;
+  pipelineStore._meta[storeKey === 'active_records' ? 'total_active' : 'total_presales'] =
+    pipelineStore[storeKey].length;
 
   // Update display data from merged store
-  if (type === 'active') {
-    activeData = storeRecordsToCSVRows(pipelineStore.active_records, 'active');
+  if (type === 'active' || type === 'live') {
+    _rawActiveData = storeRecordsToCSVRows(
+      pipelineStore.active_records.filter(r => r.record_type !== 'live'), 'active');
+    _rawLiveData   = storeRecordsToCSVRows(
+      pipelineStore.active_records.filter(r => r.record_type === 'live'), 'active');
+    rebuildActiveData();
     document.getElementById('btn-active').classList.add('loaded');
+    document.getElementById('btn-live').classList.add('loaded');
   } else {
     presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
     document.getElementById('btn-presales').classList.add('loaded');
@@ -1667,7 +1702,7 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
   const name = (row['Opportunity Name']||'').trim();
   const stored = existingMap[normName(name)];
 
-  if (type === 'active') {
+  if (type === 'active' || type === 'live') {
     const glDate = (row['Projected Go-Live Date']||'').trim();
     const oldHistory = (stored?.projected_go_live_date_history) || [];
     const lastDate   = oldHistory.length ? oldHistory[oldHistory.length-1].date : null;
@@ -1688,10 +1723,10 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
       status:                 (row['Status']||'').trim(),
       sub_status:             (row['Sub Status']||'').trim(),
       rag_status:             (row['Projected Go-Live Status']||'').trim(),
-      type_of_opportunity:    (row['Type of Opportunity']||'').trim(),
+      type_of_opportunity:    (row['Type of Opportunity']||row['Opportunity Type']||'').trim(),
       committed_qtr:          (row['Committed QTR']||'').trim(),
       revenue_usd:            (row['Opportunity Net Revenue (converted)']||'').trim(),
-      revenue_currency:       (row['Opportunity Net Revenue Currency']||'').trim(),
+      revenue_currency:       (row['Opportunity Net Revenue Currency']||row['Opportunity Net Revenue (converted) Currency']||'').trim(),
       revenue_original:       (row['Opportunity Net Revenue']||'').trim(),
       projected_go_live_date: glDate,
       actual_live_date:       (row['Actual Live Date']||'').trim(),
@@ -1700,7 +1735,7 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
       prod_created:           (row['Production Environment Created']||'').trim(),
       kickoff_date:           (row['Kick-Off Meeting']||'').trim(),
       cug_signoff:            (row['CUG Sign off']||'').trim(),
-      last_activity_date:     (row['Install Record: Last Activity Date']||'').trim(),
+      last_activity_date:     (row['Install Record: Last Activity Date']||row['Install Record: Last Modified Date']||'').trim(),
       implementation_blocker: (row['Implementation Blocker']||'').trim(),
       implementation_risk:    (row['Implementation Risk']||'').trim(),
       current_status_notes:   (row['Current Status']||'').trim().slice(0,400),
@@ -1709,7 +1744,7 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
       days_se_involved:       (row['Number of days SE involved']||'').trim(),
       days_open:              (row['Number of Days Open']||'').trim(),
       source_file:            fileName,
-      record_type:            'active',
+      record_type:            type,   // 'active' or 'live' — preserved for store split
       projected_go_live_date_history: newHistory
     };
   } else {
