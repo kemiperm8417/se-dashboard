@@ -22,7 +22,7 @@
     --sidebar-w: 220px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: auto; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; display: flex; min-height: 100vh; }
 
   /* SIDEBAR */
@@ -122,8 +122,9 @@
   .upload-btn.loaded { border-color: var(--green); }
 
   /* SECTIONS */
-  .section { padding: 24px 28px; }
-  .section + .section { border-top: 1px solid var(--border); }
+  .section { padding: 24px 28px; display: none; min-height: calc(100vh - 80px); }
+  .section.page-active { display: block; }
+  .anchor { scroll-margin-top: 0; }
   .section-title {
     font-size: 16px;
     font-weight: 700;
@@ -289,23 +290,57 @@
   .pipeline-card .pc-revenue { font-size: 18px; font-weight: 700; color: var(--accent); margin: 8px 0 4px; }
 
   /* HIGHLIGHTS/LOWLIGHTS */
-  .hl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .hl-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    font-size: 13px;
-  }
-  .hl-item.hi { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
-  .hl-item.lo { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); }
-  .hl-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-  .hl-item.hi .dot { background: var(--green); }
-  .hl-item.lo .dot { background: var(--red); }
-  .hl-item .hl-text { line-height: 1.5; }
-  .hl-item .hl-sub { font-size: 11px; color: var(--sub); }
+  .hl-trend-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding: 10px 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 10px; }
+  .trend-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .trend-chip.up   { background: rgba(22,163,74,0.1);  color: #15803d; border: 1px solid rgba(22,163,74,0.25); }
+  .trend-chip.warn { background: rgba(217,119,6,0.1);  color: #b45309; border: 1px solid rgba(217,119,6,0.25); }
+  .trend-chip.down { background: rgba(220,38,38,0.1);  color: #b91c1c; border: 1px solid rgba(220,38,38,0.25); }
+  .hl-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .hl-filter-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto; }
+  .hl-filter-row select { padding:5px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; background:var(--card); color:var(--text); cursor:pointer; }
+  .hl-filter-row .btn-export { padding:5px 14px; background:var(--accent); color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+  .hl-filter-row .btn-export:hover { opacity:.88; }
+  .hl-count-label { font-size:12px; color:var(--sub); margin-bottom:8px; }
+  .hl-table-wrap { overflow-x:auto; border-radius:10px; border:1px solid var(--border); }
+  .hl-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .hl-table thead th { background:var(--card2); padding:10px 12px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--sub); border-bottom:2px solid var(--border); white-space:nowrap; }
+  .hl-table tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+  .hl-table tbody tr:hover { background:var(--hover); }
+  .hl-table tbody tr.row-up   td:first-child { border-left:3px solid var(--green); }
+  .hl-table tbody tr.row-down td:first-child { border-left:3px solid var(--red); }
+  .hl-table tbody tr.row-warn td:first-child { border-left:3px solid var(--amber); }
+  .hl-table td { padding:9px 12px; vertical-align:top; }
+  .hl-table .td-name  { font-weight:600; max-width:200px; }
+  .hl-table .td-details { max-width:260px; font-size:12px; color:var(--sub); line-height:1.4; }
+  .hl-signal-chip { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; }
+  .hl-dur-badge { display:inline-block; padding:1px 7px; border-radius:20px; font-size:11px; font-weight:700; }
+  .hl-empty { text-align:center; padding:32px; color:var(--sub); font-size:13px; }
+
+  /* Q1 TRACKER */
+  .q1-tracker-header { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .q1-stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .q1-stat { flex:1; min-width:110px; background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; text-align:center; }
+  .q1-stat .q1-val { font-size:26px; font-weight:800; line-height:1.1; }
+  .q1-stat .q1-lbl { font-size:11px; color:var(--sub); margin-top:3px; text-transform:uppercase; letter-spacing:.5px; }
+  .q1-stat .q1-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+  .q1-stat.accent .q1-val { color:var(--accent); }
+  .q1-stat.green  .q1-val { color:var(--green); }
+  .q1-stat.amber  .q1-val { color:var(--amber); }
+  .q1-stat.red    .q1-val { color:var(--red); }
+  .q1-progress-wrap { margin-bottom:22px; }
+  .q1-progress-label { display:flex; justify-content:space-between; font-size:12px; color:var(--sub); margin-bottom:6px; }
+  .q1-progress-track { position:relative; height:22px; background:#e2e8f0; border-radius:11px; overflow:hidden; }
+  .q1-progress-fill  { height:100%; border-radius:11px; transition:width .6s ease; display:flex; align-items:center; padding-left:10px; font-size:11px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; }
+  .q1-month-markers { display:flex; gap:10px; margin-top:6px; }
+  .q1-month-marker { flex:1; text-align:center; font-size:10px; color:var(--sub); }
+  .q1-months { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+  .q1-month-card { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:center; }
+  .q1-month-card .month-name { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--sub); margin-bottom:8px; }
+  .q1-month-card .month-count { font-size:30px; font-weight:800; line-height:1; margin-bottom:4px; }
+  .q1-month-card .month-bar-wrap { height:6px; background:#e2e8f0; border-radius:3px; margin:8px 0 6px; }
+  .q1-month-card .month-bar-fill { height:100%; border-radius:3px; }
+  .q1-month-card .month-nr { font-size:11px; color:var(--sub); }
+  .q1-exclusion-note { font-size:11px; color:var(--sub); background:var(--card2); border:1px solid var(--border); border-radius:6px; padding:7px 12px; margin-top:12px; }
 
   /* LEADERSHIP */
   #leadership {
@@ -348,6 +383,21 @@
   .rpt-divider { border:none; border-top:1px solid #e5e7eb; margin:20px 0; }
   .rpt-footer { margin-top:24px; font-size:13px; }
   .rpt-signoff { margin-top:18px; }
+  /* hierarchy levels */
+  .rpt-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-badge.done { background:#dcfce7; color:#15803d; }
+  .rpt-badge.now  { background:#dbeafe; color:#1d4ed8; }
+  .rpt-badge.soon { background:#f1f5f9; color:#64748b; }
+  .rpt-year-bar { background:linear-gradient(135deg,#dbeafe,#eff6ff); border:1px solid #bfdbfe; border-radius:10px; padding:12px 16px; margin:14px 0; font-size:13px; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-qtr-head { font-size:15px; font-weight:800; margin:22px 0 3px; font-family:'Segoe UI',system-ui,sans-serif; display:flex; align-items:center; gap:8px; }
+  .rpt-qtr-meta { font-size:11px; color:#64748b; margin-bottom:10px; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-qtr-summary { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; margin:12px 0 4px; font-size:12.5px; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-month-head { font-size:13px; font-weight:700; margin:14px 0 5px; font-family:'Segoe UI',system-ui,sans-serif; display:flex; align-items:center; gap:6px; padding-left:10px; border-left:3px solid #e2e8f0; }
+  .rpt-month-head.done { border-left-color:#16a34a; }
+  .rpt-month-head.now  { border-left-color:#2563eb; }
+  .rpt-month-summary { background:#f8fafc; border-left:3px solid #2563eb; padding:7px 12px; margin:6px 0 10px 10px; font-size:12px; border-radius:0 6px 6px 0; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-week-head { font-size:11px; font-weight:700; color:#2563eb; margin:9px 0 3px 12px; text-transform:uppercase; letter-spacing:.5px; font-family:'Segoe UI',system-ui,sans-serif; }
+  .rpt-upcoming-box { margin:4px 0 10px 10px; font-size:12px; color:#64748b; font-style:italic; font-family:'Segoe UI',system-ui,sans-serif; }
 
   .exec-kpi-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
   .exec-kpi {
@@ -536,21 +586,22 @@
   </div>
   <nav>
     <div class="section-label">Overview</div>
-    <a href="#kpis" onclick="setActive(this)">📊 KPI Summary</a>
-    <a href="#pipeline-health" onclick="setActive(this)">🟢 Pipeline Health</a>
+    <a href="#kpis" onclick="showPage('kpis');return false">📊 KPI Summary</a>
+    <a href="#q1-tracker" onclick="showPage('q1-tracker');return false">🎯 Q1 LTS Tracker</a>
+    <a href="#pipeline-health" onclick="showPage('pipeline-health');return false">🟢 Pipeline Health</a>
     <div class="section-label">Detail Views</div>
-    <a href="#pipeline-table" onclick="setActive(this)">📋 All Projects</a>
-    <a href="#risk-radar" onclick="setActive(this)">🚨 Risk Radar</a>
-    <a href="#next-quarter" onclick="setActive(this)">📅 Next Quarter</a>
-    <a href="#weekly-view" onclick="setActive(this)">🗓️ Weekly View</a>
+    <a href="#pipeline-table" onclick="showPage('pipeline-table');return false">📋 All Projects</a>
+    <a href="#risk-radar" onclick="showPage('risk-radar');return false">🚨 Risk Radar</a>
+    <a href="#next-quarter" onclick="showPage('next-quarter');return false">📅 Next Quarter</a>
+    <a href="#weekly-view" onclick="showPage('weekly-view');return false">🗓️ Weekly View</a>
     <div class="section-label">Analytics</div>
-    <a href="#frontbook-backbook" onclick="setActive(this)">📈 FB vs BB</a>
-    <a href="#se-bandwidth" onclick="setActive(this)">👥 SE Bandwidth</a>
-    <a href="#presales" onclick="setActive(this)">🔭 Presales Pipeline</a>
+    <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false">📈 FB vs BB</a>
+    <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false">👥 SE Bandwidth</a>
+    <a href="#presales" onclick="showPage('presales');return false">🔭 Presales Pipeline</a>
     <div class="section-label">Reports</div>
-    <a href="#highlights" onclick="setActive(this)">✨ Highlights</a>
-    <a href="#leadership" onclick="setActive(this)">📑 Leadership Summary</a>
-    <a href="#audit-trail" onclick="setActive(this)">🔍 Audit Trail</a>
+    <a href="#highlights" onclick="showPage('highlights');return false">✨ Highlights</a>
+    <a href="#leadership" onclick="showPage('leadership');return false">📋 Summary</a>
+    <a href="#audit-trail" onclick="showPage('audit-trail');return false">🔍 Audit Trail</a>
   </nav>
 </nav>
 
@@ -623,6 +674,12 @@
     <div id="kpis" class="section anchor">
       <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
       <div class="kpi-grid" id="kpi-grid"></div>
+    </div>
+
+    <!-- Q1 LTS TRACKER -->
+    <div id="q1-tracker" class="section anchor">
+      <div class="section-title"><span class="icon">🎯</span> Q1 2026 — LTS Forecast vs Actuals</div>
+      <div id="q1-tracker-body"><p style="color:var(--sub);font-size:13px">Upload CSV files to view Q1 tracker.</p></div>
     </div>
 
     <!-- SECTION 3: PIPELINE HEALTH -->
@@ -812,11 +869,12 @@
         <span style="font-size:12px;color:var(--sub)">Showing projects in-progress with Projected Go-Live Date within 14 days from today (1 Apr – 14 Apr 2026)</span>
       </div>
       <!-- Week tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
         <button id="wv-tab-all"  class="wv-tab wv-tab-active" onclick="wvSetTab('all')">All (14 days)</button>
         <button id="wv-tab-this" class="wv-tab" onclick="wvSetTab('this')">This Week (1–7 Apr)</button>
         <button id="wv-tab-next" class="wv-tab" onclick="wvSetTab('next')">Next Week (8–14 Apr)</button>
         <button id="wv-tab-over" class="wv-tab" onclick="wvSetTab('over')">Overdue</button>
+        <button id="wv-tab-live" class="wv-tab" onclick="wvSetTab('live')" style="border-color:#16a34a;color:#15803d">✅ Recently Live</button>
       </div>
       <!-- This Week -->
       <div id="wv-block-this" class="wv-block">
@@ -836,28 +894,54 @@
         <div id="wv-over-cards" class="wv-cards"></div>
         <div id="wv-over-empty" class="wv-empty" style="display:none">No overdue projects found.</div>
       </div>
+      <!-- Recently Live -->
+      <div id="wv-block-live" class="wv-block" style="display:none">
+        <div class="wv-week-label" style="color:var(--green)">✅ Recently Live — sorted by Actual Live Date (most recent first)</div>
+        <div id="wv-live-cards" class="wv-cards"></div>
+        <div id="wv-live-empty" class="wv-empty" style="display:none">No live completed records found.</div>
+      </div>
       <!-- Summary strip -->
       <div id="wv-summary" style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;"></div>
     </div>
 
     <!-- SECTION 10: HIGHLIGHTS & LOWLIGHTS -->
     <div id="highlights" class="section anchor">
-      <div class="section-title"><span class="icon">✨</span> Weekly Highlights &amp; Lowlights</div>
-      <div class="hl-grid">
-        <div>
-          <div style="font-weight:600;margin-bottom:12px;color:var(--green)">✅ Highlights</div>
-          <div id="highlights-list"></div>
+      <div class="section-title"><span class="icon">✨</span> Highlights &amp; Lowlights — Trend Analysis</div>
+      <div id="hl-trend-bar" class="hl-trend-bar" style="display:none"></div>
+      <!-- Toolbar: tabs + filters + export -->
+      <div class="hl-toolbar">
+        <div class="tab-bar" style="margin:0">
+          <button class="tab-btn active" id="hltab-all"  onclick="hlSetTab('all',this)">All</button>
+          <button class="tab-btn"        id="hltab-up"   onclick="hlSetTab('up',this)">📈 Highlights</button>
+          <button class="tab-btn"        id="hltab-down" onclick="hlSetTab('down',this)">📉 Lowlights</button>
         </div>
-        <div>
-          <div style="font-weight:600;margin-bottom:12px;color:var(--red)">⚠️ Lowlights</div>
-          <div id="lowlights-list"></div>
+        <div class="hl-filter-row">
+          <select id="hl-f-signal" onchange="applyHLFilters()"><option value="">All Signals</option></select>
+          <select id="hl-f-se"     onchange="applyHLFilters()"><option value="">All SE Owners</option></select>
+          <select id="hl-f-region" onchange="applyHLFilters()"><option value="">All Regions</option></select>
+          <button class="btn-export" onclick="exportHighlights()">📤 Export Text</button>
         </div>
+      </div>
+      <div class="hl-count-label" id="hl-count"></div>
+      <div class="hl-table-wrap">
+        <table class="hl-table">
+          <thead><tr>
+            <th style="width:130px">Signal</th>
+            <th>Project</th>
+            <th>SE Owner</th>
+            <th>Region</th>
+            <th>Revenue</th>
+            <th>Duration</th>
+            <th>Details / Notes</th>
+          </tr></thead>
+          <tbody id="hl-tbody"></tbody>
+        </table>
       </div>
     </div>
 
     <!-- SECTION 11: LEADERSHIP SUMMARY -->
     <div id="leadership" class="section anchor">
-      <div class="section-title"><span class="icon">📑</span> Leadership Weekly Summary</div>
+      <div class="section-title"><span class="icon">📋</span> Summary — SE Pipeline Report</div>
       <div class="report-actions">
         <button onclick="copyReport()">📋 Copy Report Text</button>
         <button onclick="window.print()">🖨️ Print / Export PDF</button>
@@ -1542,6 +1626,7 @@ function renderAuditTrail() {
 // =====================================================
 function renderDashboard() {
   renderKPIs();
+  renderQ1Tracker();
   renderPipelineHealth();
   renderPipelineTable();
   renderRiskRadar();
@@ -1553,11 +1638,168 @@ function renderDashboard() {
   renderHighlights();
   renderLeadership();
   renderAuditTrail();
+  showPage(currentPage);
 }
 
 // =====================================================
 // SECTION 2: KPI CARDS
 // =====================================================
+// =====================================================
+// Q1 LTS TRACKER
+// =====================================================
+function renderQ1Tracker() {
+  const active = activeData || [];
+  if (!active.length) return;
+
+  const QTR      = 'Q1-2026';
+  const Q1_START = new Date('2026-01-01');
+  const Q1_END   = new Date('2026-03-31');
+
+  // ── Exclusion rules ───────────────────────────────────────────────────
+  // 1. Exclude if Status = 'Presales' (any NR)
+  // 2. Exclude if Status = 'In Progress' AND Type = 'Additional Project' AND NR = 0
+  function isExcluded(r) {
+    const status = (r['Status'] || '').trim();
+    const type   = (r['Type of Opportunity'] || '').trim();
+    const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
+    if (status === 'Presales') return true;
+    if (status === 'In Progress' && type === 'Additional Project' && rev === 0) return true;
+    return false;
+  }
+
+  // Helper: is Actual Live Date within a given month (1-indexed month, year)
+  function inMonth(dateStr, yr, mo) {
+    const d = parseDate(dateStr);
+    if (!d) return false;
+    return d.getFullYear() === yr && d.getMonth() === mo - 1;
+  }
+
+  function inQ1(dateStr) {
+    const d = parseDate(dateStr);
+    if (!d) return false;
+    return d >= Q1_START && d <= Q1_END;
+  }
+
+  // ── LTS: committed to Q1-2026, after exclusions ───────────────────────
+  const ltsRecords = active.filter(r =>
+    (r['Committed QTR'] || '').trim() === QTR && !isExcluded(r)
+  );
+  const ltsCount = ltsRecords.length;
+  const ltsNR    = ltsRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+  // ── QTD: went live in Q1, after exclusions ────────────────────────────
+  const qtdRecords = active.filter(r =>
+    (r['Status'] || '').trim() === 'Live Completed' &&
+    inQ1(r['Actual Live Date']) &&
+    !isExcluded(r)
+  );
+  const qtdCount = qtdRecords.length;
+  const qtdNR    = qtdRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+  // ── Monthly breakdown ─────────────────────────────────────────────────
+  const months = [
+    { name: 'January',  short: 'Jan', yr: 2026, mo: 1 },
+    { name: 'February', short: 'Feb', yr: 2026, mo: 2 },
+    { name: 'March',    short: 'Mar', yr: 2026, mo: 3 },
+  ].map(m => {
+    const recs = qtdRecords.filter(r => inMonth(r['Actual Live Date'], m.yr, m.mo));
+    const nr   = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+    return { ...m, count: recs.length, nr };
+  });
+
+  const remaining  = Math.max(ltsCount - qtdCount, 0);
+  const pct        = ltsCount > 0 ? Math.round((qtdCount / ltsCount) * 100) : 0;
+  const pctLeft    = 100 - pct;
+  const maxMonthCt = Math.max(...months.map(m => m.count), 1);
+
+  // RAG breakdown of remaining (not live) LTS records
+  const remaining_records = ltsRecords.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+  const remOnTrack = remaining_records.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track').length;
+  const remAtRisk  = remaining_records.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
+  const remBlocked = remaining_records.filter(r =>
+    (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked'
+  ).length;
+  const remNR = remaining_records.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+  // ── Progress bar colour: green if >=70%, amber if 40-69%, red if <40%
+  const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+
+  // ── Build HTML ────────────────────────────────────────────────────────
+  let h = '';
+
+  // Stat cards row
+  h += `<div class="q1-stat-row">
+    <div class="q1-stat accent">
+      <div class="q1-val">${ltsCount}</div>
+      <div class="q1-lbl">Q1 LTS Forecast</div>
+      <div class="q1-sub">${fmtRev(ltsNR)} total NR</div>
+    </div>
+    <div class="q1-stat green">
+      <div class="q1-val">${qtdCount}</div>
+      <div class="q1-lbl">QTD Live</div>
+      <div class="q1-sub">${fmtRev(qtdNR)} unlocked</div>
+    </div>
+    <div class="q1-stat ${remaining === 0 ? 'green' : pct >= 70 ? 'amber' : 'red'}">
+      <div class="q1-val">${remaining}</div>
+      <div class="q1-lbl">Remaining</div>
+      <div class="q1-sub">${fmtRev(remNR)} at stake</div>
+    </div>
+    <div class="q1-stat ${pct >= 70 ? 'green' : pct >= 40 ? 'amber' : 'red'}">
+      <div class="q1-val">${pct}%</div>
+      <div class="q1-lbl">Achievement</div>
+      <div class="q1-sub">QTD vs Forecast</div>
+    </div>
+    <div class="q1-stat">
+      <div class="q1-val" style="font-size:18px">🟢${remOnTrack} &nbsp;🟡${remAtRisk} &nbsp;🔴${remBlocked}</div>
+      <div class="q1-lbl">Remaining RAG</div>
+      <div class="q1-sub">On Track / At Risk / Blocked</div>
+    </div>
+  </div>`;
+
+  // Progress bar
+  h += `<div class="q1-progress-wrap">
+    <div class="q1-progress-label">
+      <span>Q1 Progress — <strong>${qtdCount} of ${ltsCount}</strong> projects live</span>
+      <span style="font-weight:700;color:${barColor}">${pct}% achieved</span>
+    </div>
+    <div class="q1-progress-track">
+      <div class="q1-progress-fill" style="width:${pct}%;background:${barColor}">
+        ${pct >= 12 ? `${pct}%` : ''}
+      </div>
+    </div>
+    <div style="display:flex;margin-top:6px;font-size:10px;color:var(--sub);gap:0">
+      <div style="flex:${months[0].count};text-align:center;border-right:1px dashed #cbd5e1;padding-right:4px">Jan ${months[0].count}</div>
+      <div style="flex:${months[1].count};text-align:center;border-right:1px dashed #cbd5e1;padding:0 4px">Feb ${months[1].count}</div>
+      <div style="flex:${months[2].count};text-align:center;padding-left:4px">Mar ${months[2].count}</div>
+      <div style="flex:${remaining};text-align:center;color:#94a3b8;border-left:1px dashed #cbd5e1;padding-left:4px">Remaining ${remaining}</div>
+    </div>
+  </div>`;
+
+  // Monthly cards
+  h += `<div class="q1-months">`;
+  months.forEach(m => {
+    const barPct = maxMonthCt > 0 ? Math.round((m.count / maxMonthCt) * 100) : 0;
+    const col    = m.count >= 10 ? '#16a34a' : m.count >= 5 ? '#2563eb' : '#d97706';
+    h += `<div class="q1-month-card">
+      <div class="month-name">${m.name} 2026</div>
+      <div class="month-count" style="color:${col}">${m.count}</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:4px">projects live</div>
+      <div class="month-bar-wrap"><div class="month-bar-fill" style="width:${barPct}%;background:${col}"></div></div>
+      <div class="month-nr">${fmtRev(m.nr)} NR unlocked</div>
+    </div>`;
+  });
+  h += `</div>`;
+
+  // Exclusion note
+  h += `<div class="q1-exclusion-note">
+    ℹ️ <strong>Exclusions applied:</strong>
+    Status = "Presales" (any NR) &nbsp;|&nbsp;
+    In Progress + Type = "Additional Project" + NR = $0
+  </div>`;
+
+  document.getElementById('q1-tracker-body').innerHTML = h;
+}
+
 function renderKPIs() {
   const active = activeData || [];
   const presales = presalesData || [];
@@ -1941,15 +2183,17 @@ let wvCurrentTab = 'all';
 
 function wvSetTab(tab) {
   wvCurrentTab = tab;
-  ['all','this','next','over'].forEach(t => {
+  ['all','this','next','over','live'].forEach(t => {
     document.getElementById(`wv-tab-${t}`).classList.toggle('wv-tab-active', t === tab);
   });
   const showThis = tab === 'all' || tab === 'this';
   const showNext = tab === 'all' || tab === 'next';
   const showOver = tab === 'all' || tab === 'over';
-  document.getElementById('wv-block-this').style.display = showThis ? '' : 'none';
-  document.getElementById('wv-block-next').style.display = showNext ? '' : 'none';
-  document.getElementById('wv-block-over').style.display = showOver ? '' : 'none';
+  const showLive = tab === 'live';
+  document.getElementById('wv-block-this').style.display = showThis && !showLive ? '' : 'none';
+  document.getElementById('wv-block-next').style.display = showNext && !showLive ? '' : 'none';
+  document.getElementById('wv-block-over').style.display = showOver && !showLive ? '' : 'none';
+  document.getElementById('wv-block-live').style.display = showLive ? '' : 'none';
 }
 
 function renderWeeklyView() {
@@ -2012,6 +2256,49 @@ function renderWeeklyView() {
   fillCards(nextWeek, 'wv-next-cards', 'wv-next-empty');
   fillCards(overdue, 'wv-over-cards', 'wv-over-empty');
 
+  // ── Recently Live tab — sorted by Actual Live Date (most recent first) ──
+  const recentlyLive = active
+    .filter(r => r['Actual Live Date'])
+    .map(r => ({ row: r, dur: daysSince(r['Actual Live Date']) }))
+    .filter(x => x.dur !== null)
+    .sort((a, b) => a.dur - b.dur);   // smallest dur = most recent = first
+
+  const liveCardsEl = document.getElementById('wv-live-cards');
+  const liveEmptyEl = document.getElementById('wv-live-empty');
+  if (recentlyLive.length === 0) {
+    liveCardsEl.innerHTML = '';
+    liveEmptyEl.style.display = '';
+  } else {
+    liveEmptyEl.style.display = 'none';
+    liveCardsEl.innerHTML = recentlyLive.map(({ row, dur }) => {
+      const name    = row['Opportunity Name'] || '—';
+      const se      = row['Implementation Owner'] || '—';
+      const region  = (row['Global Region'] || '').split('|')[0].trim() || '—';
+      const qtr     = row['Committed QTR'] || '—';
+      const rev     = parseRev(row['Opportunity Net Revenue (converted)']);
+      const actDate = row['Actual Live Date'] || '—';
+      const glDate  = row['Projected Go-Live Date'] || '—';
+      const notes   = (row['Current Status'] || '').trim();
+      const notesHtml = notes ? `<div class="wv-risk" style="color:#475569">📝 ${notes.length > 100 ? notes.slice(0,100)+'…' : notes}</div>` : '';
+      return `<div class="wv-card" style="border-left:3px solid #16a34a">
+        <div class="wv-name">${escHtml(name)}</div>
+        <div class="wv-rag"><span class="badge badge-green">Live Completed</span></div>
+        <div class="wv-meta">
+          <span>👤 ${escHtml(se)}</span>
+          <span>🌏 ${escHtml(region)}</span>
+          <span>📅 ${escHtml(qtr)}</span>
+          ${rev > 0 ? `<span>💰 $${(rev/1000).toFixed(0)}k</span>` : ''}
+        </div>
+        <div class="wv-status"><strong>Actual Live:</strong> ${actDate} &nbsp;|&nbsp; <strong>Projected:</strong> ${glDate}</div>
+        ${notesHtml}
+        <div class="wv-days ok">✅ Live ${dur}d ago</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Update tab label with count
+  document.getElementById('wv-tab-live').textContent = `✅ Recently Live (${recentlyLive.length})`;
+
   // Summary strip
   const onTrackCount = [...thisWeek, ...nextWeek].filter(x => (x.row['Projected Go-Live Status'] || '').trim() === 'On Track').length;
   const atRiskCount  = [...thisWeek, ...nextWeek].filter(x => (x.row['Projected Go-Live Status'] || '').trim() === 'At Risk').length;
@@ -2024,6 +2311,7 @@ function renderWeeklyView() {
     <div class="wv-summary-chip" style="color:var(--green)"><strong>${onTrackCount}</strong> on track</div>
     <div class="wv-summary-chip" style="color:var(--amber)"><strong>${atRiskCount}</strong> at risk</div>
     <div class="wv-summary-chip" style="color:var(--red)"><strong>${blockedCount}</strong> blocked</div>
+    <div class="wv-summary-chip" style="color:var(--green)"><strong>${recentlyLive.length}</strong> live completed</div>
   `;
 }
 
@@ -2360,54 +2648,318 @@ function renderPresales() {
 // =====================================================
 // SECTION 10: HIGHLIGHTS & LOWLIGHTS
 // =====================================================
+// ── global highlights data store for filtering ──────────────────────────────
+let hlData = [];
+let hlTabState = 'all';
+
+function hlSetTab(tab, btn) {
+  hlTabState = tab;
+  document.querySelectorAll('#hltab-all,#hltab-up,#hltab-down').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyHLFilters();
+}
+
+function applyHLFilters() {
+  const signal = document.getElementById('hl-f-signal')?.value || '';
+  const se     = document.getElementById('hl-f-se')?.value    || '';
+  const region = document.getElementById('hl-f-region')?.value || '';
+
+  let rows = hlData;
+  if (hlTabState === 'up')   rows = rows.filter(r => r.type === 'up');
+  if (hlTabState === 'down') rows = rows.filter(r => r.type === 'down');
+  if (signal) rows = rows.filter(r => r.signal === signal);
+  if (se)     rows = rows.filter(r => r.se === se);
+  if (region) rows = rows.filter(r => r.region === region);
+
+  renderHLTable(rows);
+}
+
+function renderHLTable(rows) {
+  const tbody = document.getElementById('hl-tbody');
+  const count = document.getElementById('hl-count');
+  if (!tbody) return;
+
+  const signalStyles = {
+    'Went Live':      { bg:'#dcfce7', color:'#15803d' },
+    'CUG In Progress':{ bg:'#dbeafe', color:'#1d4ed8' },
+    'Blocked':        { bg:'#fee2e2', color:'#b91c1c' },
+    'At Risk':        { bg:'#fef3c7', color:'#b45309' },
+    'Overdue':        { bg:'#fef3c7', color:'#b45309' },
+    'Flag':           { bg:'#f1f5f9', color:'#475569' },
+    'Stale':          { bg:'#f1f5f9', color:'#64748b' },
+  };
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="hl-empty">No records match the current filters.</td></tr>`;
+    if (count) count.textContent = '';
+    return;
+  }
+
+  if (count) count.textContent = `Showing ${rows.length} record${rows.length!==1?'s':''}`;
+
+  tbody.innerHTML = rows.map(r => {
+    const st  = signalStyles[r.signal] || { bg:'#f1f5f9', color:'#475569' };
+    const rowCls = r.type === 'up' ? 'row-up' : (r.signal === 'At Risk' || r.signal === 'Overdue' || r.signal === 'Stale') ? 'row-warn' : 'row-down';
+    const durColor = r.type === 'up' ? (r.signal === 'CUG In Progress' ? '#2563eb' : '#16a34a') :
+                     (r.signal === 'Blocked' ? '#dc2626' : '#d97706');
+    const durHtml = r.dur !== null
+      ? `<span class="hl-dur-badge" style="background:${durColor}18;color:${durColor};border:1px solid ${durColor}40">${r.dur}d</span>`
+      : '—';
+    return `<tr class="${rowCls}">
+      <td class="td-signal">
+        <span class="hl-signal-chip" style="background:${st.bg};color:${st.color}">${r.icon} ${r.signal}</span>
+      </td>
+      <td class="td-name">${escHtml(r.name)}</td>
+      <td>${escHtml(r.se)}</td>
+      <td>${escHtml(r.region)}</td>
+      <td style="white-space:nowrap">${r.revFmt}</td>
+      <td style="white-space:nowrap">${durHtml}</td>
+      <td class="td-details">${escHtml(r.details)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportHighlights() {
+  const signal = document.getElementById('hl-f-signal')?.value || '';
+  const se     = document.getElementById('hl-f-se')?.value    || '';
+  let rows = hlData;
+  if (hlTabState === 'up')   rows = rows.filter(r => r.type === 'up');
+  if (hlTabState === 'down') rows = rows.filter(r => r.type === 'down');
+  if (signal) rows = rows.filter(r => r.signal === signal);
+  if (se)     rows = rows.filter(r => r.se === se);
+
+  const lines = [
+    `SE Dashboard — Highlights & Lowlights`,
+    `Generated: ${TODAY.toISOString().slice(0,10)}`,
+    `Filter: ${hlTabState==='up'?'Highlights only':hlTabState==='down'?'Lowlights only':'All'} | Signal: ${signal||'All'} | SE: ${se||'All'}`,
+    `${'─'.repeat(70)}`,
+    '',
+  ];
+
+  const ups   = rows.filter(r => r.type === 'up');
+  const downs = rows.filter(r => r.type === 'down');
+
+  if (ups.length) {
+    lines.push('📈 HIGHLIGHTS');
+    ups.forEach(r => {
+      const dur = r.dur !== null ? `${r.dur}d` : '';
+      lines.push(`  ${r.icon} [${r.signal}${dur?' | '+dur:''}]  ${r.name}`);
+      lines.push(`     SE: ${r.se} | ${r.region} | ${r.revFmt}`);
+      if (r.details) lines.push(`     → ${r.details}`);
+      lines.push('');
+    });
+  }
+
+  if (downs.length) {
+    lines.push('📉 LOWLIGHTS');
+    downs.forEach(r => {
+      const dur = r.dur !== null ? `${r.dur}d` : '';
+      lines.push(`  ${r.icon} [${r.signal}${dur?' | '+dur:''}]  ${r.name}`);
+      lines.push(`     SE: ${r.se} | ${r.region} | ${r.revFmt}`);
+      if (r.details) lines.push(`     → ${r.details}`);
+      lines.push('');
+    });
+  }
+
+  const text = lines.join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.btn-export');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📤 Export Text', 2000); }
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+}
+
 function renderHighlights() {
   const active = activeData || [];
-  const highlights = [];
-  const lowlights = [];
+  if (!active.length) return;
 
-  active.forEach(r => {
-    const status = (r['Status'] || '').trim();
-    const rag = (r['Projected Go-Live Status'] || '').trim();
-    const qtr = (r['Committed QTR'] || '').trim();
-    const subStatus = (r['Sub Status'] || '').trim();
-    const lastActivity = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
-    const daysAgo = daysSince(lastActivity);
-    const name = truncate(r['Opportunity Name'], 50);
-    const se = r['Implementation Owner'] || '—';
-    const blocker = r['Implementation Blocker'] || '';
-    const risk = r['Implementation Risk'] || '';
+  // Active pipeline only: In Progress + Live Completed
+  const pipeline = active.filter(r => {
+    const s = (r['Status'] || '').trim();
+    return s === 'In Progress' || s === 'Live Completed';
+  });
 
-    // HIGHLIGHTS
-    if (status === 'Live Completed') {
-      highlights.push({ text: `<strong>${escHtml(name)}</strong> went live`, sub: `SE: ${escHtml(se)} | ${escHtml(extractRegion(r['Global Region']))}` });
-    } else if (rag === 'On Track' && qtr === CURRENT_QTR) {
-      highlights.push({ text: `<strong>${escHtml(name)}</strong> on track for ${escHtml(qtr)}`, sub: `SE: ${escHtml(se)} | ${escHtml(subStatus)}` });
-    } else if (daysAgo !== null && daysAgo <= 7 && status !== 'Live Completed') {
-      highlights.push({ text: `<strong>${escHtml(name)}</strong> recently updated`, sub: `SE: ${escHtml(se)} | ${daysAgo}d ago` });
-    }
+  function isOverdue(r) {
+    const gl = parseDate(r['Projected Go-Live Date']);
+    if (!gl) return false;
+    return gl < TODAY && (r['Status'] || '').trim() === 'In Progress';
+  }
 
-    // LOWLIGHTS
+  const NEG_KW = ['delay','delayed','on hold','pending client','waiting on client','no response',
+    'client unresponsive','escalat','stuck','behind schedule','missing','failed','unable to',
+    'legal issue','compliance issue','resourcing','resource constraint','deprioritised','deprioritized',
+    'pushed back','deferred','not progressing'];
+
+  function matchKw(text, kwList) {
+    if (!text) return null;
+    const lower = text.toLowerCase();
+    return kwList.find(k => lower.includes(k)) || null;
+  }
+
+  // Duration badge pill
+  function durBadge(days, color) {
+    return `<span style="display:inline-block;background:${color}18;color:${color};border:1px solid ${color}40;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700;margin-right:6px;vertical-align:middle">${days}d</span>`;
+  }
+
+  // Group header within the highlights column
+  function grpHdr(icon, label, n, color) {
+    return `<div style="font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:${color};margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid ${color}30">${icon} ${label} <span style="font-weight:400;opacity:.7">(${n})</span></div>`;
+  }
+
+  // ── SIGNAL 1: Went Live — sorted by Actual Live Date (most recent first) ──
+  const wentLive = pipeline
+    .filter(r => r['Actual Live Date'])
+    .map(r => ({ r, dur: daysSince(r['Actual Live Date']) }))
+    .filter(x => x.dur !== null)
+    .sort((a, b) => a.dur - b.dur);   // smallest dur = most recent = first
+
+  // ── SIGNAL 2: CUG In Progress — Prod Env Created, no Actual Live Date yet ──
+  // Duration = days since Production Environment Created (longest = needs most attention)
+  const cugInProgress = pipeline
+    .filter(r => r['Production Environment Created'] && !r['Actual Live Date'] && (r['Status']||'').trim() === 'In Progress')
+    .map(r => ({ r, dur: daysSince(r['Production Environment Created']) }))
+    .filter(x => x.dur !== null)
+    .sort((a, b) => b.dur - a.dur);   // longest in CUG first
+
+  // ── SIGNAL 3 (lowlight): Stale — Last Activity Date > 14 days ───────────
+  const staleItems = pipeline
+    .filter(r => {
+      if ((r['Status']||'').trim() !== 'In Progress') return false;
+      const last = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
+      const d = daysSince(last);
+      return d !== null && d > 14;
+    })
+    .map(r => {
+      const last = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
+      return { r, dur: daysSince(last) };
+    })
+    .sort((a, b) => b.dur - a.dur);   // most stale first
+
+  // ── Build hlData (normalised rows for table + filtering) ─────────────────
+  hlData = [];
+  const loIds = new Set();
+
+  // HIGHLIGHTS: Went Live
+  wentLive.forEach(({ r, dur }) => {
+    const name = (r['Opportunity Name'] || '').trim();
+    hlData.push({
+      type:'up', signal:'Went Live', icon:'🏆',
+      name, se: r['Implementation Owner']||'—',
+      region: extractRegion(r['Global Region']||''),
+      rev: parseRev(r['Opportunity Net Revenue (converted)']),
+      revFmt: fmtRev(parseRev(r['Opportunity Net Revenue (converted)'])),
+      dur, details: `Actual Live: ${r['Actual Live Date']||'—'}`
+    });
+  });
+
+  // HIGHLIGHTS: CUG In Progress
+  cugInProgress.forEach(({ r, dur }) => {
+    const name = (r['Opportunity Name'] || '').trim();
+    const rag  = (r['Projected Go-Live Status']||'').trim();
+    hlData.push({
+      type:'up', signal:'CUG In Progress', icon:'🔵',
+      name, se: r['Implementation Owner']||'—',
+      region: extractRegion(r['Global Region']||''),
+      rev: parseRev(r['Opportunity Net Revenue (converted)']),
+      revFmt: fmtRev(parseRev(r['Opportunity Net Revenue (converted)'])),
+      dur, details: `Prod Env: ${r['Production Environment Created']||'—'} | Go-Live: ${r['Projected Go-Live Date']||'—'} | ${rag||'—'}`
+    });
+  });
+
+  // LOWLIGHTS
+  pipeline.forEach(r => {
+    const status  = (r['Status']||'').trim();
+    const rag     = (r['Projected Go-Live Status']||'').trim();
+    const name    = (r['Opportunity Name']||'').trim();
+    const id      = name;
+    const se      = r['Implementation Owner']||'—';
+    const region  = extractRegion(r['Global Region']||'');
+    const blocker = (r['Implementation Blocker']||'').trim();
+    const risk    = (r['Implementation Risk']||'').trim();
+    const notes   = (r['Current Status']||'').trim();
+    const rev     = parseRev(r['Opportunity Net Revenue (converted)']);
+    const revFmt  = fmtRev(rev);
+    const glDate  = r['Projected Go-Live Date']||'';
+
     if (status === 'Blocked' || rag === 'Blocked') {
-      const reason = truncate(blocker || r['Current Status'] || 'No details', 120);
-      lowlights.push({ text: `<strong>${escHtml(name)}</strong> is BLOCKED`, sub: escHtml(reason), cls: 'lo' });
-    } else if (rag === 'At Risk') {
-      const reason = truncate(risk || r['Current Status'] || 'No details', 120);
-      lowlights.push({ text: `<strong>${escHtml(name)}</strong> at risk`, sub: escHtml(reason), cls: 'lo' });
-    } else if (subStatus.toLowerCase().includes('delayed')) {
-      const reason = truncate(blocker || r['Current Status'] || '', 120);
-      lowlights.push({ text: `<strong>${escHtml(name)}</strong> delayed`, sub: reason ? escHtml(reason) : `SE: ${escHtml(se)}`, cls: 'lo' });
+      hlData.push({ type:'down', signal:'Blocked', icon:'🔴', name, se, region, rev, revFmt, dur:0,
+        details: truncate(blocker||notes||'No details', 160) });
+      loIds.add(id); return;
+    }
+    if (rag === 'At Risk') {
+      const odStr = isOverdue(r) ? ` | ⏰ overdue ${daysSince(glDate)}d` : '';
+      hlData.push({ type:'down', signal:'At Risk', icon:'🟡', name, se, region, rev, revFmt,
+        dur: daysSince(glDate)||0,
+        details: truncate(risk||blocker||notes||'No risk details', 160) + odStr });
+      loIds.add(id); return;
+    }
+    if (isOverdue(r) && !loIds.has(id)) {
+      const od = daysSince(glDate)||0;
+      hlData.push({ type:'down', signal:'Overdue', icon:'⏰', name, se, region, rev, revFmt, dur: od,
+        details: `Projected: ${glDate} | RAG: ${rag||'—'}` });
+      loIds.add(id); return;
+    }
+    if (!loIds.has(id)) {
+      const kw = matchKw(blocker||risk||notes, NEG_KW);
+      if (kw) {
+        hlData.push({ type:'down', signal:'Flag', icon:'📉', name, se, region, rev, revFmt, dur:0,
+          details: truncate(blocker||risk||notes, 160) });
+        loIds.add(id); return;
+      }
     }
   });
 
-  const hlDiv = document.getElementById('highlights-list');
-  hlDiv.innerHTML = highlights.length > 0
-    ? highlights.slice(0, 20).map(h => `<div class="hl-item hi"><div class="dot"></div><div class="hl-text">${h.text}<div class="hl-sub">${h.sub}</div></div></div>`).join('')
-    : '<div class="empty-state">No highlights available</div>';
+  // Stale → lowlights
+  staleItems.forEach(({ r, dur }) => {
+    const id = (r['Opportunity Name']||'').trim();
+    if (loIds.has(id)) return;
+    const last = r['Install Record: Last Activity Date']||r['Install Record: Last Modified Date']||'';
+    hlData.push({ type:'down', signal:'Stale', icon:'🕐',
+      name: id, se: r['Implementation Owner']||'—',
+      region: extractRegion(r['Global Region']||''),
+      rev: parseRev(r['Opportunity Net Revenue (converted)']),
+      revFmt: fmtRev(parseRev(r['Opportunity Net Revenue (converted)'])),
+      dur, details: `${dur}d no activity | Last: ${last||'—'} | Go-Live: ${r['Projected Go-Live Date']||'—'}` });
+  });
 
-  const llDiv = document.getElementById('lowlights-list');
-  llDiv.innerHTML = lowlights.length > 0
-    ? lowlights.slice(0, 20).map(h => `<div class="hl-item lo"><div class="dot"></div><div class="hl-text">${h.text}<div class="hl-sub">${h.sub}</div></div></div>`).join('')
-    : '<div class="empty-state" style="color:var(--green)">No critical lowlights — great job!</div>';
+  // ── Populate filter dropdowns ─────────────────────────────────────────────
+  function populateSelect(id, values) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = `<option value="">All ${id==='hl-f-signal'?'Signals':id==='hl-f-se'?'SE Owners':'Regions'}</option>` +
+      [...new Set(values)].sort().map(v => `<option value="${escHtml(v)}"${v===cur?' selected':''}>${escHtml(v)}</option>`).join('');
+  }
+  populateSelect('hl-f-signal', hlData.map(r => r.signal));
+  populateSelect('hl-f-se',     hlData.map(r => r.se));
+  populateSelect('hl-f-region', hlData.map(r => r.region));
+
+  // ── Trend summary bar ─────────────────────────────────────────────────────
+  const bar = document.getElementById('hl-trend-bar');
+  if (bar) {
+    const atRiskCnt  = pipeline.filter(r=>(r['Projected Go-Live Status']||'').trim()==='At Risk').length;
+    const blockedCnt = pipeline.filter(r=>(r['Status']||'').trim()==='Blocked'||(r['Projected Go-Live Status']||'').trim()==='Blocked').length;
+    const overdueCnt = pipeline.filter(r=>isOverdue(r)).length;
+    bar.style.display = 'flex';
+    bar.innerHTML = [
+      wentLive.length      ? `<span class="trend-chip up">🏆 ${wentLive.length} Went Live</span>` : '',
+      cugInProgress.length ? `<span class="trend-chip up">🔵 ${cugInProgress.length} In CUG</span>` : '',
+      atRiskCnt            ? `<span class="trend-chip warn">🟡 ${atRiskCnt} At Risk</span>` : '',
+      blockedCnt           ? `<span class="trend-chip down">🔴 ${blockedCnt} Blocked</span>` : '',
+      overdueCnt           ? `<span class="trend-chip down">⏰ ${overdueCnt} Overdue</span>` : '',
+      staleItems.length    ? `<span class="trend-chip warn">🕐 ${staleItems.length} Stale &gt;14d</span>` : '',
+    ].filter(Boolean).join('');
+  }
+
+  // Reset tab state and render table
+  hlTabState = 'all';
+  ['hltab-all','hltab-up','hltab-down'].forEach((id,i) => {
+    const b = document.getElementById(id);
+    if (b) b.classList.toggle('active', i===0);
+  });
+  applyHLFilters();
 }
 
 // =====================================================
@@ -2418,7 +2970,6 @@ function renderLeadership() {
   const presales = presalesData || [];
   if (!active.length && !presales.length) return;
 
-  // ── helpers ──────────────────────────────────────────────────────────────
   const $r  = s => `<span class="rpt-red">${s}</span>`;
   const $a  = s => `<span class="rpt-amber">${s}</span>`;
   const $g  = s => `<span class="rpt-green">${s}</span>`;
@@ -2428,288 +2979,276 @@ function renderLeadership() {
   const rv  = v => fmtRev(parseRev(v));
   const esc = escHtml;
 
-  // ── PREVIOUS MONTH (always report on prior month) ────────────────────────
-  // User generates on the 3rd of the new month, so always look back one month
-  const prevMonthEnd   = new Date(TODAY.getFullYear(), TODAY.getMonth(), 0);   // last day of prev month
-  const prevMonthStart = new Date(TODAY.getFullYear(), TODAY.getMonth() - 1, 1); // 1st of prev month
-  const prevMonthDays  = prevMonthEnd.getDate();  // total days in prev month
-  const prevMonthName  = prevMonthStart.toLocaleString('default', { month: 'long', year: 'numeric' });
-  const prevMonthShort = prevMonthStart.toLocaleString('default', { month: 'short', year: '2-digit' });
-  const yr = prevMonthStart.getFullYear();
-  const mo = prevMonthStart.getMonth(); // 0-indexed
+  const REPORT_YEAR = TODAY.getFullYear();
 
-  // Week boundaries within the previous month
-  const weeks = [
-    { label: 'Week 1', start: 1,  end: 7 },
-    { label: 'Week 2', start: 8,  end: 14 },
-    { label: 'Week 3', start: 15, end: 21 },
-    { label: 'Week 4', start: 22, end: prevMonthDays }
-  ];
+  // ── date helpers ──────────────────────────────────────────────────────────
+  const MONTH_NAMES  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTH_SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  function inWeek(dateStr, wk) {
-    const d = parseDate(dateStr);
-    if (!d) return false;
-    return d.getFullYear() === yr && d.getMonth() === mo &&
-           d.getDate() >= wk.start && d.getDate() <= wk.end;
-  }
+  function lastDayOfMonth(yr, mo) { return new Date(yr, mo + 1, 0).getDate(); }
 
-  function inPrevMonth(dateStr) {
+  function inMonthRange(dateStr, yr, mo) {
     const d = parseDate(dateStr);
     if (!d) return false;
     return d.getFullYear() === yr && d.getMonth() === mo;
   }
 
-  function weekLabel(wk) {
-    return `${wk.label} (${wk.start}–${wk.end} ${prevMonthStart.toLocaleString('default',{month:'short'})} ${yr})`;
+  function inWeekRange(dateStr, yr, mo, wkStart, wkEnd) {
+    const d = parseDate(dateStr);
+    if (!d) return false;
+    return d.getFullYear() === yr && d.getMonth() === mo &&
+           d.getDate() >= wkStart && d.getDate() <= wkEnd;
   }
 
-  // For each record, find its most relevant "activity week" date
-  function bestWeekDate(r) {
-    const fields = ['Actual Live Date','CUG Sign off','Kick-Off Meeting','Install Record: Last Activity Date','Install Record: Last Modified Date'];
-    for (const f of fields) {
-      if (r[f] && inPrevMonth(r[f])) return r[f];
-    }
-    return null;
+  function monthEnd(yr, mo)   { return new Date(yr, mo + 1, 0); }
+  function monthStart(yr, mo) { return new Date(yr, mo, 1); }
+  function isMonthDone(yr, mo)    { return monthEnd(yr, mo) < TODAY; }
+  function isMonthCurrent(yr, mo) { return TODAY.getMonth() === mo && TODAY.getFullYear() === yr; }
+
+  // ── live records for a month ───────────────────────────────────────────────
+  function liveInMonth(yr, mo) {
+    return active.filter(r => inMonthRange(r['Actual Live Date'], yr, mo));
+  }
+  function cugInMonth(yr, mo) {
+    return active.filter(r => inMonthRange(r['CUG Sign off'], yr, mo));
+  }
+  function kickoffInMonth(yr, mo) {
+    return active.filter(r => inMonthRange(r['Kick-Off Meeting'], yr, mo));
   }
 
+  // ── fmtRevK helper ────────────────────────────────────────────────────────
   function fmtRevK(v) {
     const n = parseRev(v);
     return n >= 1e6 ? `~$${(n/1e6).toFixed(1)}M` : n > 0 ? `~$${Math.round(n/1000)}K` : '—';
   }
 
-  function median(arr) {
-    if (!arr.length) return null;
-    const s = [...arr].sort((a,b)=>a-b);
-    const m = Math.floor(s.length/2);
-    return s.length%2 ? s[m] : Math.round((s[m-1]+s[m])/2);
+  // ── week section within a month (past/current only) ───────────────────────
+  function buildWeekHtml(wkLabel, yr, mo, wkStart, wkEnd, liveRecs, cugRecs, kickRecs) {
+    const wLive = liveRecs.filter(r => inWeekRange(r['Actual Live Date'], yr, mo, wkStart, wkEnd));
+    const wCug  = cugRecs.filter(r  => inWeekRange(r['CUG Sign off'],    yr, mo, wkStart, wkEnd));
+    const wKick = kickRecs.filter(r => inWeekRange(r['Kick-Off Meeting'], yr, mo, wkStart, wkEnd));
+    if (!wLive.length && !wCug.length && !wKick.length) return '';
+
+    let h = `<div class="rpt-week-head">${wkLabel} (${wkStart}–${wkEnd} ${MONTH_SHORT[mo]} ${yr})</div>`;
+    h += `<ul class="rpt-ul" style="margin-left:24px">`;
+    if (wLive.length) {
+      h += `<li>${$g('✅ Go-Lives (' + wLive.length + ')')} — `;
+      h += wLive.map(r => {
+        const tag = (r['Type of Opportunity']||'').trim();
+        return `${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})${tag ? ' ['+tag+']' : ''}`;
+      }).join('; ');
+      h += '</li>';
+    }
+    if (wCug.length) {
+      h += `<li>${$bl('🔵 CUG Sign-offs (' + wCug.length + ')')} — `;
+      h += wCug.map(r => $i(esc(r['Opportunity Name']))).join(', ');
+      h += '</li>';
+    }
+    if (wKick.length) {
+      h += `<li>${$b('🚀 Kick-offs (' + wKick.length + ')')} — `;
+      h += wKick.map(r => `${$i(esc(r['Opportunity Name']))} (SE: ${esc(r['Implementation Owner']||'—')})`).join(', ');
+      h += '</li>';
+    }
+    h += '</ul>';
+    return h;
   }
 
-  // ── data derivations ─────────────────────────────────────────────────────
-  const qtr      = CURRENT_QTR;
-  const qtrLabel = qtr.replace('-',' ');
+  // ── build a single month ───────────────────────────────────────────────────
+  function buildMonthHtml(yr, mo) {
+    const moName  = MONTH_NAMES[mo];
+    const done    = isMonthDone(yr, mo);
+    const current = isMonthCurrent(yr, mo);
+    const future  = !done && !current;
 
-  const liveCompleted = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
-  const inProgress    = active.filter(r => (r['Status']||'').trim() === 'In Progress');
-  const qtrCommitted  = active.filter(r => (r['Committed QTR']||'').trim() === qtr);
-  const onTrack       = active.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track');
-  const atRisk        = active.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk');
-  const blocked       = active.filter(r =>
-    (r['Projected Go-Live Status']||'').trim() === 'Blocked' ||
-    (r['Status']||'').trim() === 'Blocked'
-  );
+    const badge = done    ? '<span class="rpt-badge done">Completed</span>' :
+                  current ? '<span class="rpt-badge now">In Progress</span>' :
+                            '<span class="rpt-badge soon">Upcoming</span>';
 
-  // Revenue
-  const liveRev    = liveCompleted.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
-  const atRiskRev  = atRisk.filter(r=>(r['Committed QTR']||'').trim()===qtr).reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
-  const blockedRev = blocked.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+    const moClass = done ? 'done' : current ? 'now' : '';
+    let h = `<div class="rpt-month-head ${moClass}">${moName} ${yr} ${badge}</div>`;
 
-  // Slipped = committed to qtr, in progress, not on track
-  const slipped = inProgress.filter(r =>
-    ((r['Committed QTR']||'').trim() === qtr &&
-    ['At Risk','Blocked',''].includes((r['Projected Go-Live Status']||'').trim())) ||
-    (r['Sub Status']||'').toLowerCase().includes('delayed')
-  );
+    if (future) {
+      // Show projected pipeline for this month
+      const proj = active.filter(r => {
+        const d = parseDate(r['Projected Go-Live Date']);
+        return d && d.getFullYear() === yr && d.getMonth() === mo &&
+               (r['Status']||'').trim() === 'In Progress';
+      });
+      const projNR = proj.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+      if (proj.length) {
+        h += `<div class="rpt-upcoming-box">📅 ${proj.length} project${proj.length!==1?'s':''} projected — ${fmtRev(projNR)} potential NR<br>`;
+        h += proj.map(r => `${esc(r['Opportunity Name']||'—')} (${esc(r['Implementation Owner']||'—')})`).join(' · ');
+        h += '</div>';
+      } else {
+        h += `<div class="rpt-upcoming-box">No projects projected for this month.</div>`;
+      }
+      return h;
+    }
 
-  // Moved out = in progress, different future qtr
-  const movedOut = inProgress.filter(r => {
-    const cq = (r['Committed QTR']||'').trim();
-    return cq && cq !== qtr && cq !== 'Not Committed';
-  });
+    // Past or current month — weekly breakdown
+    const liveRecs = liveInMonth(yr, mo);
+    const cugRecs  = cugInMonth(yr, mo);
+    const kickRecs = kickoffInMonth(yr, mo);
+    const lastDay  = lastDayOfMonth(yr, mo);
 
-  // TTL median
-  const ttlDays = liveCompleted.map(r=>parseFloat(r['Number of days in implementation']||'0')).filter(v=>v>0);
-  const ttlMedian = median(ttlDays);
+    const weeks = [
+      { label: 'Week 1', start: 1,  end: 7 },
+      { label: 'Week 2', start: 8,  end: 14 },
+      { label: 'Week 3', start: 15, end: 21 },
+      { label: 'Week 4', start: 22, end: lastDay },
+    ];
 
-  // Top 3 by revenue
-  const top3 = [...new Map([...inProgress,...atRisk,...blocked].map(r=>[r['Opportunity Name'],r])).values()]
-    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)']))
-    .slice(0,3);
-  const top3Names  = new Set(top3.map(r=>r['Opportunity Name']));
-  const top3AtRisk = atRisk.filter(r=>!top3Names.has(r['Opportunity Name']))
-    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,3);
-  const top3Blocked = [...blocked]
-    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,3);
-
-  // ── WEEKLY BREAKDOWN for previous month ──────────────────────────────────
-  // For each week, bucket records by relevant date fields
-  function weekBucket(wk) {
-    const liveWk    = liveCompleted.filter(r => inWeek(r['Actual Live Date'], wk));
-    const cugWk     = active.filter(r => inWeek(r['CUG Sign off'], wk) && (r['Status']||'').trim() !== 'Live Completed');
-    const kickoffWk = active.filter(r => inWeek(r['Kick-Off Meeting'], wk));
-    const activeWk  = active.filter(r => {
-      const d = bestWeekDate(r);
-      if (!d) return false;
-      return inWeek(d, wk) &&
-             !liveWk.includes(r) && !cugWk.includes(r) && !kickoffWk.includes(r);
+    weeks.forEach(wk => {
+      h += buildWeekHtml(wk.label, yr, mo, wk.start, wk.end, liveRecs, cugRecs, kickRecs);
     });
-    return { liveWk, cugWk, kickoffWk, activeWk };
+
+    if (!liveRecs.length && !cugRecs.length && !kickRecs.length) {
+      h += `<div style="margin-left:12px;font-size:12px;color:#94a3b8;font-style:italic">No activity recorded for ${moName}.</div>`;
+    }
+
+    // Month summary (completed months only)
+    if (done) {
+      const moNR = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+      h += `<div class="rpt-month-summary">`;
+      h += `📊 ${$b(moName + ' Summary:')} `;
+      h += liveRecs.length
+        ? `${$g(liveRecs.length + ' project' + (liveRecs.length!==1?'s':'')+' live')} · ${$bl(fmtRev(moNR) + ' NR unlocked')}`
+        : `No go-lives recorded`;
+      if (cugRecs.length) h += ` · ${cugRecs.length} CUG sign-off${cugRecs.length!==1?'s':''}`;
+      if (kickRecs.length) h += ` · ${kickRecs.length} new kick-off${kickRecs.length!==1?'s':''}`;
+      h += `</div>`;
+    }
+
+    return h;
   }
 
-  // ── build HTML ────────────────────────────────────────────────────────────
+  // ── build a quarter ────────────────────────────────────────────────────────
+  function buildQtrHtml(qLabel, qMonths, qKey) {
+    const qStart  = monthStart(REPORT_YEAR, qMonths[0]);
+    const qEnd    = monthEnd(REPORT_YEAR, qMonths[2]);
+    const done    = qEnd < TODAY;
+    const current = qStart <= TODAY && TODAY <= qEnd;
+
+    const badge = done    ? '<span class="rpt-badge done">Completed</span>' :
+                  current ? '<span class="rpt-badge now">In Progress</span>' :
+                            '<span class="rpt-badge soon">Upcoming</span>';
+
+    // Quarter-level stats
+    const ltsRecs  = active.filter(r => (r['Committed QTR']||'').trim() === qKey);
+    const liveRecs = active.filter(r => {
+      const d = parseDate(r['Actual Live Date']);
+      return d && d >= qStart && d <= qEnd;
+    });
+    const liveNR   = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+    let h = `<div class="rpt-qtr-head">${qLabel} ${REPORT_YEAR} ${badge}</div>`;
+    h += `<div class="rpt-qtr-meta">LTS Forecast: ${ltsRecs.length} · Live: ${liveRecs.length} · NR Unlocked: ${fmtRev(liveNR)}</div>`;
+
+    // Monthly breakdown
+    qMonths.forEach(mo => { h += buildMonthHtml(REPORT_YEAR, mo); });
+
+    // Quarter summary — only when completed
+    if (done && ltsRecs.length) {
+      const onTrack = ltsRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track').length;
+      const atRisk  = ltsRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
+      const blocked = ltsRecs.filter(r =>
+        (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked'
+      ).length;
+      // Slipped = committed to this QTR but still In Progress (missed the quarter)
+      const slipped = ltsRecs.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+
+      h += `<hr class="rpt-divider" style="margin:10px 0">`;
+      h += `<div class="rpt-qtr-summary">`;
+      h += `📈 ${$b(qLabel + ' ' + REPORT_YEAR + ' Summary:')} `;
+      h += `${$g(liveRecs.length + ' live')} of ${ltsRecs.length} LTS`;
+      h += ` · ${$bl(fmtRev(liveNR) + ' NR')}`;
+      if (slipped.length) h += ` · ${$a(slipped.length + ' slipped/carried to next quarter')}`;
+      h += ` &nbsp;|&nbsp; RAG: ${$g('🟢' + onTrack)} ${$a('🟡' + atRisk)} ${$r('🔴' + blocked)}`;
+      h += `</div>`;
+    }
+
+    return h;
+  }
+
+  // ── quarters definition ────────────────────────────────────────────────────
+  const QUARTERS = [
+    { label: 'Q1', months: [0,1,2], key: `Q1-${REPORT_YEAR}` },
+    { label: 'Q2', months: [3,4,5], key: `Q2-${REPORT_YEAR}` },
+    { label: 'Q3', months: [6,7,8], key: `Q3-${REPORT_YEAR}` },
+    { label: 'Q4', months: [9,10,11], key: `Q4-${REPORT_YEAR}` },
+  ];
+
+  // ── Year-level stats ───────────────────────────────────────────────────────
+  const yearLive   = active.filter(r => {
+    const d = parseDate(r['Actual Live Date']);
+    return d && d.getFullYear() === REPORT_YEAR;
+  });
+  const yearLiveNR = yearLive.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const isYearDone = new Date(REPORT_YEAR, 11, 31) < TODAY;
+
+  // ── Build HTML ─────────────────────────────────────────────────────────────
   let h = '';
 
-  // Greeting + intro
+  // Greeting
   h += `<p class="rpt-greeting">Dear All,</p>`;
-  h += `<p class="rpt-intro">Please find the ${$b(prevMonthName)} weekly Implementation report from our SE team. It provides a week-by-week overview of go-lives, CUG completions, new kick-offs, and key risks in ${qtrLabel}.</p>`;
+  h += `<p class="rpt-intro">Please find the ${$b(REPORT_YEAR + ' SE Implementation Report')} providing a full breakdown by year, quarter, month and week. Summaries are shown for each completed period.</p>`;
 
-  // ── WEEKLY SECTIONS ──
-  weeks.forEach((wk, wi) => {
-    const { liveWk, cugWk, kickoffWk, activeWk } = weekBucket(wk);
-    const hasContent = liveWk.length || cugWk.length || kickoffWk.length || activeWk.length;
+  // Year-level summary bar
+  h += `<div class="rpt-year-bar">`;
+  h += `📅 ${$b(REPORT_YEAR + (isYearDone ? ' Year' : ' YTD') + ':')} `;
+  h += `${$g(yearLive.length + ' projects live')} · ${$bl(fmtRev(yearLiveNR) + ' NR unlocked')} · `;
+  h += `${active.filter(r=>(r['Status']||'').trim()==='In Progress').length} still in progress · `;
+  h += `${presales.length} presales opportunities`;
+  h += `</div>`;
 
+  // Quarters
+  QUARTERS.forEach(q => {
     h += `<hr class="rpt-divider">`;
-    h += `<div class="rpt-section">`;
-    h += `<div class="rpt-head" style="color:var(--accent)">${weekLabel(wk)}</div>`;
-
-    if (!hasContent) {
-      h += `<p style="color:#6b7280;font-style:italic;font-size:13px">No recorded activity in the data for this week.</p>`;
-    } else {
-      h += `<ul class="rpt-ul">`;
-
-      // Go-lives
-      if (liveWk.length) {
-        h += `<li>${$g('✅ Go-Lives (' + liveWk.length + ')')} — `;
-        h += liveWk.map(r => {
-          const fb = (r['Type of Opportunity']||'').trim();
-          const tag = fb ? ` [${fb==='Frontbook'?$bl('Frontbook'):$b('Backbook')}]` : '';
-          return `${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})${tag}`;
-        }).join('; ');
-        h += `</li>`;
-      }
-
-      // CUG completions
-      if (cugWk.length) {
-        h += `<li>${$bl('🔵 CUG Sign-offs (' + cugWk.length + ')')} — `;
-        h += cugWk.map(r => `${$i(esc(r['Opportunity Name']))}`).join(', ');
-        h += `</li>`;
-      }
-
-      // New kick-offs
-      if (kickoffWk.length) {
-        h += `<li>${$b('🚀 New Kick-offs (' + kickoffWk.length + ')')} — `;
-        h += kickoffWk.map(r => `${$i(esc(r['Opportunity Name']))} (SE: ${esc(r['Implementation Owner']||'—')})`).join(', ');
-        h += `</li>`;
-      }
-
-      // Active projects with notable updates this week
-      if (activeWk.length) {
-        h += `<li>${$b('📋 Active Updates (' + activeWk.length + ')')}`;
-        h += `<ul class="rpt-ul">`;
-        activeWk.slice(0,6).forEach(r => {
-          const rag = (r['Projected Go-Live Status']||'').trim();
-          const ragHtml = rag==='On Track'?$g('On Track'):rag==='At Risk'?$a('At Risk'):rag==='Blocked'?$r('Blocked'):'';
-          const sub = (r['Sub Status']||'').trim();
-          const notes = truncate((r['Current Status']||'').trim(), 120);
-          h += `<li>${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})`;
-          if (ragHtml) h += ` — ${ragHtml}`;
-          if (sub) h += ` | ${esc(sub)}`;
-          if (notes) h += `<br><span style="font-size:12px;color:#6b7280">${esc(notes)}</span>`;
-          h += `</li>`;
-        });
-        if (activeWk.length > 6) h += `<li style="color:#6b7280;font-style:italic">...and ${activeWk.length-6} more</li>`;
-        h += `</ul></li>`;
-      }
-
-      h += `</ul>`;
-
-      // Week mini-summary line
-      const wkLiveRev = liveWk.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
-      if (wkLiveRev > 0) {
-        h += `<p style="font-size:12px;color:#6b7280;margin-top:6px">Week revenue unlocked: ${$g(fmtRevK(String(wkLiveRev)))}</p>`;
-      }
-    }
-    h += `</div>`;
+    h += buildQtrHtml(q.label, q.months, q.key);
   });
 
-  // ── MONTHLY SUMMARY ──
-  h += `<hr class="rpt-divider">`;
-  h += `<div class="rpt-section">`;
-  h += `<div class="rpt-head">Monthly Summary — ${prevMonthName}</div>`;
-  h += `<ul class="rpt-ul">`;
-
-  h += `<li>${$b(liveCompleted.length + ' account' + (liveCompleted.length!==1?'s':''))} went live in ${prevMonthShort}, unlocking ${$bl(fmtRevK(String(liveRev)))} in quarterly revenue.</li>`;
-
-  h += `<li>Against a forecast of ${$b(qtrCommitted.length)} LTS, ${$b(liveCompleted.length)} project${liveCompleted.length!==1?'s have':' has'} gone live QTD.</li>`;
-
-  if (ttlMedian) h += `<li>${$b('TTL (Median):')} ~${ttlMedian}d</li>`;
-
-  if (slipped.length) {
-    h += `<li>${$b(slipped.length + ' project' + (slipped.length!==1?'s':''))} slipped, representing ${$a(fmtRevK(String(atRiskRev+blockedRev)))} in potential ${qtr} revenue slippage.`;
-    h += `<ul class="rpt-ul">`;
-    if (atRiskRev) h += `<li>${$a(fmtRevK(String(atRiskRev)))} recoverable if At Risk projects deliver this month</li>`;
-    if (blockedRev) h += `<li>${$r(fmtRevK(String(blockedRev)))} at risk — ${blocked.length} Blocked project${blocked.length!==1?'s':''} with no confirmed go-live date</li>`;
-    const slippedAR  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='At Risk');
-    const slippedBl  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='Blocked'||(r['Status']||'').trim()==='Blocked');
-    const slippedOT  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='On Track');
-    if (slippedOT.length) h += `<li>${slippedOT.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$g('On Track')}]</li>`;
-    if (slippedAR.length) h += `<li>${slippedAR.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$a('At Risk')}]</li>`;
-    if (slippedBl.length) h += `<li>${slippedBl.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$r('Blocked')}]</li>`;
-    // Key reasons
-    const reasons = slipped.filter(r=>r['Implementation Blocker']||r['Implementation Risk']).slice(0,3);
-    if (reasons.length) {
-      h += `<li>Key reasons for slips:<ul class="rpt-ul">`;
-      reasons.forEach(r => h += `<li>${$i(esc(r['Opportunity Name']))} — ${esc(truncate((r['Implementation Blocker']||r['Implementation Risk']||'').trim(),150))}</li>`);
-      h += `</ul></li>`;
-    }
-    h += `</ul></li>`;
-  }
-
-  if (movedOut.length) {
-    h += `<li>${$b(movedOut.length + ' project' + (movedOut.length!==1?'s have':' has'))} been moved out of ${qtr}: ${movedOut.map(r=>$i(esc(r['Opportunity Name']))).join(', ')}.</li>`;
-  }
-
-  h += `</ul></div>`;
-
-  // ── TOP PROJECT UPDATE ──
-  if (top3.length) {
+  // Year summary (at end — YTD or annual)
+  if (isYearDone || yearLive.length > 0) {
     h += `<hr class="rpt-divider">`;
     h += `<div class="rpt-section">`;
-    h += `<div class="rpt-head">Top Project Update (top ${top3.length} NR)</div>`;
-    h += `<ol class="rpt-num-list">`;
-    top3.forEach(r => {
-      const rag = (r['Projected Go-Live Status']||'').trim();
-      const ragHtml = rag==='On Track'?$g('On Track'):rag==='At Risk'?$a('At Risk'):rag==='Blocked'?$r('Blocked'):'';
-      const notes = truncate((r['Current Status']||r['Implementation Risk']||'').trim(),180);
-      h += `<li>${$i($b(esc(r['Opportunity Name'])))} (NR ${rv(r['Opportunity Net Revenue (converted)'])})`;
-      const cq = (r['Committed QTR']||'').trim();
-      if (cq) h += ` | ${cq}`;
-      if (ragHtml) h += ` — ${ragHtml}`;
-      if (notes) h += `: ${esc(notes)}`;
-      h += `</li>`;
+    h += `<div class="rpt-head">${isYearDone ? '📅 ' + REPORT_YEAR + ' Annual Summary' : '📅 ' + REPORT_YEAR + ' Year-to-Date Summary'}</div>`;
+    h += `<ul class="rpt-ul">`;
+    h += `<li>${$b('Total live:')} ${$g(yearLive.length + ' projects')} · ${$bl(fmtRev(yearLiveNR) + ' NR unlocked')}</li>`;
+
+    // Quarter-by-quarter live breakdown
+    QUARTERS.forEach(q => {
+      const qStart = monthStart(REPORT_YEAR, q.months[0]);
+      const qEnd   = monthEnd(REPORT_YEAR, q.months[2]);
+      const qLive  = yearLive.filter(r => {
+        const d = parseDate(r['Actual Live Date']);
+        return d && d >= qStart && d <= qEnd;
+      });
+      const qLiveNR = qLive.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+      const isDone  = qEnd < TODAY;
+      if (isDone || qLive.length) {
+        h += `<li>${$b(q.label + ':')} ${qLive.length} live · ${fmtRev(qLiveNR)} NR</li>`;
+      }
     });
-    h += `</ol></div>`;
+
+    // Monthly breakdown table for completed months
+    const doneMonths = Array.from({length:12},(_,i)=>i).filter(mo => isMonthDone(REPORT_YEAR, mo));
+    if (doneMonths.length) {
+      h += `<li>${$b('Monthly breakdown:')}`;
+      h += `<ul class="rpt-ul">`;
+      doneMonths.forEach(mo => {
+        const recs = liveInMonth(REPORT_YEAR, mo);
+        const nr   = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+        h += `<li>${MONTH_SHORT[mo]}: ${recs.length > 0 ? $g(recs.length + ' live') + ' · ' + fmtRev(nr) : 'no go-lives'}</li>`;
+      });
+      h += `</ul></li>`;
+    }
+
+    h += `</ul></div>`;
   }
 
-  // ── RAG STATUS ──
+  // Footer
   h += `<hr class="rpt-divider">`;
-  h += `<div class="rpt-section">`;
-  h += `<p>${$b(qtr+' remaining LTS ('+qtrCommitted.length+') — RAG status:')} `;
-  h += `${$g('On Track '+onTrack.length+' 🟢')} &nbsp;|&nbsp; ${$a('At Risk '+atRisk.length+' 🟡')} &nbsp;|&nbsp; ${$r('Blocked '+blocked.length+' 🔴')}</p>`;
-  h += `<ul class="rpt-ul">`;
-
-  if (top3AtRisk.length) {
-    h += `<li>${$b('Top '+top3AtRisk.length+' At Risk')}, excluding Top ${top3.length} above:<ul class="rpt-ul">`;
-    top3AtRisk.forEach(r => {
-      const risk = truncate((r['Implementation Risk']||r['Implementation Blocker']||r['Current Status']||'').trim(),160);
-      h += `<li>${$i(esc(r['Opportunity Name']))} (NR ${rv(r['Opportunity Net Revenue (converted)'])})${risk?': '+esc(risk):''}</li>`;
-    });
-    h += `</ul></li>`;
-  }
-  if (top3Blocked.length) {
-    h += `<li>${$b('Top '+top3Blocked.length+' Blocked')}:<ul class="rpt-ul">`;
-    top3Blocked.forEach(r => {
-      const blocker = truncate((r['Implementation Blocker']||r['Current Status']||'').trim(),160);
-      h += `<li>${$i(esc(r['Opportunity Name']))} (NR ${rv(r['Opportunity Net Revenue (converted)'])}) | ${qtr} slippage ${$r(fmtRevK(r['Opportunity Net Revenue (converted)']))} at risk`;
-      if (blocker) h += `: ${esc(blocker)}`;
-      h += `</li>`;
-    });
-    h += `</ul></li>`;
-  }
-  h += `</ul></div>`;
-
-  // ── FOOTER ──
-  h += `<hr class="rpt-divider">`;
-  h += `<p class="rpt-footer">I have attached the detailed implementation pipeline spreadsheet. The data is sourced from NIUM Salesforce and can be accessed directly via the SE Dashboard.</p>`;
+  h += `<p class="rpt-footer">Data sourced from NIUM Salesforce and can be accessed via the SE Dashboard. Summaries reflect completed periods only; ongoing periods show current status.</p>`;
   h += `<div class="rpt-signoff"><p>Thanks,</p><p>${$b('Kemi')}</p></div>`;
 
   document.getElementById('report-doc').innerHTML = h;
@@ -2769,24 +3308,25 @@ function sortTable(tableId, colIdx) {
 // =====================================================
 // SIDEBAR ACTIVE
 // =====================================================
-function setActive(el) {
-  document.querySelectorAll('#sidebar nav a').forEach(a => a.classList.remove('active'));
-  el.classList.add('active');
-}
+let currentPage = 'kpis';
 
-// Observe sections for active sidebar link
-window.addEventListener('scroll', () => {
-  const sections = document.querySelectorAll('.anchor');
-  let current = '';
-  sections.forEach(s => {
-    if (window.scrollY >= s.offsetTop - 100) current = s.id;
-  });
-  if (current) {
-    document.querySelectorAll('#sidebar nav a').forEach(a => {
-      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
-    });
+function showPage(id) {
+  currentPage = id;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('page-active'));
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('page-active');
+    // scroll page to top on navigation
+    document.getElementById('main').scrollTop = 0;
   }
-});
+  document.querySelectorAll('#sidebar nav a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+  });
+  // Resize charts after display change
+  setTimeout(() => {
+    Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+  }, 60);
+}
 </script>
 </body>
 </html>
