@@ -317,6 +317,38 @@
     border-radius: 12px;
     padding: 24px;
   }
+  /* LEADERSHIP REPORT */
+  .report-actions { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .report-actions button { background:var(--card2); border:1px solid var(--border); color:var(--sub); padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; }
+  .report-actions button:hover { border-color:var(--accent); color:var(--accent); }
+  .report-doc {
+    background:#ffffff; border:1px solid var(--border); border-radius:12px;
+    padding:36px 44px; max-width:860px; font-family:Georgia,'Times New Roman',serif;
+    font-size:13.5px; line-height:1.75; color:#1a1a1a;
+    box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  }
+  .rpt-greeting { margin-bottom:14px; }
+  .rpt-intro { margin-bottom:18px; }
+  .rpt-section { margin-bottom:20px; }
+  .rpt-head { font-weight:700; text-decoration:underline; margin-bottom:8px; font-family:'Segoe UI',system-ui,sans-serif; font-size:13.5px; }
+  .rpt-ul { list-style:disc; margin-left:22px; margin-bottom:4px; }
+  .rpt-ul li { margin-bottom:3px; }
+  .rpt-ul .rpt-ul { list-style:circle; margin-top:3px; }
+  .rpt-ul .rpt-ul .rpt-ul { list-style:square; }
+  .rpt-green  { color:#15803d; font-weight:600; }
+  .rpt-amber  { color:#b45309; font-weight:600; }
+  .rpt-red    { color:#b91c1c; font-weight:600; }
+  .rpt-blue   { color:#1d4ed8; font-weight:600; }
+  .rpt-italic { font-style:italic; }
+  .rpt-bold   { font-weight:700; }
+  .rpt-rag-row { display:inline-flex; gap:14px; font-family:'Segoe UI',system-ui,sans-serif; font-size:13px; margin:6px 0; }
+  .rpt-rag-chip { display:inline-flex; align-items:center; gap:4px; }
+  .rpt-num-list { list-style:decimal; margin-left:22px; margin-bottom:4px; }
+  .rpt-num-list li { margin-bottom:6px; }
+  .rpt-divider { border:none; border-top:1px solid #e5e7eb; margin:20px 0; }
+  .rpt-footer { margin-top:24px; font-size:13px; }
+  .rpt-signoff { margin-top:18px; }
+
   .exec-kpi-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
   .exec-kpi {
     background: var(--card2);
@@ -720,8 +752,8 @@
             <thead>
               <tr>
                 <th onclick="sortTable('bw-table',0)">SE Name</th>
-                <th onclick="sortTable('bw-table',1)">Active Projects</th>
-                <th onclick="sortTable('bw-table',2)">Presales</th>
+                <th onclick="sortTable('bw-table',1)">Active (cap 15)</th>
+                <th onclick="sortTable('bw-table',2)">Presales (cap 20)</th>
                 <th onclick="sortTable('bw-table',3)">Total</th>
                 <th onclick="sortTable('bw-table',4)">Pipeline Value</th>
                 <th onclick="sortTable('bw-table',5)">At Risk</th>
@@ -734,7 +766,8 @@
         </div>
       </div>
       <div style="margin-top:8px;font-size:11px;color:var(--sub)">
-        🔴 Overloaded: &gt;8 projects &nbsp;|&nbsp; 🟡 High: 6-8 projects &nbsp;|&nbsp; 🟢 Healthy: &lt;6 projects
+        Active Pipeline — 🔴 Overloaded: &gt;15 &nbsp;|&nbsp; 🟡 High: 10–15 &nbsp;|&nbsp; 🟢 Healthy: &lt;10 &nbsp;&nbsp;&nbsp;
+        Presales Pipeline — 🔴 Overloaded: &gt;20 &nbsp;|&nbsp; 🟡 High: 15–20 &nbsp;|&nbsp; 🟢 Healthy: &lt;15
       </div>
     </div>
 
@@ -824,19 +857,13 @@
 
     <!-- SECTION 11: LEADERSHIP SUMMARY -->
     <div id="leadership" class="section anchor">
-      <div class="section-title"><span class="icon">📑</span> Leadership Summary</div>
-      <div class="exec-card">
-        <div id="exec-kpis" class="exec-kpi-row"></div>
-        <div class="exec-two-col">
-          <div class="exec-block" id="exec-risks">
-            <h4>Key Risks &amp; Blockers</h4>
-            <ul id="exec-risks-list"></ul>
-          </div>
-          <div class="exec-block" id="exec-top">
-            <h4>Top 3 Pipeline Opportunities</h4>
-            <ul id="exec-top-list"></ul>
-          </div>
-        </div>
+      <div class="section-title"><span class="icon">📑</span> Leadership Weekly Summary</div>
+      <div class="report-actions">
+        <button onclick="copyReport()">📋 Copy Report Text</button>
+        <button onclick="window.print()">🖨️ Print / Export PDF</button>
+      </div>
+      <div class="report-doc" id="report-doc">
+        <p class="rpt-intro" style="color:var(--sub);font-family:'Segoe UI',system-ui,sans-serif;font-style:italic">Upload CSV files to generate the leadership report.</p>
       </div>
     </div>
 
@@ -2101,29 +2128,51 @@ function renderSEBandwidth() {
   // Filter to SEs with data
   const activeSEList = allSEs.filter(se => seData[se].active + seData[se].presalesCount > 0);
 
-  // Bar chart
-  const colors = activeSEList.map(se => {
-    const total = seData[se].active + seData[se].presalesCount;
-    if (total > 8) return '#ef4444';
-    if (total >= 6) return '#f59e0b';
-    return '#22c55e';
-  });
+  // Thresholds
+  const ACTIVE_MAX = 15;    // > 15 overloaded, 10-15 high, ≤ 9 healthy
+  const PRESALES_MAX = 20;  // > 20 overloaded, 15-20 high, ≤ 14 healthy
 
+  function seLoadStatus(activeCount, presalesCount) {
+    if (activeCount > ACTIVE_MAX || presalesCount > PRESALES_MAX) return 'over';
+    if (activeCount >= 10 || presalesCount >= 15) return 'warn';
+    return 'ok';
+  }
+
+  // Bar chart
   destroyChart('seLoadChart');
   charts['seLoadChart'] = new Chart(document.getElementById('seLoadChart').getContext('2d'), {
     type: 'bar',
     data: {
       labels: activeSEList,
       datasets: [
-        { label: 'Active', data: activeSEList.map(se => seData[se].active), backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4 },
-        { label: 'Presales', data: activeSEList.map(se => seData[se].presalesCount), backgroundColor: 'rgba(139,92,246,0.5)', borderRadius: 4 }
+        {
+          label: `Active (max ${ACTIVE_MAX})`,
+          data: activeSEList.map(se => seData[se].active),
+          backgroundColor: activeSEList.map(se => seData[se].active > ACTIVE_MAX ? 'rgba(220,38,38,0.75)' : seData[se].active >= 10 ? 'rgba(217,119,6,0.75)' : 'rgba(37,99,235,0.7)'),
+          borderRadius: 4
+        },
+        {
+          label: `Presales (max ${PRESALES_MAX})`,
+          data: activeSEList.map(se => seData[se].presalesCount),
+          backgroundColor: activeSEList.map(se => seData[se].presalesCount > PRESALES_MAX ? 'rgba(220,38,38,0.5)' : seData[se].presalesCount >= 15 ? 'rgba(217,119,6,0.5)' : 'rgba(139,92,246,0.5)'),
+          borderRadius: 4
+        }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: true,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#f8fafc', font: { size: 11 } } }
+        legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            afterLabel: function(ctx) {
+              const se = activeSEList[ctx.dataIndex];
+              if (ctx.datasetIndex === 0) return `Capacity: ${seData[se].active}/${ACTIVE_MAX}`;
+              return `Capacity: ${seData[se].presalesCount}/${PRESALES_MAX}`;
+            }
+          }
+        }
       },
       scales: {
         x: { stacked: false, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
@@ -2160,18 +2209,48 @@ function renderSEBandwidth() {
   tbody.innerHTML = activeSEList.map(se => {
     const d = seData[se];
     const total = d.active + d.presalesCount;
-    const rowCls = total > 8 ? 'bw-over' : total >= 6 ? 'bw-warn' : 'bw-ok';
-    const loadBadge = total > 8 ? '<span class="badge badge-red">Overloaded</span>' :
-                      total >= 6 ? '<span class="badge badge-amber">High</span>' :
+    const status = seLoadStatus(d.active, d.presalesCount);
+    const rowCls = status === 'over' ? 'bw-over' : status === 'warn' ? 'bw-warn' : 'bw-ok';
+    const loadBadge = status === 'over' ? '<span class="badge badge-red">Overloaded</span>' :
+                      status === 'warn' ? '<span class="badge badge-amber">High</span>' :
                       '<span class="badge badge-green">Healthy</span>';
+
+    // Capacity progress bars
+    const activePct  = Math.min(100, (d.active / ACTIVE_MAX) * 100);
+    const activeColor = d.active > ACTIVE_MAX ? 'var(--red)' : d.active >= 10 ? 'var(--amber)' : 'var(--accent)';
+    const presalesPct  = Math.min(100, (d.presalesCount / PRESALES_MAX) * 100);
+    const presalesColor = d.presalesCount > PRESALES_MAX ? 'var(--red)' : d.presalesCount >= 15 ? 'var(--amber)' : '#8b5cf6';
+
+    const activeCell = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="min-width:20px;text-align:center;font-weight:600">${d.active}</span>
+        <div style="flex:1;min-width:60px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px">
+            <span></span><span>${d.active}/${ACTIVE_MAX}</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${activePct}%;background:${activeColor}"></div></div>
+        </div>
+      </div>`;
+
+    const presalesCell = `
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="min-width:20px;text-align:center;font-weight:600">${d.presalesCount}</span>
+        <div style="flex:1;min-width:60px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px">
+            <span></span><span>${d.presalesCount}/${PRESALES_MAX}</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${presalesPct}%;background:${presalesColor}"></div></div>
+        </div>
+      </div>`;
+
     return `<tr class="${rowCls}">
       <td><strong>${escHtml(se)}</strong></td>
-      <td style="text-align:center">${d.active}</td>
-      <td style="text-align:center">${d.presalesCount}</td>
+      <td style="min-width:140px">${activeCell}</td>
+      <td style="min-width:140px">${presalesCell}</td>
       <td style="text-align:center;font-weight:700">${total}</td>
       <td style="text-align:right">${fmtRev(d.pipelineVal)}</td>
-      <td style="text-align:center">${d.atRisk > 0 ? `<span style="color:var(--amber)">${d.atRisk}</span>` : '0'}</td>
-      <td style="text-align:center">${d.blocked > 0 ? `<span style="color:var(--red)">${d.blocked}</span>` : '0'}</td>
+      <td style="text-align:center">${d.atRisk > 0 ? `<span style="color:var(--amber);font-weight:600">${d.atRisk}</span>` : '0'}</td>
+      <td style="text-align:center">${d.blocked > 0 ? `<span style="color:var(--red);font-weight:600">${d.blocked}</span>` : '0'}</td>
       <td>${loadBadge}</td>
     </tr>`;
   }).join('');
@@ -2335,63 +2414,325 @@ function renderHighlights() {
 // SECTION 11: LEADERSHIP SUMMARY
 // =====================================================
 function renderLeadership() {
-  const active = activeData || [];
+  const active   = activeData   || [];
   const presales = presalesData || [];
+  if (!active.length && !presales.length) return;
 
-  const thisQtrActive = active.filter(r => (r['Committed QTR'] || '') === CURRENT_QTR);
-  const liveCompleted = active.filter(r => (r['Status'] || '').trim() === 'Live Completed');
-  const atRiskBlocked = active.filter(r =>
-    (r['Projected Go-Live Status'] || '').trim() === 'At Risk' ||
-    (r['Projected Go-Live Status'] || '').trim() === 'Blocked' ||
-    (r['Status'] || '').trim() === 'Blocked'
-  );
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const $r  = s => `<span class="rpt-red">${s}</span>`;
+  const $a  = s => `<span class="rpt-amber">${s}</span>`;
+  const $g  = s => `<span class="rpt-green">${s}</span>`;
+  const $i  = s => `<span class="rpt-italic">${s}</span>`;
+  const $b  = s => `<span class="rpt-bold">${s}</span>`;
+  const $bl = s => `<span class="rpt-blue">${s}</span>`;
+  const rv  = v => fmtRev(parseRev(v));
+  const esc = escHtml;
 
-  const totalActiveRev = active.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const presalesRev = presales.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  // ── PREVIOUS MONTH (always report on prior month) ────────────────────────
+  // User generates on the 3rd of the new month, so always look back one month
+  const prevMonthEnd   = new Date(TODAY.getFullYear(), TODAY.getMonth(), 0);   // last day of prev month
+  const prevMonthStart = new Date(TODAY.getFullYear(), TODAY.getMonth() - 1, 1); // 1st of prev month
+  const prevMonthDays  = prevMonthEnd.getDate();  // total days in prev month
+  const prevMonthName  = prevMonthStart.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const prevMonthShort = prevMonthStart.toLocaleString('default', { month: 'short', year: '2-digit' });
+  const yr = prevMonthStart.getFullYear();
+  const mo = prevMonthStart.getMonth(); // 0-indexed
 
-  // Exec KPIs
-  const execKpis = [
-    { label: 'Q1 Implementations', val: thisQtrActive.length },
-    { label: 'Live Completed', val: liveCompleted.length },
-    { label: 'At Risk / Blocked', val: atRiskBlocked.length },
-    { label: 'Active Pipeline', val: fmtRev(totalActiveRev) },
-    { label: 'Presales Pipeline', val: fmtRev(presalesRev) },
-    { label: 'Total Pipeline', val: fmtRev(totalActiveRev + presalesRev) },
+  // Week boundaries within the previous month
+  const weeks = [
+    { label: 'Week 1', start: 1,  end: 7 },
+    { label: 'Week 2', start: 8,  end: 14 },
+    { label: 'Week 3', start: 15, end: 21 },
+    { label: 'Week 4', start: 22, end: prevMonthDays }
   ];
 
-  document.getElementById('exec-kpis').innerHTML = execKpis.map(k => `
-    <div class="exec-kpi">
-      <div class="val">${k.val}</div>
-      <div class="lbl">${k.label}</div>
-    </div>
-  `).join('');
+  function inWeek(dateStr, wk) {
+    const d = parseDate(dateStr);
+    if (!d) return false;
+    return d.getFullYear() === yr && d.getMonth() === mo &&
+           d.getDate() >= wk.start && d.getDate() <= wk.end;
+  }
 
-  // Key risks
-  const risks = active
-    .filter(r => r['Implementation Blocker'] && r['Implementation Blocker'].trim())
-    .slice(0, 8);
+  function inPrevMonth(dateStr) {
+    const d = parseDate(dateStr);
+    if (!d) return false;
+    return d.getFullYear() === yr && d.getMonth() === mo;
+  }
 
-  const risksList = document.getElementById('exec-risks-list');
-  risksList.innerHTML = risks.length > 0
-    ? risks.map(r => `<li>
-        <span class="bullet-red">▸</span>
-        <span><strong>${escHtml(truncate(r['Opportunity Name'], 35))}</strong> — ${escHtml(truncate(r['Implementation Blocker'], 100))}</span>
-      </li>`).join('')
-    : '<li><span class="bullet-green">✓</span> <span>No active blockers recorded</span></li>';
+  function weekLabel(wk) {
+    return `${wk.label} (${wk.start}–${wk.end} ${prevMonthStart.toLocaleString('default',{month:'short'})} ${yr})`;
+  }
+
+  // For each record, find its most relevant "activity week" date
+  function bestWeekDate(r) {
+    const fields = ['Actual Live Date','CUG Sign off','Kick-Off Meeting','Install Record: Last Activity Date','Install Record: Last Modified Date'];
+    for (const f of fields) {
+      if (r[f] && inPrevMonth(r[f])) return r[f];
+    }
+    return null;
+  }
+
+  function fmtRevK(v) {
+    const n = parseRev(v);
+    return n >= 1e6 ? `~$${(n/1e6).toFixed(1)}M` : n > 0 ? `~$${Math.round(n/1000)}K` : '—';
+  }
+
+  function median(arr) {
+    if (!arr.length) return null;
+    const s = [...arr].sort((a,b)=>a-b);
+    const m = Math.floor(s.length/2);
+    return s.length%2 ? s[m] : Math.round((s[m-1]+s[m])/2);
+  }
+
+  // ── data derivations ─────────────────────────────────────────────────────
+  const qtr      = CURRENT_QTR;
+  const qtrLabel = qtr.replace('-',' ');
+
+  const liveCompleted = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
+  const inProgress    = active.filter(r => (r['Status']||'').trim() === 'In Progress');
+  const qtrCommitted  = active.filter(r => (r['Committed QTR']||'').trim() === qtr);
+  const onTrack       = active.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track');
+  const atRisk        = active.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk');
+  const blocked       = active.filter(r =>
+    (r['Projected Go-Live Status']||'').trim() === 'Blocked' ||
+    (r['Status']||'').trim() === 'Blocked'
+  );
+
+  // Revenue
+  const liveRev    = liveCompleted.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+  const atRiskRev  = atRisk.filter(r=>(r['Committed QTR']||'').trim()===qtr).reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+  const blockedRev = blocked.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+
+  // Slipped = committed to qtr, in progress, not on track
+  const slipped = inProgress.filter(r =>
+    ((r['Committed QTR']||'').trim() === qtr &&
+    ['At Risk','Blocked',''].includes((r['Projected Go-Live Status']||'').trim())) ||
+    (r['Sub Status']||'').toLowerCase().includes('delayed')
+  );
+
+  // Moved out = in progress, different future qtr
+  const movedOut = inProgress.filter(r => {
+    const cq = (r['Committed QTR']||'').trim();
+    return cq && cq !== qtr && cq !== 'Not Committed';
+  });
+
+  // TTL median
+  const ttlDays = liveCompleted.map(r=>parseFloat(r['Number of days in implementation']||'0')).filter(v=>v>0);
+  const ttlMedian = median(ttlDays);
 
   // Top 3 by revenue
-  const top3 = [...active, ...presales]
-    .sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']))
-    .slice(0, 3);
+  const top3 = [...new Map([...inProgress,...atRisk,...blocked].map(r=>[r['Opportunity Name'],r])).values()]
+    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)']))
+    .slice(0,3);
+  const top3Names  = new Set(top3.map(r=>r['Opportunity Name']));
+  const top3AtRisk = atRisk.filter(r=>!top3Names.has(r['Opportunity Name']))
+    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,3);
+  const top3Blocked = [...blocked]
+    .sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,3);
 
-  document.getElementById('exec-top-list').innerHTML = top3.map((r, i) => {
-    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
-    const se = r['Implementation Owner'] || r['Presales Engineer'] || '—';
-    return `<li>
-      <span style="color:var(--accent);font-weight:700">${i+1}.</span>
-      <span><strong>${escHtml(truncate(r['Opportunity Name'], 35))}</strong> — ${fmtRev(rev)} | SE: ${escHtml(se)}</span>
-    </li>`;
-  }).join('');
+  // ── WEEKLY BREAKDOWN for previous month ──────────────────────────────────
+  // For each week, bucket records by relevant date fields
+  function weekBucket(wk) {
+    const liveWk    = liveCompleted.filter(r => inWeek(r['Actual Live Date'], wk));
+    const cugWk     = active.filter(r => inWeek(r['CUG Sign off'], wk) && (r['Status']||'').trim() !== 'Live Completed');
+    const kickoffWk = active.filter(r => inWeek(r['Kick-Off Meeting'], wk));
+    const activeWk  = active.filter(r => {
+      const d = bestWeekDate(r);
+      if (!d) return false;
+      return inWeek(d, wk) &&
+             !liveWk.includes(r) && !cugWk.includes(r) && !kickoffWk.includes(r);
+    });
+    return { liveWk, cugWk, kickoffWk, activeWk };
+  }
+
+  // ── build HTML ────────────────────────────────────────────────────────────
+  let h = '';
+
+  // Greeting + intro
+  h += `<p class="rpt-greeting">Dear All,</p>`;
+  h += `<p class="rpt-intro">Please find the ${$b(prevMonthName)} weekly Implementation report from our SE team. It provides a week-by-week overview of go-lives, CUG completions, new kick-offs, and key risks in ${qtrLabel}.</p>`;
+
+  // ── WEEKLY SECTIONS ──
+  weeks.forEach((wk, wi) => {
+    const { liveWk, cugWk, kickoffWk, activeWk } = weekBucket(wk);
+    const hasContent = liveWk.length || cugWk.length || kickoffWk.length || activeWk.length;
+
+    h += `<hr class="rpt-divider">`;
+    h += `<div class="rpt-section">`;
+    h += `<div class="rpt-head" style="color:var(--accent)">${weekLabel(wk)}</div>`;
+
+    if (!hasContent) {
+      h += `<p style="color:#6b7280;font-style:italic;font-size:13px">No recorded activity in the data for this week.</p>`;
+    } else {
+      h += `<ul class="rpt-ul">`;
+
+      // Go-lives
+      if (liveWk.length) {
+        h += `<li>${$g('✅ Go-Lives (' + liveWk.length + ')')} — `;
+        h += liveWk.map(r => {
+          const fb = (r['Type of Opportunity']||'').trim();
+          const tag = fb ? ` [${fb==='Frontbook'?$bl('Frontbook'):$b('Backbook')}]` : '';
+          return `${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})${tag}`;
+        }).join('; ');
+        h += `</li>`;
+      }
+
+      // CUG completions
+      if (cugWk.length) {
+        h += `<li>${$bl('🔵 CUG Sign-offs (' + cugWk.length + ')')} — `;
+        h += cugWk.map(r => `${$i(esc(r['Opportunity Name']))}`).join(', ');
+        h += `</li>`;
+      }
+
+      // New kick-offs
+      if (kickoffWk.length) {
+        h += `<li>${$b('🚀 New Kick-offs (' + kickoffWk.length + ')')} — `;
+        h += kickoffWk.map(r => `${$i(esc(r['Opportunity Name']))} (SE: ${esc(r['Implementation Owner']||'—')})`).join(', ');
+        h += `</li>`;
+      }
+
+      // Active projects with notable updates this week
+      if (activeWk.length) {
+        h += `<li>${$b('📋 Active Updates (' + activeWk.length + ')')}`;
+        h += `<ul class="rpt-ul">`;
+        activeWk.slice(0,6).forEach(r => {
+          const rag = (r['Projected Go-Live Status']||'').trim();
+          const ragHtml = rag==='On Track'?$g('On Track'):rag==='At Risk'?$a('At Risk'):rag==='Blocked'?$r('Blocked'):'';
+          const sub = (r['Sub Status']||'').trim();
+          const notes = truncate((r['Current Status']||'').trim(), 120);
+          h += `<li>${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})`;
+          if (ragHtml) h += ` — ${ragHtml}`;
+          if (sub) h += ` | ${esc(sub)}`;
+          if (notes) h += `<br><span style="font-size:12px;color:#6b7280">${esc(notes)}</span>`;
+          h += `</li>`;
+        });
+        if (activeWk.length > 6) h += `<li style="color:#6b7280;font-style:italic">...and ${activeWk.length-6} more</li>`;
+        h += `</ul></li>`;
+      }
+
+      h += `</ul>`;
+
+      // Week mini-summary line
+      const wkLiveRev = liveWk.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+      if (wkLiveRev > 0) {
+        h += `<p style="font-size:12px;color:#6b7280;margin-top:6px">Week revenue unlocked: ${$g(fmtRevK(String(wkLiveRev)))}</p>`;
+      }
+    }
+    h += `</div>`;
+  });
+
+  // ── MONTHLY SUMMARY ──
+  h += `<hr class="rpt-divider">`;
+  h += `<div class="rpt-section">`;
+  h += `<div class="rpt-head">Monthly Summary — ${prevMonthName}</div>`;
+  h += `<ul class="rpt-ul">`;
+
+  h += `<li>${$b(liveCompleted.length + ' account' + (liveCompleted.length!==1?'s':''))} went live in ${prevMonthShort}, unlocking ${$bl(fmtRevK(String(liveRev)))} in quarterly revenue.</li>`;
+
+  h += `<li>Against a forecast of ${$b(qtrCommitted.length)} LTS, ${$b(liveCompleted.length)} project${liveCompleted.length!==1?'s have':' has'} gone live QTD.</li>`;
+
+  if (ttlMedian) h += `<li>${$b('TTL (Median):')} ~${ttlMedian}d</li>`;
+
+  if (slipped.length) {
+    h += `<li>${$b(slipped.length + ' project' + (slipped.length!==1?'s':''))} slipped, representing ${$a(fmtRevK(String(atRiskRev+blockedRev)))} in potential ${qtr} revenue slippage.`;
+    h += `<ul class="rpt-ul">`;
+    if (atRiskRev) h += `<li>${$a(fmtRevK(String(atRiskRev)))} recoverable if At Risk projects deliver this month</li>`;
+    if (blockedRev) h += `<li>${$r(fmtRevK(String(blockedRev)))} at risk — ${blocked.length} Blocked project${blocked.length!==1?'s':''} with no confirmed go-live date</li>`;
+    const slippedAR  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='At Risk');
+    const slippedBl  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='Blocked'||(r['Status']||'').trim()==='Blocked');
+    const slippedOT  = slipped.filter(r=>(r['Projected Go-Live Status']||'').trim()==='On Track');
+    if (slippedOT.length) h += `<li>${slippedOT.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$g('On Track')}]</li>`;
+    if (slippedAR.length) h += `<li>${slippedAR.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$a('At Risk')}]</li>`;
+    if (slippedBl.length) h += `<li>${slippedBl.map(r=>$i(esc(r['Opportunity Name']))).join(', ')} [${$r('Blocked')}]</li>`;
+    // Key reasons
+    const reasons = slipped.filter(r=>r['Implementation Blocker']||r['Implementation Risk']).slice(0,3);
+    if (reasons.length) {
+      h += `<li>Key reasons for slips:<ul class="rpt-ul">`;
+      reasons.forEach(r => h += `<li>${$i(esc(r['Opportunity Name']))} — ${esc(truncate((r['Implementation Blocker']||r['Implementation Risk']||'').trim(),150))}</li>`);
+      h += `</ul></li>`;
+    }
+    h += `</ul></li>`;
+  }
+
+  if (movedOut.length) {
+    h += `<li>${$b(movedOut.length + ' project' + (movedOut.length!==1?'s have':' has'))} been moved out of ${qtr}: ${movedOut.map(r=>$i(esc(r['Opportunity Name']))).join(', ')}.</li>`;
+  }
+
+  h += `</ul></div>`;
+
+  // ── TOP PROJECT UPDATE ──
+  if (top3.length) {
+    h += `<hr class="rpt-divider">`;
+    h += `<div class="rpt-section">`;
+    h += `<div class="rpt-head">Top Project Update (top ${top3.length} NR)</div>`;
+    h += `<ol class="rpt-num-list">`;
+    top3.forEach(r => {
+      const rag = (r['Projected Go-Live Status']||'').trim();
+      const ragHtml = rag==='On Track'?$g('On Track'):rag==='At Risk'?$a('At Risk'):rag==='Blocked'?$r('Blocked'):'';
+      const notes = truncate((r['Current Status']||r['Implementation Risk']||'').trim(),180);
+      h += `<li>${$i($b(esc(r['Opportunity Name'])))} (NR ${rv(r['Opportunity Net Revenue (converted)'])})`;
+      const cq = (r['Committed QTR']||'').trim();
+      if (cq) h += ` | ${cq}`;
+      if (ragHtml) h += ` — ${ragHtml}`;
+      if (notes) h += `: ${esc(notes)}`;
+      h += `</li>`;
+    });
+    h += `</ol></div>`;
+  }
+
+  // ── RAG STATUS ──
+  h += `<hr class="rpt-divider">`;
+  h += `<div class="rpt-section">`;
+  h += `<p>${$b(qtr+' remaining LTS ('+qtrCommitted.length+') — RAG status:')} `;
+  h += `${$g('On Track '+onTrack.length+' 🟢')} &nbsp;|&nbsp; ${$a('At Risk '+atRisk.length+' 🟡')} &nbsp;|&nbsp; ${$r('Blocked '+blocked.length+' 🔴')}</p>`;
+  h += `<ul class="rpt-ul">`;
+
+  if (top3AtRisk.length) {
+    h += `<li>${$b('Top '+top3AtRisk.length+' At Risk')}, excluding Top ${top3.length} above:<ul class="rpt-ul">`;
+    top3AtRisk.forEach(r => {
+      const risk = truncate((r['Implementation Risk']||r['Implementation Blocker']||r['Current Status']||'').trim(),160);
+      h += `<li>${$i(esc(r['Opportunity Name']))} (NR ${rv(r['Opportunity Net Revenue (converted)'])})${risk?': '+esc(risk):''}</li>`;
+    });
+    h += `</ul></li>`;
+  }
+  if (top3Blocked.length) {
+    h += `<li>${$b('Top '+top3Blocked.length+' Blocked')}:<ul class="rpt-ul">`;
+    top3Blocked.forEach(r => {
+      const blocker = truncate((r['Implementation Blocker']||r['Current Status']||'').trim(),160);
+      h += `<li>${$i(esc(r['Opportunity Name']))} (NR ${rv(r['Opportunity Net Revenue (converted)'])}) | ${qtr} slippage ${$r(fmtRevK(r['Opportunity Net Revenue (converted)']))} at risk`;
+      if (blocker) h += `: ${esc(blocker)}`;
+      h += `</li>`;
+    });
+    h += `</ul></li>`;
+  }
+  h += `</ul></div>`;
+
+  // ── FOOTER ──
+  h += `<hr class="rpt-divider">`;
+  h += `<p class="rpt-footer">I have attached the detailed implementation pipeline spreadsheet. The data is sourced from NIUM Salesforce and can be accessed directly via the SE Dashboard.</p>`;
+  h += `<div class="rpt-signoff"><p>Thanks,</p><p>${$b('Kemi')}</p></div>`;
+
+  document.getElementById('report-doc').innerHTML = h;
+}
+
+function copyReport() {
+  const el = document.getElementById('report-doc');
+  if (!el) return;
+  // Get plain text version
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Report Text', 2000);
+  }).catch(() => {
+    // Fallback: select the text
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+  });
 }
 
 // =====================================================
