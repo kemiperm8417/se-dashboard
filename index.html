@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solution Engineering Health Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --card2: #f8fafc;
+    --accent: #2563eb;
+    --green: #16a34a;
+    --amber: #d97706;
+    --red: #dc2626;
+    --text: #0f172a;
+    --sub: #64748b;
+    --border: #e2e8f0;
+    --hover: #eff6ff;
+    --sidebar-w: 220px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: #ffffff;
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0 0 20px 0;
+  }
+  #sidebar .logo {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  #sidebar .logo span { color: var(--sub); font-weight: 400; font-size: 11px; display: block; margin-top: 2px; }
+  #sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    color: var(--sub);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  #sidebar nav a:hover, #sidebar nav a.active {
+    color: var(--text);
+    background: var(--hover);
+    border-left-color: var(--accent);
+  }
+  #sidebar nav .section-label {
+    padding: 14px 16px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--sub);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* MAIN */
+  #main { margin-left: var(--sidebar-w); flex: 1; padding: 0 0 60px 0; }
+
+  /* HEADER */
+  #header {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 28px;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  #header .title-block h1 { font-size: 20px; font-weight: 700; color: #ffffff; }
+  #header .title-block .date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #ffffff;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+  #header .upload-area { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .upload-btn:hover { background: var(--hover); border-color: var(--accent); }
+  .upload-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .upload-btn .check { color: var(--green); font-size: 16px; display: none; }
+  .upload-btn.loaded .check { display: inline; }
+  .upload-btn.loaded { border-color: var(--green); }
+
+  /* SECTIONS */
+  .section { padding: 24px 28px; }
+  .section + .section { border-top: 1px solid var(--border); }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 18px; }
+
+  /* PLACEHOLDER */
+  #placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    color: var(--sub);
+  }
+  #placeholder .big-icon { font-size: 64px; opacity: 0.3; }
+  #placeholder h2 { font-size: 20px; color: var(--text); }
+  #placeholder p { font-size: 14px; text-align: center; max-width: 400px; line-height: 1.6; }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: transform 0.15s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); }
+  .kpi-card .label { font-size: 11px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-card .value { font-size: 32px; font-weight: 700; line-height: 1; }
+  .kpi-card .sub { font-size: 11px; color: var(--sub); margin-top: 4px; }
+  .kpi-card.green { border-left: 3px solid var(--green); }
+  .kpi-card.green .value { color: var(--green); }
+  .kpi-card.amber { border-left: 3px solid var(--amber); }
+  .kpi-card.amber .value { color: var(--amber); }
+  .kpi-card.red { border-left: 3px solid var(--red); }
+  .kpi-card.red .value { color: var(--red); }
+  .kpi-card.blue { border-left: 3px solid var(--accent); }
+  .kpi-card.blue .value { color: var(--accent); }
+
+  /* CHARTS */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .chart-card h3 { font-size: 13px; font-weight: 600; margin-bottom: 14px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+  .chart-card canvas { max-height: 260px; }
+
+  /* TABLES */
+  .table-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .table-wrap th {
+    background: #152032;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--sub);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .table-wrap th:hover { color: var(--text); }
+  .table-wrap td {
+    padding: 9px 12px;
+    border-top: 1px solid var(--border);
+    vertical-align: middle;
+    max-width: 220px;
+  }
+  .table-wrap tr:hover td { background: var(--hover); }
+  .table-wrap .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent); border: 1px solid rgba(59,130,246,0.3); }
+  .badge-grey { background: rgba(148,163,184,0.15); color: var(--sub); border: 1px solid rgba(148,163,184,0.3); }
+  .badge-fb { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+  .badge-bb { background: rgba(20,184,166,0.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.3); }
+
+  /* FILTERS */
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    align-items: center;
+  }
+  .filters select, .filters input {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .filters select:focus, .filters input:focus { outline: none; border-color: var(--accent); }
+  .filter-label { font-size: 12px; color: var(--sub); }
+
+  /* RISK CARDS */
+  .risk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .risk-item {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    border-left: 3px solid var(--red);
+    margin-bottom: 8px;
+  }
+  .risk-item.amber { border-left-color: var(--amber); }
+  .risk-item .ri-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .risk-item .ri-sub { font-size: 12px; color: var(--sub); }
+  .risk-item .ri-text { font-size: 12px; color: var(--amber); margin-top: 6px; line-height: 1.5; }
+  .risk-item.amber .ri-text { color: var(--amber); }
+
+  /* PIPELINE NEXT QTR */
+  .pipeline-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .pipeline-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: transform 0.15s;
+  }
+  .pipeline-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .pipeline-card .pc-name { font-weight: 600; font-size: 13px; margin-bottom: 8px; line-height: 1.4; }
+  .pipeline-card .pc-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); margin-top: 4px; }
+  .pipeline-card .pc-row span { color: var(--text); }
+  .pipeline-card .pc-revenue { font-size: 18px; font-weight: 700; color: var(--accent); margin: 8px 0 4px; }
+
+  /* HIGHLIGHTS/LOWLIGHTS */
+  .hl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .hl-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .hl-item.hi { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.2); }
+  .hl-item.lo { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2); }
+  .hl-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .hl-item.hi .dot { background: var(--green); }
+  .hl-item.lo .dot { background: var(--red); }
+  .hl-item .hl-text { line-height: 1.5; }
+  .hl-item .hl-sub { font-size: 11px; color: var(--sub); }
+
+  /* LEADERSHIP */
+  #leadership {
+    background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  }
+  .exec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .exec-kpi-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .exec-kpi {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .exec-kpi .val { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .exec-kpi .lbl { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .exec-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+  .exec-block h4 { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+  .exec-block ul { list-style: none; }
+  .exec-block ul li {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .exec-block ul li:last-child { border-bottom: none; }
+  .bullet-red { color: var(--red); }
+  .bullet-green { color: var(--green); }
+
+  /* BANDWIDTH TABLE */
+  .bw-over { background: rgba(239,68,68,0.08) !important; }
+  .bw-warn { background: rgba(245,158,11,0.08) !important; }
+  .bw-ok { background: rgba(34,197,94,0.04) !important; }
+
+  /* STALE */
+  .stale-row td { color: var(--amber) !important; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px; color: var(--sub); font-size: 13px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    #sidebar { display: none; }
+    #main { margin-left: 0; }
+    .chart-grid, .risk-grid, .hl-grid, .exec-two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* WEEKLY VIEW */
+  .wv-tab {
+    background: var(--card2); border: 1px solid var(--border); color: var(--sub);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.15s;
+  }
+  .wv-tab:hover { background: var(--hover); color: var(--text); }
+  .wv-tab-active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+  .wv-block { margin-bottom: 24px; }
+  .wv-week-label { font-size: 13px; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.3px; }
+  .wv-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }
+  .wv-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; position: relative; transition: border-color 0.15s;
+  }
+  .wv-card:hover { border-color: var(--accent); }
+  .wv-card .wv-name { font-weight: 600; font-size: 13px; margin-bottom: 6px; padding-right: 60px; line-height: 1.4; }
+  .wv-card .wv-meta { font-size: 11px; color: var(--sub); display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .wv-card .wv-meta span { background: #f1f5f9; padding: 2px 7px; border-radius: 4px; }
+  .wv-card .wv-rag { position: absolute; top: 14px; right: 14px; }
+  .wv-card .wv-status { font-size: 11px; color: var(--sub); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+  .wv-card .wv-days { font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .wv-card .wv-days.urgent { color: var(--red); }
+  .wv-card .wv-days.soon { color: var(--amber); }
+  .wv-card .wv-days.ok { color: var(--green); }
+  .wv-card .wv-days.overdue { color: var(--red); }
+  .wv-card .wv-risk { font-size: 11px; color: var(--amber); margin-top: 6px; border-left: 3px solid var(--amber); padding-left: 6px; }
+  .wv-empty { color: var(--sub); font-size: 13px; padding: 14px 0; font-style: italic; }
+  .wv-summary-chip {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .wv-summary-chip strong { font-size: 16px; }
+
+  /* PRINT */
+  @media print {
+    #sidebar { display: none; }
+    #main { margin-left: 0; }
+    #header .upload-area { display: none; }
+    body { background: white; color: black; }
+    .kpi-card, .chart-card, .table-wrap, .exec-card { border: 1px solid #ccc; }
+    #leadership { page-break-before: always; }
+  }
+
+  /* STORE / MERGE MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 32px; max-width: 620px; width: 90%;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.12);
+  }
+  .modal-box h2 { font-size: 16px; margin-bottom: 6px; }
+  .modal-box .modal-sub { color: var(--sub); font-size: 12px; margin-bottom: 20px; }
+  .modal-diff { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 12px; max-height: 220px; overflow-y: auto; margin-bottom: 20px; }
+  .diff-row { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid #e2e8f0; align-items: flex-start; }
+  .diff-row:last-child { border-bottom: none; }
+  .diff-name { flex: 2; font-weight: 500; color: var(--text); }
+  .diff-old { flex: 1.5; color: var(--red); text-decoration: line-through; font-family: monospace; }
+  .diff-new { flex: 1.5; color: var(--green); font-family: monospace; }
+  .diff-badge { flex-shrink: 0; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .diff-changed { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .diff-added   { background: rgba(34,197,94,0.2);  color: var(--green); }
+  .diff-same    { background: rgba(148,163,184,0.1); color: var(--sub); }
+  .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .btn-merge    { background: var(--accent); color: #fff; border: none; padding: 8px 20px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-overwrite { background: var(--amber); color: #000; border: none; padding: 8px 20px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-cancel   { background: transparent; color: var(--sub); border: 1px solid var(--border); padding: 8px 16px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+  .modal-stat-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .modal-stat { background: #f1f5f9; border: 1px solid var(--border); border-radius: 7px; padding: 8px 14px; font-size: 12px; }
+  .modal-stat strong { display: block; font-size: 18px; }
+
+  /* STORE CONTROLS */
+  .store-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 28px; background: rgba(59,130,246,0.07); border-bottom: 1px solid var(--border); font-size: 12px; }
+  .store-bar .store-status { color: var(--sub); }
+  .store-bar .store-status.loaded { color: var(--green); }
+  .btn-store { background: var(--card2); border: 1px solid var(--border); color: var(--sub); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+  .btn-store:hover { border-color: var(--accent); color: var(--text); }
+  .btn-store.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* AUDIT TRAIL */
+  .audit-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .audit-table th { background: #f1f5f9; padding: 8px 10px; text-align: left; color: var(--sub); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .audit-table td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .audit-table tr:hover td { background: var(--hover); }
+  .audit-history-line { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .audit-history-line:last-child { margin-bottom: 0; }
+  .audit-date-tag { background: #f1f5f9; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-family: monospace; font-size: 11px; }
+  .audit-date-tag.current { border-color: var(--green); color: var(--green); }
+  .audit-arrow { color: var(--sub); font-size: 10px; }
+  .audit-source { font-size: 10px; color: var(--sub); }
+  .audit-changed { color: var(--amber); font-size: 10px; font-weight: 600; }
+  .changelog-item { padding: 10px 14px; border-left: 3px solid var(--accent); margin-bottom: 8px; background: #f8fafc; border: 1px solid var(--border); border-left-width: 3px; border-radius: 0 6px 6px 0; }
+  .changelog-item .cl-time { font-size: 11px; color: var(--sub); margin-bottom: 3px; }
+  .changelog-item .cl-action { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+  .changelog-item .cl-desc { font-size: 12px; color: var(--text); }
+
+  /* SORT ARROWS */
+  th.sort-asc::after { content: ' ↑'; color: var(--accent); }
+  th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+
+  /* SCROLLABLE TABLE */
+  .table-scroll { overflow-x: auto; }
+
+  /* TABS */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--card2);
+    color: var(--sub);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .tab-btn.active, .tab-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .prog-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+  /* SECTION ANCHOR OFFSET */
+  .anchor { padding-top: 70px; margin-top: -70px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="logo">
+    SE Dashboard
+    <span>Solution Engineering</span>
+  </div>
+  <nav>
+    <div class="section-label">Overview</div>
+    <a href="#kpis" onclick="setActive(this)">📊 KPI Summary</a>
+    <a href="#pipeline-health" onclick="setActive(this)">🟢 Pipeline Health</a>
+    <div class="section-label">Detail Views</div>
+    <a href="#pipeline-table" onclick="setActive(this)">📋 All Projects</a>
+    <a href="#risk-radar" onclick="setActive(this)">🚨 Risk Radar</a>
+    <a href="#next-quarter" onclick="setActive(this)">📅 Next Quarter</a>
+    <a href="#weekly-view" onclick="setActive(this)">🗓️ Weekly View</a>
+    <div class="section-label">Analytics</div>
+    <a href="#frontbook-backbook" onclick="setActive(this)">📈 FB vs BB</a>
+    <a href="#se-bandwidth" onclick="setActive(this)">👥 SE Bandwidth</a>
+    <a href="#presales" onclick="setActive(this)">🔭 Presales Pipeline</a>
+    <div class="section-label">Reports</div>
+    <a href="#highlights" onclick="setActive(this)">✨ Highlights</a>
+    <a href="#leadership" onclick="setActive(this)">📑 Leadership Summary</a>
+    <a href="#audit-trail" onclick="setActive(this)">🔍 Audit Trail</a>
+  </nav>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div id="main">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="title-block">
+      <h1>Solution Engineering Health Dashboard</h1>
+      <div class="date-badge">📅 As of <span id="date-display">31 March 2026</span></div>
+    </div>
+    <div class="upload-area">
+      <label class="upload-btn" id="btn-active">
+        <span>📁</span>
+        <span>Upload Active &amp; Live Records</span>
+        <span class="check">✓</span>
+        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'active')">
+      </label>
+      <label class="upload-btn" id="btn-presales">
+        <span>📁</span>
+        <span>Upload Presales Records</span>
+        <span class="check">✓</span>
+        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'presales')">
+      </label>
+    </div>
+  </div>
+
+  <!-- STORE BAR -->
+  <div class="store-bar">
+    <label class="btn-store" title="Load SE_Pipeline_Data.json to enable merge/update mode and audit trail">
+      🗄️ Load Data Store (.json)
+      <input type="file" accept=".json" style="display:none" onchange="handleStoreUpload(event)">
+    </label>
+    <span class="store-status" id="store-status">No data store loaded — upload SE_Pipeline_Data.json to enable merge &amp; audit trail</span>
+    <span style="flex:1"></span>
+    <button class="btn-store" id="btn-download-json" style="display:none" onclick="downloadStore('json')">⬇️ Download JSON Store</button>
+    <button class="btn-store" id="btn-download-md"   style="display:none" onclick="downloadStore('md')">⬇️ Download MD Snapshot</button>
+  </div>
+
+  <!-- MERGE MODAL -->
+  <div class="modal-overlay" id="merge-modal">
+    <div class="modal-box">
+      <h2>📥 New CSV Uploaded</h2>
+      <div class="modal-sub" id="merge-modal-sub">A data store is loaded. Choose how to handle the new data.</div>
+      <div class="modal-stat-row" id="merge-stats"></div>
+      <div id="merge-diff-wrap" style="display:none">
+        <div style="font-size:12px;color:var(--sub);margin-bottom:8px;">🔍 Projected Go-Live Date changes detected:</div>
+        <div class="modal-diff" id="merge-diff"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeMergeModal(true)">Cancel (keep existing)</button>
+        <button class="btn-overwrite" onclick="confirmImport('overwrite')">⚠️ Overwrite All</button>
+        <button class="btn-merge"    onclick="confirmImport('merge')">🔀 Merge &amp; Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLACEHOLDER -->
+  <div id="placeholder">
+    <div class="big-icon">📊</div>
+    <h2>No data loaded yet</h2>
+    <p>Please upload your CSV files using the buttons in the header to populate the dashboard. Both files can be uploaded in any order — the dashboard will auto-detect file type.</p>
+  </div>
+
+  <!-- DASHBOARD CONTENT (hidden until data loaded) -->
+  <div id="dashboard" style="display:none">
+
+    <!-- SECTION 2: KPI CARDS -->
+    <div id="kpis" class="section anchor">
+      <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </div>
+
+    <!-- SECTION 3: PIPELINE HEALTH -->
+    <div id="pipeline-health" class="section anchor">
+      <div class="section-title"><span class="icon">🟢</span> Pipeline Health</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>RAG Status Distribution</h3>
+          <canvas id="ragChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Implementation Stage Distribution</h3>
+          <canvas id="stageChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: PIPELINE TABLE -->
+    <div id="pipeline-table" class="section anchor">
+      <div class="section-title"><span class="icon">📋</span> All Active &amp; Live Projects</div>
+      <div class="filters" id="table-filters">
+        <span class="filter-label">Filter:</span>
+        <select id="filter-se" onchange="applyTableFilters()"><option value="">All SEs</option></select>
+        <select id="filter-rag" onchange="applyTableFilters()">
+          <option value="">All RAG</option>
+          <option value="On Track">On Track</option>
+          <option value="At Risk">At Risk</option>
+          <option value="Blocked">Blocked</option>
+          <option value="Unknown">Unknown</option>
+        </select>
+        <select id="filter-region" onchange="applyTableFilters()"><option value="">All Regions</option></select>
+        <select id="filter-qtr" onchange="applyTableFilters()"><option value="">All Quarters</option></select>
+        <select id="filter-type" onchange="applyTableFilters()">
+          <option value="">All Types</option>
+          <option value="Frontbook">Frontbook</option>
+          <option value="Backbook">Backbook</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="Search..." oninput="applyTableFilters()" style="min-width:150px">
+      </div>
+      <div class="table-scroll">
+        <div class="table-wrap">
+          <table id="pipeline-tbl">
+            <thead>
+              <tr>
+                <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name</th>
+                <th onclick="sortTable('pipeline-tbl',1)">SE</th>
+                <th onclick="sortTable('pipeline-tbl',2)">Region</th>
+                <th onclick="sortTable('pipeline-tbl',3)">Status / Sub Status</th>
+                <th onclick="sortTable('pipeline-tbl',4)">Committed QTR</th>
+                <th onclick="sortTable('pipeline-tbl',5)">Revenue (USD)</th>
+                <th onclick="sortTable('pipeline-tbl',6)">RAG</th>
+                <th onclick="sortTable('pipeline-tbl',7)">Type</th>
+              </tr>
+            </thead>
+            <tbody id="pipeline-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="pipeline-count" style="margin-top:8px;font-size:12px;color:var(--sub)"></div>
+    </div>
+
+    <!-- SECTION 5: RISK RADAR -->
+    <div id="risk-radar" class="section anchor">
+      <div class="section-title"><span class="icon">🚨</span> Risk Radar</div>
+      <div class="risk-grid">
+        <div>
+          <div style="font-weight:600;margin-bottom:12px;color:var(--red)">🔴 Blocked Projects</div>
+          <div id="blocked-list"></div>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:12px;color:var(--amber)">🟡 At Risk Projects</div>
+          <div id="atrisk-list"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-weight:600;margin-bottom:12px;color:var(--amber)">⏰ Stale Projects (Last Activity &gt; 30 days ago)</div>
+        <div class="table-scroll">
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>Opportunity</th><th>SE</th><th>Region</th><th>Last Activity</th><th>Days Stale</th><th>Status</th>
+              </tr></thead>
+              <tbody id="stale-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: NEXT QUARTER -->
+    <div id="next-quarter" class="section anchor">
+      <div class="section-title"><span class="icon">📅</span> Next Quarter Pipeline (Not Committed to Q1-2026)</div>
+      <div class="pipeline-cards" id="next-qtr-cards"></div>
+    </div>
+
+    <!-- SECTION 7: FRONTBOOK vs BACKBOOK -->
+    <div id="frontbook-backbook" class="section anchor">
+      <div class="section-title"><span class="icon">📈</span> Frontbook vs Backbook by Region</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Count by Region</h3>
+          <canvas id="fbbbCountChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Revenue Value by Region ($M)</h3>
+          <canvas id="fbbbValueChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 8: SE BANDWIDTH -->
+    <div id="se-bandwidth" class="section anchor">
+      <div class="section-title"><span class="icon">👥</span> SE Bandwidth Metrics</div>
+      <div class="chart-grid">
+        <div class="chart-card" style="grid-column: span 1;">
+          <h3>Total Project Load per SE</h3>
+          <canvas id="seLoadChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Pipeline Value per SE ($M)</h3>
+          <canvas id="seValueChart"></canvas>
+        </div>
+      </div>
+      <div style="margin-top:16px" class="table-scroll">
+        <div class="table-wrap">
+          <table id="bw-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('bw-table',0)">SE Name</th>
+                <th onclick="sortTable('bw-table',1)">Active Projects</th>
+                <th onclick="sortTable('bw-table',2)">Presales</th>
+                <th onclick="sortTable('bw-table',3)">Total</th>
+                <th onclick="sortTable('bw-table',4)">Pipeline Value</th>
+                <th onclick="sortTable('bw-table',5)">At Risk</th>
+                <th onclick="sortTable('bw-table',6)">Blocked</th>
+                <th>Load</th>
+              </tr>
+            </thead>
+            <tbody id="bw-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:var(--sub)">
+        🔴 Overloaded: &gt;8 projects &nbsp;|&nbsp; 🟡 High: 6-8 projects &nbsp;|&nbsp; 🟢 Healthy: &lt;6 projects
+      </div>
+    </div>
+
+    <!-- SECTION 9: PRESALES PIPELINE -->
+    <div id="presales" class="section anchor">
+      <div class="section-title"><span class="icon">🔭</span> Presales Pipeline</div>
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Stage Funnel</h3>
+          <canvas id="presalesFunnelChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Weighted Pipeline Value per SE ($K)</h3>
+          <canvas id="weightedValueChart"></canvas>
+        </div>
+      </div>
+      <div style="margin-top:16px" class="table-scroll">
+        <div class="table-wrap">
+          <table id="presales-tbl">
+            <thead>
+              <tr>
+                <th onclick="sortTable('presales-tbl',0)">Opportunity Name</th>
+                <th onclick="sortTable('presales-tbl',1)">SE</th>
+                <th onclick="sortTable('presales-tbl',2)">Stage</th>
+                <th onclick="sortTable('presales-tbl',3)">Probability</th>
+                <th onclick="sortTable('presales-tbl',4)">Revenue (USD)</th>
+                <th onclick="sortTable('presales-tbl',5)">Region</th>
+                <th onclick="sortTable('presales-tbl',6)">Type</th>
+                <th onclick="sortTable('presales-tbl',7)">Sub Status</th>
+              </tr>
+            </thead>
+            <tbody id="presales-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: WEEKLY VIEW -->
+    <div id="weekly-view" class="section anchor">
+      <div class="section-title"><span class="icon">🗓️</span> Weekly Pipeline View — Next 14 Days</div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:12px;color:var(--sub)">Showing projects in-progress with Projected Go-Live Date within 14 days from today (1 Apr – 14 Apr 2026)</span>
+      </div>
+      <!-- Week tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:18px;">
+        <button id="wv-tab-all"  class="wv-tab wv-tab-active" onclick="wvSetTab('all')">All (14 days)</button>
+        <button id="wv-tab-this" class="wv-tab" onclick="wvSetTab('this')">This Week (1–7 Apr)</button>
+        <button id="wv-tab-next" class="wv-tab" onclick="wvSetTab('next')">Next Week (8–14 Apr)</button>
+        <button id="wv-tab-over" class="wv-tab" onclick="wvSetTab('over')">Overdue</button>
+      </div>
+      <!-- This Week -->
+      <div id="wv-block-this" class="wv-block">
+        <div class="wv-week-label" style="color:var(--accent)">📅 This Week — 1 Apr to 7 Apr 2026</div>
+        <div id="wv-this-cards" class="wv-cards"></div>
+        <div id="wv-this-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
+      </div>
+      <!-- Next Week -->
+      <div id="wv-block-next" class="wv-block">
+        <div class="wv-week-label" style="color:var(--amber)">📅 Next Week — 8 Apr to 14 Apr 2026</div>
+        <div id="wv-next-cards" class="wv-cards"></div>
+        <div id="wv-next-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
+      </div>
+      <!-- Overdue -->
+      <div id="wv-block-over" class="wv-block" style="display:none">
+        <div class="wv-week-label" style="color:var(--red)">🔴 Overdue — Projected Go-Live passed, still In Progress</div>
+        <div id="wv-over-cards" class="wv-cards"></div>
+        <div id="wv-over-empty" class="wv-empty" style="display:none">No overdue projects found.</div>
+      </div>
+      <!-- Summary strip -->
+      <div id="wv-summary" style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- SECTION 10: HIGHLIGHTS & LOWLIGHTS -->
+    <div id="highlights" class="section anchor">
+      <div class="section-title"><span class="icon">✨</span> Weekly Highlights &amp; Lowlights</div>
+      <div class="hl-grid">
+        <div>
+          <div style="font-weight:600;margin-bottom:12px;color:var(--green)">✅ Highlights</div>
+          <div id="highlights-list"></div>
+        </div>
+        <div>
+          <div style="font-weight:600;margin-bottom:12px;color:var(--red)">⚠️ Lowlights</div>
+          <div id="lowlights-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 11: LEADERSHIP SUMMARY -->
+    <div id="leadership" class="section anchor">
+      <div class="section-title"><span class="icon">📑</span> Leadership Summary</div>
+      <div class="exec-card">
+        <div id="exec-kpis" class="exec-kpi-row"></div>
+        <div class="exec-two-col">
+          <div class="exec-block" id="exec-risks">
+            <h4>Key Risks &amp; Blockers</h4>
+            <ul id="exec-risks-list"></ul>
+          </div>
+          <div class="exec-block" id="exec-top">
+            <h4>Top 3 Pipeline Opportunities</h4>
+            <ul id="exec-top-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION: AUDIT TRAIL -->
+    <div id="audit-trail" class="section anchor">
+      <div class="section-title"><span class="icon">🔍</span> Audit Trail — Projected Go-Live Date History</div>
+      <div id="audit-no-store" style="color:var(--sub);font-size:13px;padding:16px 0;">
+        Load a data store (<strong>SE_Pipeline_Data.json</strong>) using the bar above to view the full audit trail and change history.
+      </div>
+      <div id="audit-content" style="display:none">
+        <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;" id="audit-summary-chips"></div>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="auditTab('changes',this)">📝 Go-Live Date Changes</button>
+          <button class="tab-btn" onclick="auditTab('all',this)">📋 All Tracked Records</button>
+          <button class="tab-btn" onclick="auditTab('changelog',this)">📜 Import Change Log</button>
+        </div>
+        <div id="audit-panel-changes">
+          <div class="table-scroll">
+            <table class="audit-table" id="audit-changes-tbl">
+              <thead><tr>
+                <th>Opportunity</th><th>SE Owner</th><th>Region</th>
+                <th>Go-Live Date History</th><th>Changes</th><th>Current RAG</th>
+              </tr></thead>
+              <tbody id="audit-changes-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="audit-panel-all" style="display:none">
+          <div class="table-scroll">
+            <table class="audit-table" id="audit-all-tbl">
+              <thead><tr>
+                <th>Opportunity</th><th>SE Owner</th><th>Status</th>
+                <th>Current Go-Live</th><th>Recorded On</th><th>Source File</th>
+              </tr></thead>
+              <tbody id="audit-all-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="audit-panel-changelog" style="display:none">
+          <div id="audit-changelog-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main -->
+
+<script>
+// =====================================================
+// DATA STORE
+// =====================================================
+const TODAY = new Date('2026-04-01');
+const CURRENT_QTR = 'Q1-2026';
+
+let activeData   = null;
+let presalesData = null;
+let pipelineStore = null;          // loaded SE_Pipeline_Data.json
+let pendingImport = null;          // { type, rawData } waiting for merge modal decision
+
+// Chart instances
+let charts = {};
+
+// =====================================================
+// UTILITIES
+// =====================================================
+function parseRev(val) {
+  if (!val || val === '') return 0;
+  return parseFloat(String(val).replace(/[^0-9.-]/g, '')) || 0;
+}
+
+function parseDate(str) {
+  if (!str || str.trim() === '') return null;
+  // Try DD/MM/YYYY
+  let m = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  // Try YYYY-MM-DD
+  m = str.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  return null;
+}
+
+function daysSince(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d) return null;
+  return Math.floor((TODAY - d) / 86400000);
+}
+
+function fmtRev(val) {
+  if (!val) return '$0';
+  if (val >= 1e6) return '$' + (val/1e6).toFixed(1) + 'M';
+  if (val >= 1e3) return '$' + (val/1e3).toFixed(0) + 'K';
+  return '$' + Math.round(val);
+}
+
+function extractRegion(raw) {
+  if (!raw) return 'Unknown';
+  const s = String(raw).trim();
+  const main = s.includes('|') ? s.split('|')[0].trim() : s;
+  if (main.toUpperCase().includes('APAC') || main.toUpperCase().includes('ASIA')) return 'APAC & ME';
+  if (main.toUpperCase().includes('EUROPE')) return 'Europe';
+  if (main.toUpperCase().includes('AMERIC')) return 'Americas';
+  return main || 'Unknown';
+}
+
+function ragClass(status) {
+  if (!status || status.trim() === '') return 'grey';
+  const s = status.trim().toLowerCase();
+  if (s === 'on track') return 'green';
+  if (s === 'at risk') return 'amber';
+  if (s === 'blocked') return 'red';
+  return 'grey';
+}
+
+function ragLabel(status) {
+  if (!status || status.trim() === '') return 'Unknown';
+  return status.trim();
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function truncate(s, n) {
+  if (!s) return '';
+  const str = String(s);
+  return str.length > n ? str.substring(0, n) + '...' : str;
+}
+
+// =====================================================
+// FILE UPLOAD & AUTO-DETECTION
+// =====================================================
+function handleFileUpload(event, hint) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      const headers = results.meta.fields || [];
+      let type = hint;
+      if (headers.includes('Implementation Owner') && headers.includes('Projected Go-Live Status')) {
+        type = 'active';
+      } else if (headers.includes('Presales Engineer') && headers.includes('Opportunity: Probability (%)')) {
+        type = 'presales';
+      }
+
+      // If a store is loaded, show merge modal instead of directly loading
+      if (pipelineStore) {
+        pendingImport = { type, rawData: results.data, fileName: file.name };
+        openMergeModal(type, results.data, file.name);
+        return;
+      }
+
+      applyImport(type, results.data);
+    }
+  });
+}
+
+function applyImport(type, rawData) {
+  if (type === 'active') {
+    activeData = rawData;
+    document.getElementById('btn-active').classList.add('loaded');
+  } else {
+    presalesData = rawData;
+    document.getElementById('btn-presales').classList.add('loaded');
+  }
+  if (activeData || presalesData) {
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    renderDashboard();
+  }
+}
+
+// =====================================================
+// DATA STORE — LOAD JSON
+// =====================================================
+function handleStoreUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      pipelineStore = JSON.parse(e.target.result);
+      const el = document.getElementById('store-status');
+      el.textContent = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
+      el.className = 'store-status loaded';
+      document.getElementById('btn-download-json').style.display = '';
+      document.getElementById('btn-download-md').style.display   = '';
+      // Populate dashboard from store if no CSVs loaded yet
+      if (!activeData && pipelineStore.active_records?.length) {
+        activeData = storeRecordsToCSVRows(pipelineStore.active_records, 'active');
+      }
+      if (!presalesData && pipelineStore.presales_records?.length) {
+        presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
+      }
+      if (activeData || presalesData) {
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        renderDashboard();
+      }
+    } catch(err) {
+      alert('Failed to parse JSON store: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Convert store records back to the flat CSV-row format the render functions expect
+function storeRecordsToCSVRows(records, type) {
+  if (type === 'active') {
+    return records.map(r => ({
+      'Opportunity Name':                          r.opportunity_name || '',
+      'Install Record: Implementation Name':       r.implementation_name || '',
+      'Implementation Owner':                      r.se_owner || '',
+      'Opportunity Owner Name':                    r.sales_owner || '',
+      'Global Region':                             r.global_region || '',
+      'Institution Type':                          r.institution_type || '',
+      'Platform Segment':                          r.platform_segment || '',
+      'Product Features':                          r.product_features || '',
+      'Opportunity: Stage':                        r.stage || '',
+      'Status':                                    r.status || '',
+      'Sub Status':                                r.sub_status || '',
+      'Projected Go-Live Status':                  r.rag_status || '',
+      'Type of Opportunity':                       r.type_of_opportunity || '',
+      'Committed QTR':                             r.committed_qtr || '',
+      'Opportunity Net Revenue (converted)':       r.revenue_usd || '',
+      'Opportunity Net Revenue Currency':          r.revenue_currency || '',
+      'Opportunity Net Revenue':                   r.revenue_original || '',
+      'Projected Go-Live Date':                    r.projected_go_live_date || '',
+      'Actual Live Date':                          r.actual_live_date || '',
+      'Implementation Start Date':                 r.implementation_start || '',
+      'Sandbox Created':                           r.sandbox_created || '',
+      'Production Environment Created':            r.prod_created || '',
+      'Kick-Off Meeting':                          r.kickoff_date || '',
+      'CUG Sign off':                              r.cug_signoff || '',
+      'Install Record: Last Activity Date':        r.last_activity_date || '',
+      'Implementation Blocker':                    r.implementation_blocker || '',
+      'Implementation Risk':                       r.implementation_risk || '',
+      'Current Status':                            r.current_status_notes || '',
+      'Number of days in implementation':          r.days_in_implementation || '',
+      'Number of days in CUG':                     r.days_in_cug || '',
+      'Number of days SE involved':                r.days_se_involved || '',
+      'Number of Days Open':                       r.days_open || '',
+    }));
+  } else {
+    return records.map(r => ({
+      'Opportunity Name':                          r.opportunity_name || '',
+      'Install Record: Implementation Name':       r.implementation_name || '',
+      'Presales Engineer':                         r.se_owner || '',
+      'Opportunity Owner Name':                    r.sales_owner || '',
+      'Global Region':                             r.global_region || '',
+      'Platform Segment':                          r.platform_segment || '',
+      'Opportunity: Stage':                        r.stage || '',
+      'Opportunity: Probability (%)':              r.probability_pct || '',
+      'Sub Status':                                r.sub_status || '',
+      'Type of Opportunity':                       r.type_of_opportunity || '',
+      'Opportunity Net Revenue (converted)':       r.revenue_usd || '',
+      'Opportunity Net Revenue (converted) Currency': r.revenue_currency || '',
+      'Sandbox Created':                           r.sandbox_created || '',
+      'Install Record: Last Activity Date':        r.last_activity_date || '',
+      'Opportunity: Legal NDA Signed Date':        r.nda_signed_date || '',
+      'Number of days in pre sales':               r.days_in_presales || '',
+      'Number of Days Open':                       r.days_open || '',
+      'Number of days SE involved':                r.days_se_involved || '',
+    }));
+  }
+}
+
+// =====================================================
+// MERGE MODAL
+// =====================================================
+function normName(n) { return (n||'').trim().toLowerCase(); }
+
+function detectGoLiveChanges(type, newRows) {
+  if (type !== 'active' || !pipelineStore) return [];
+  const existing = {};
+  for (const r of (pipelineStore.active_records || [])) {
+    existing[normName(r.opportunity_name)] = r;
+  }
+  const changes = [];
+  for (const row of newRows) {
+    const name = (row['Opportunity Name']||'').trim();
+    const newDate = (row['Projected Go-Live Date']||'').trim();
+    const stored = existing[normName(name)];
+    if (!stored) { changes.push({ name, status: 'new', oldDate: '', newDate }); continue; }
+    const oldDate = stored.projected_go_live_date || '';
+    if (newDate && oldDate !== newDate) {
+      changes.push({ name, status: 'changed', oldDate, newDate });
+    }
+  }
+  return changes;
+}
+
+function openMergeModal(type, newRows, fileName) {
+  const changes = detectGoLiveChanges(type, newRows);
+  const storeCount = type === 'active'
+    ? (pipelineStore.active_records||[]).length
+    : (pipelineStore.presales_records||[]).length;
+  const newCount  = newRows.length;
+  const changed   = changes.filter(c => c.status === 'changed').length;
+  const added     = changes.filter(c => c.status === 'new').length;
+
+  document.getElementById('merge-modal-sub').innerHTML =
+    `<strong>${fileName}</strong> detected as <em>${type}</em> records. A data store is already loaded.`;
+
+  document.getElementById('merge-stats').innerHTML = `
+    <div class="modal-stat"><strong>${storeCount}</strong>Existing in store</div>
+    <div class="modal-stat"><strong>${newCount}</strong>Rows in new CSV</div>
+    <div class="modal-stat" style="color:var(--amber)"><strong>${changed}</strong>Go-Live date changes</div>
+    <div class="modal-stat" style="color:var(--green)"><strong>${added}</strong>New records</div>
+  `;
+
+  const diffWrap = document.getElementById('merge-diff-wrap');
+  if (changed > 0) {
+    diffWrap.style.display = '';
+    const diffEl = document.getElementById('merge-diff');
+    diffEl.innerHTML = changes.filter(c=>c.status==='changed').map(c => `
+      <div class="diff-row">
+        <span class="diff-name">${escHtml(c.name)}</span>
+        <span class="diff-old">${c.oldDate||'(none)'}</span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-new">${c.newDate||'(none)'}</span>
+        <span class="diff-badge diff-changed">CHANGED</span>
+      </div>`).join('');
+  } else {
+    diffWrap.style.display = 'none';
+  }
+
+  document.getElementById('merge-modal').classList.add('open');
+}
+
+function closeMergeModal(cancel) {
+  document.getElementById('merge-modal').classList.remove('open');
+  if (cancel) pendingImport = null;
+}
+
+function confirmImport(mode) {
+  closeMergeModal(false);
+  if (!pendingImport) return;
+  const { type, rawData, fileName } = pendingImport;
+  pendingImport = null;
+
+  const now = new Date().toISOString().slice(0,10);
+  const nowISO = new Date().toISOString().slice(0,19);
+
+  if (mode === 'overwrite') {
+    // Overwrite store records but PRESERVE existing go-live history where name matches
+    const existing = {};
+    for (const r of (pipelineStore[type==='active'?'active_records':'presales_records']||[])) {
+      existing[normName(r.opportunity_name)] = r;
+    }
+    const newRecords = rawData.map(row => buildStoreRecord(row, type, existing, now, 'overwrite', fileName));
+    pipelineStore[type==='active'?'active_records':'presales_records'] = newRecords;
+    pipelineStore.change_log.push({ timestamp: nowISO, action: 'overwrite', description: `Overwrite of ${type} records from ${fileName} (${newRecords.length} records)`, uploaded_by: 'user' });
+
+  } else { // merge
+    const existingArr = pipelineStore[type==='active'?'active_records':'presales_records'] || [];
+    const existingMap = {};
+    for (const r of existingArr) existingMap[normName(r.opportunity_name)] = r;
+
+    let updated = 0, added = 0, dateChanges = 0;
+    const newRecords = rawData.map(row => {
+      const name = (row['Opportunity Name']||'').trim();
+      const stored = existingMap[normName(name)];
+      if (stored) {
+        updated++;
+        const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
+        // Count date changes
+        if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
+        return newRec;
+      } else {
+        added++;
+        return buildStoreRecord(row, type, {}, now, 'merge', fileName);
+      }
+    });
+    // Keep store records not present in new CSV
+    const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
+    const kept = existingArr.filter(r => !newNames.has(normName(r.opportunity_name)));
+    pipelineStore[type==='active'?'active_records':'presales_records'] = [...newRecords, ...kept];
+    pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
+  }
+
+  pipelineStore._meta.last_updated_on = now;
+  pipelineStore._meta[type==='active'?'total_active':'total_presales'] =
+    pipelineStore[type==='active'?'active_records':'presales_records'].length;
+
+  // Update display data from merged store
+  if (type === 'active') {
+    activeData = storeRecordsToCSVRows(pipelineStore.active_records, 'active');
+    document.getElementById('btn-active').classList.add('loaded');
+  } else {
+    presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
+    document.getElementById('btn-presales').classList.add('loaded');
+  }
+  updateStoreStatusBar();
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  renderDashboard();
+}
+
+function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
+  const name = (row['Opportunity Name']||'').trim();
+  const stored = existingMap[normName(name)];
+
+  if (type === 'active') {
+    const glDate = (row['Projected Go-Live Date']||'').trim();
+    const oldHistory = (stored?.projected_go_live_date_history) || [];
+    const lastDate   = oldHistory.length ? oldHistory[oldHistory.length-1].date : null;
+    const newHistory = [...oldHistory];
+    if (glDate && glDate !== lastDate) {
+      newHistory.push({ date: glDate, recorded_on: nowDate, source: `${mode} from ${fileName}`, changed_by: 'user' });
+    }
+    return {
+      opportunity_name:       name,
+      implementation_name:    (row['Install Record: Implementation Name']||'').trim(),
+      se_owner:               (row['Implementation Owner']||'').trim(),
+      sales_owner:            (row['Opportunity Owner Name']||'').trim(),
+      global_region:          (row['Global Region']||'').trim(),
+      institution_type:       (row['Institution Type']||'').trim(),
+      platform_segment:       (row['Platform Segment']||'').trim(),
+      product_features:       (row['Product Features']||'').trim(),
+      stage:                  (row['Opportunity: Stage']||'').trim(),
+      status:                 (row['Status']||'').trim(),
+      sub_status:             (row['Sub Status']||'').trim(),
+      rag_status:             (row['Projected Go-Live Status']||'').trim(),
+      type_of_opportunity:    (row['Type of Opportunity']||'').trim(),
+      committed_qtr:          (row['Committed QTR']||'').trim(),
+      revenue_usd:            (row['Opportunity Net Revenue (converted)']||'').trim(),
+      revenue_currency:       (row['Opportunity Net Revenue Currency']||'').trim(),
+      revenue_original:       (row['Opportunity Net Revenue']||'').trim(),
+      projected_go_live_date: glDate,
+      actual_live_date:       (row['Actual Live Date']||'').trim(),
+      implementation_start:   (row['Implementation Start Date']||'').trim(),
+      sandbox_created:        (row['Sandbox Created']||'').trim(),
+      prod_created:           (row['Production Environment Created']||'').trim(),
+      kickoff_date:           (row['Kick-Off Meeting']||'').trim(),
+      cug_signoff:            (row['CUG Sign off']||'').trim(),
+      last_activity_date:     (row['Install Record: Last Activity Date']||'').trim(),
+      implementation_blocker: (row['Implementation Blocker']||'').trim(),
+      implementation_risk:    (row['Implementation Risk']||'').trim(),
+      current_status_notes:   (row['Current Status']||'').trim().slice(0,400),
+      days_in_implementation: (row['Number of days in implementation']||'').trim(),
+      days_in_cug:            (row['Number of days in CUG']||'').trim(),
+      days_se_involved:       (row['Number of days SE involved']||'').trim(),
+      days_open:              (row['Number of Days Open']||'').trim(),
+      source_file:            fileName,
+      record_type:            'active',
+      projected_go_live_date_history: newHistory
+    };
+  } else {
+    return {
+      opportunity_name:     name,
+      implementation_name:  (row['Install Record: Implementation Name']||'').trim(),
+      se_owner:             (row['Presales Engineer']||'').trim(),
+      sales_owner:          (row['Opportunity Owner Name']||'').trim(),
+      global_region:        (row['Global Region']||'').trim(),
+      platform_segment:     (row['Platform Segment']||'').trim(),
+      stage:                (row['Opportunity: Stage']||'').trim(),
+      probability_pct:      (row['Opportunity: Probability (%)']||'').trim(),
+      sub_status:           (row['Sub Status']||'').trim(),
+      type_of_opportunity:  (row['Type of Opportunity']||'').trim(),
+      revenue_usd:          (row['Opportunity Net Revenue (converted)']||'').trim(),
+      revenue_currency:     (row['Opportunity Net Revenue (converted) Currency']||'').trim(),
+      sandbox_created:      (row['Sandbox Created']||'').trim(),
+      last_activity_date:   (row['Install Record: Last Activity Date']||'').trim(),
+      nda_signed_date:      (row['Opportunity: Legal NDA Signed Date']||'').trim(),
+      days_in_presales:     (row['Number of days in pre sales']||'').trim(),
+      days_open:            (row['Number of Days Open']||'').trim(),
+      days_se_involved:     (row['Number of days SE involved']||'').trim(),
+      source_file:          fileName,
+      record_type:          'presales',
+      projected_go_live_date: '',
+      projected_go_live_date_history: stored?.projected_go_live_date_history || []
+    };
+  }
+}
+
+function updateStoreStatusBar() {
+  if (!pipelineStore) return;
+  const el = document.getElementById('store-status');
+  el.textContent = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
+  el.className = 'store-status loaded';
+}
+
+// =====================================================
+// DOWNLOAD STORE
+// =====================================================
+function downloadStore(format) {
+  if (!pipelineStore) { alert('No data store loaded.'); return; }
+  if (format === 'json') {
+    const blob = new Blob([JSON.stringify(pipelineStore, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, `SE_Pipeline_Data_${pipelineStore._meta?.last_updated_on||'export'}.json`);
+  } else {
+    const md = generateMDSnapshot();
+    const blob = new Blob([md], { type: 'text/markdown' });
+    triggerDownload(blob, `SE_Pipeline_Record_${pipelineStore._meta?.last_updated_on||'export'}.md`);
+  }
+}
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function generateMDSnapshot() {
+  const store = pipelineStore;
+  const date  = store._meta?.last_updated_on || new Date().toISOString().slice(0,10);
+  const active   = store.active_records   || [];
+  const presales = store.presales_records || [];
+
+  const fmtR = v => { const n=parseFloat(v)||0; return n>=1e6?`$${(n/1e6).toFixed(2)}M`:n>=1e3?`$${(n/1e3).toFixed(0)}k`:n>0?`$${n}`:'—'; };
+  const sr = r => r.includes('|') ? r.split('|')[0].trim() : r;
+  const rag = {'On Track':'🟢','At Risk':'🟡','Blocked':'🔴'};
+  const stage = {Qualifying:'🔍',Proposal:'📄',Negotiation:'🤝',Contracting:'📝','Contract Signed':'✅',Won:'🏆',Live:'🚀',PreWork:'🛠️','On Hold':'⏸️'};
+
+  const lines = [];
+  lines.push(`# SE Pipeline Record — Snapshot ${date}`);
+  lines.push(`\n> **Generated:** ${date}  \n> **Active:** ${active.length}  \n> **Presales:** ${presales.length}  \n> **Data store version:** ${store._meta?.version||1}\n\n---\n`);
+
+  // Active by status
+  lines.push('## 1. Active & Live Pipeline\n');
+  const byStatus = {};
+  for (const r of active) (byStatus[r.status||'Unknown']=byStatus[r.status||'Unknown']||[]).push(r);
+  for (const [si, st] of ['In Progress','Presales','Live Completed','Blocked','Unknown'].entries()) {
+    const recs = byStatus[st]||[];
+    if (!recs.length) continue;
+    lines.push(`### 1.${si+1} ${st} (${recs.length})\n`);
+    lines.push('| Opportunity | SE | Region | Sub Status | Go-Live | RAG | QTR | Revenue |');
+    lines.push('|---|---|---|---|---|---|---|---|');
+    for (const r of [...recs].sort((a,b)=>(a.projected_go_live_date||'9999').localeCompare(b.projected_go_live_date||'9999')))
+      lines.push(`| ${r.opportunity_name} | ${r.se_owner||'—'} | ${sr(r.global_region)} | ${r.sub_status||'—'} | ${r.projected_go_live_date||'—'} | ${rag[r.rag_status]||'⚪'} ${r.rag_status||'—'} | ${r.committed_qtr||'—'} | ${fmtR(r.revenue_usd)} |`);
+    lines.push('');
+  }
+
+  // Presales
+  lines.push('## 2. Presales Pipeline\n');
+  lines.push('| Opportunity | SE | Region | Stage | Probability | Type | Revenue |');
+  lines.push('|---|---|---|---|---|---|---|');
+  for (const r of [...presales].sort((a,b)=>(parseFloat(b.probability_pct)||0)-(parseFloat(a.probability_pct)||0)))
+    lines.push(`| ${r.opportunity_name} | ${r.se_owner||'—'} | ${sr(r.global_region)} | ${stage[r.stage]||'•'} ${r.stage||'—'} | ${r.probability_pct?r.probability_pct+'%':'—'} | ${r.type_of_opportunity||'—'} | ${fmtR(r.revenue_usd)} |`);
+  lines.push('');
+
+  // Audit trail
+  lines.push('## 3. Projected Go-Live Date — Audit Trail\n');
+  lines.push('> Records with more than one entry in history have had their go-live date changed.\n');
+  const withHist = active.filter(r => r.projected_go_live_date_history?.length > 0);
+  if (withHist.length) {
+    lines.push('| Opportunity | SE | Current Go-Live | # Changes | History |');
+    lines.push('|---|---|---|---|---|');
+    for (const r of [...withHist].sort((a,b)=>(a.projected_go_live_date||'9999').localeCompare(b.projected_go_live_date||'9999'))) {
+      const hist = r.projected_go_live_date_history.map(h=>`\`${h.date}\` *(${h.recorded_on})*`).join(' → ');
+      lines.push(`| ${r.opportunity_name} | ${r.se_owner||'—'} | ${r.projected_go_live_date||'—'} | ${r.projected_go_live_date_history.length} | ${hist} |`);
+    }
+  } else { lines.push('_No changes recorded yet._'); }
+  lines.push('');
+
+  // SE bandwidth
+  lines.push('## 4. SE Bandwidth\n');
+  lines.push('| SE | Active | Presales | Total | At Risk | Blocked | Pipeline Value |');
+  lines.push('|---|---|---|---|---|---|---|');
+  const sa={}, sp={};
+  for (const r of active) if (r.se_owner) (sa[r.se_owner]=sa[r.se_owner]||[]).push(r);
+  for (const r of presales) if (r.se_owner) (sp[r.se_owner]=sp[r.se_owner]||[]).push(r);
+  for (const se of [...new Set([...Object.keys(sa),...Object.keys(sp)])].sort()) {
+    const a=sa[se]||[], p=sp[se]||[];
+    const val=[...a,...p].reduce((s,r)=>s+(parseFloat(r.revenue_usd)||0),0);
+    const t=a.length+p.length;
+    lines.push(`| ${t>8?'🔴':t>=6?'🟡':'🟢'} ${se} | ${a.length} | ${p.length} | **${t}** | ${a.filter(r=>r.rag_status==='At Risk').length} | ${a.filter(r=>r.rag_status==='Blocked'||r.status==='Blocked').length} | ${fmtR(String(val))} |`);
+  }
+  lines.push('');
+
+  // Change log
+  lines.push('## 5. Change Log\n');
+  lines.push('| Timestamp | Action | Description |');
+  lines.push('|---|---|---|');
+  for (const c of (store.change_log||[]))
+    lines.push(`| ${c.timestamp} | ${c.action} | ${c.description} |`);
+  lines.push(`\n---\n*SE Pipeline Record · Last updated: ${date}*`);
+
+  return lines.join('\n');
+}
+
+// =====================================================
+// AUDIT TRAIL RENDER
+// =====================================================
+function auditTab(tab, btn) {
+  ['changes','all','changelog'].forEach(t => {
+    document.getElementById(`audit-panel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#audit-trail .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderAuditTrail() {
+  const noStore  = document.getElementById('audit-no-store');
+  const content  = document.getElementById('audit-content');
+  if (!pipelineStore) { noStore.style.display=''; content.style.display='none'; return; }
+  noStore.style.display = 'none';
+  content.style.display = '';
+
+  const active   = pipelineStore.active_records   || [];
+  const changelog = pipelineStore.change_log || [];
+
+  // Summary chips
+  const withChanges = active.filter(r => (r.projected_go_live_date_history||[]).length > 1);
+  const totalImports = changelog.length;
+  document.getElementById('audit-summary-chips').innerHTML = `
+    <div class="wv-summary-chip"><strong>${active.length}</strong> active records tracked</div>
+    <div class="wv-summary-chip" style="color:var(--amber)"><strong>${withChanges.length}</strong> go-live date changes</div>
+    <div class="wv-summary-chip" style="color:var(--accent)"><strong>${totalImports}</strong> import events</div>
+    <div class="wv-summary-chip" style="color:var(--sub)">Store v${pipelineStore._meta?.version||1} · Updated ${pipelineStore._meta?.last_updated_on||'—'}</div>
+  `;
+
+  // Tab 1: records with date changes (history length > 1)
+  const changedRecs = active.filter(r => (r.projected_go_live_date_history||[]).length > 1);
+  const tbody1 = document.getElementById('audit-changes-tbody');
+  if (!changedRecs.length) {
+    tbody1.innerHTML = `<tr><td colspan="6" style="color:var(--sub);font-style:italic;padding:16px">No go-live date changes recorded yet. They will appear here after a subsequent CSV merge.</td></tr>`;
+  } else {
+    tbody1.innerHTML = changedRecs.map(r => {
+      const hist = (r.projected_go_live_date_history||[]);
+      const histHtml = hist.map((h,i) => `
+        <div class="audit-history-line">
+          <span class="audit-date-tag ${i===hist.length-1?'current':''}">${h.date||'(none)'}</span>
+          ${i<hist.length-1?'<span class="audit-arrow">→</span>':''}
+          <span class="audit-source">recorded ${h.recorded_on} · ${h.source}</span>
+        </div>`).join('');
+      const rag = r.rag_status||'';
+      return `<tr>
+        <td><strong>${escHtml(r.opportunity_name)}</strong></td>
+        <td>${escHtml(r.se_owner)||'—'}</td>
+        <td>${escHtml((r.global_region||'').split('|')[0].trim())}</td>
+        <td>${histHtml}</td>
+        <td><span class="audit-changed">${hist.length} entries</span></td>
+        <td><span class="badge badge-${rag==='On Track'?'green':rag==='At Risk'?'amber':rag==='Blocked'?'red':'grey'}">${rag||'—'}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Tab 2: all tracked records
+  const tbody2 = document.getElementById('audit-all-tbody');
+  tbody2.innerHTML = active.map(r => {
+    const hist = r.projected_go_live_date_history||[];
+    const first = hist[0];
+    return `<tr>
+      <td>${escHtml(r.opportunity_name)}</td>
+      <td>${escHtml(r.se_owner)||'—'}</td>
+      <td><span class="badge badge-${r.status==='Live Completed'?'green':r.status==='Blocked'?'red':'grey'}">${escHtml(r.status)||'—'}</span></td>
+      <td><code>${escHtml(r.projected_go_live_date)||'—'}</code></td>
+      <td>${first?.recorded_on||'—'}</td>
+      <td style="color:var(--sub);font-size:11px">${escHtml(first?.source||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  // Tab 3: change log
+  const clEl = document.getElementById('audit-changelog-list');
+  clEl.innerHTML = [...changelog].reverse().map(c => `
+    <div class="changelog-item">
+      <div class="cl-time">${c.timestamp}</div>
+      <div class="cl-action">${c.action.toUpperCase()}</div>
+      <div class="cl-desc">${escHtml(c.description)}</div>
+    </div>`).join('') || '<p style="color:var(--sub)">No change log entries.</p>';
+}
+
+// =====================================================
+// MAIN RENDER
+// =====================================================
+function renderDashboard() {
+  renderKPIs();
+  renderPipelineHealth();
+  renderPipelineTable();
+  renderRiskRadar();
+  renderNextQuarter();
+  renderWeeklyView();
+  renderFBBB();
+  renderSEBandwidth();
+  renderPresales();
+  renderHighlights();
+  renderLeadership();
+  renderAuditTrail();
+}
+
+// =====================================================
+// SECTION 2: KPI CARDS
+// =====================================================
+function renderKPIs() {
+  const active = activeData || [];
+  const presales = presalesData || [];
+
+  const totalActive = active.filter(r => {
+    const s = (r['Status'] || '').trim();
+    return s === 'In Progress' || s === 'Presales';
+  }).length;
+
+  const totalPresales = presales.length;
+
+  const activeRev = active.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const presalesRev = presales.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const totalPipeline = activeRev + presalesRev;
+
+  const onTrack = active.filter(r => (r['Projected Go-Live Status'] || '').trim() === 'On Track').length;
+  const atRisk = active.filter(r => (r['Projected Go-Live Status'] || '').trim() === 'At Risk').length;
+  const blocked = active.filter(r =>
+    (r['Projected Go-Live Status'] || '').trim() === 'Blocked' ||
+    (r['Status'] || '').trim() === 'Blocked'
+  ).length;
+  const liveCompleted = active.filter(r => (r['Status'] || '').trim() === 'Live Completed').length;
+
+  const kpiData = [
+    { label: 'Total Active Projects', value: totalActive, sub: 'In Progress + Presales', cls: 'blue' },
+    { label: 'Presales Opportunities', value: totalPresales, sub: 'From presales file', cls: 'blue' },
+    { label: 'Total Pipeline Value', value: fmtRev(totalPipeline), sub: 'Active + Presales', cls: 'blue', raw: true },
+    { label: 'On Track', value: onTrack, sub: 'Green status', cls: 'green' },
+    { label: 'At Risk', value: atRisk, sub: 'Amber status', cls: 'amber' },
+    { label: 'Blocked', value: blocked, sub: 'Red / blocked', cls: 'red' },
+    { label: 'Live Completed (Q)', value: liveCompleted, sub: 'This quarter', cls: 'green' },
+  ];
+
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = kpiData.map(k => `
+    <div class="kpi-card ${k.cls}">
+      <div class="label">${k.label}</div>
+      <div class="value">${k.raw ? k.value : k.value}</div>
+      <div class="sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// =====================================================
+// SECTION 3: PIPELINE HEALTH CHARTS
+// =====================================================
+function renderPipelineHealth() {
+  const active = activeData || [];
+
+  // RAG counts
+  const ragCounts = { 'On Track': 0, 'At Risk': 0, 'Blocked': 0, 'Unknown': 0 };
+  active.forEach(r => {
+    const s = (r['Projected Go-Live Status'] || '').trim();
+    if (r['Status'] && r['Status'].trim() === 'Blocked') {
+      ragCounts['Blocked']++;
+    } else if (s === 'On Track') ragCounts['On Track']++;
+    else if (s === 'At Risk') ragCounts['At Risk']++;
+    else if (s === 'Blocked') ragCounts['Blocked']++;
+    else ragCounts['Unknown']++;
+  });
+
+  destroyChart('ragChart');
+  const ragCtx = document.getElementById('ragChart').getContext('2d');
+  charts['ragChart'] = new Chart(ragCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['On Track', 'At Risk', 'Blocked', 'Unknown'],
+      datasets: [{
+        data: [ragCounts['On Track'], ragCounts['At Risk'], ragCounts['Blocked'], ragCounts['Unknown']],
+        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444', '#64748b'],
+        borderColor: '#e2e8f0',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#f8fafc', padding: 14, font: { size: 12 } }
+        }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // Stage distribution
+  const stageCounts = {};
+  active.forEach(r => {
+    const sub = (r['Sub Status'] || r['Status'] || 'Unknown').trim();
+    // Simplify label
+    let label = sub;
+    if (sub.includes('Dev Work')) label = 'Dev Work';
+    else if (sub.includes('CUG')) label = 'CUG';
+    else if (sub.includes('Live Completed') || sub.includes('Live: New')) label = 'Live Completed';
+    else if (sub.includes('Delayed')) label = 'Delayed';
+    else if (sub.includes('Blocked')) label = 'Blocked';
+    else if (sub.includes('Presales')) label = 'Presales';
+    else if (sub.includes('In Progress')) label = 'In Progress';
+    stageCounts[label] = (stageCounts[label] || 0) + 1;
+  });
+
+  const stageLabels = Object.keys(stageCounts).sort((a,b) => stageCounts[b]-stageCounts[a]);
+  const stageColors = stageLabels.map(l => {
+    if (l === 'Live Completed') return '#22c55e';
+    if (l === 'Blocked') return '#ef4444';
+    if (l === 'Delayed') return '#f59e0b';
+    if (l === 'At Risk') return '#f59e0b';
+    return '#3b82f6';
+  });
+
+  destroyChart('stageChart');
+  const stageCtx = document.getElementById('stageChart').getContext('2d');
+  charts['stageChart'] = new Chart(stageCtx, {
+    type: 'bar',
+    data: {
+      labels: stageLabels,
+      datasets: [{
+        label: 'Count',
+        data: stageLabels.map(l => stageCounts[l]),
+        backgroundColor: stageColors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', stepSize: 1 },
+          grid: { color: '#e2e8f0' }
+        },
+        y: {
+          ticks: { color: '#f8fafc', font: { size: 11 } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// =====================================================
+// SECTION 4: PIPELINE TABLE
+// =====================================================
+let allPipelineRows = [];
+
+function renderPipelineTable() {
+  const active = activeData || [];
+
+  // Populate filter dropdowns
+  const ses = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))].sort();
+  const regions = [...new Set(active.map(r => extractRegion(r['Global Region'])).filter(r => r !== 'Unknown'))].sort();
+  const qtrs = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
+
+  const seSel = document.getElementById('filter-se');
+  const curSE = seSel.value;
+  seSel.innerHTML = '<option value="">All SEs</option>' + ses.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+  seSel.value = curSE;
+
+  const regSel = document.getElementById('filter-region');
+  const curReg = regSel.value;
+  regSel.innerHTML = '<option value="">All Regions</option>' + regions.map(r => `<option value="${escHtml(r)}">${escHtml(r)}</option>`).join('');
+  regSel.value = curReg;
+
+  const qtrSel = document.getElementById('filter-qtr');
+  const curQtr = qtrSel.value;
+  qtrSel.innerHTML = '<option value="">All Quarters</option>' + qtrs.map(q => `<option value="${escHtml(q)}">${escHtml(q)}</option>`).join('');
+  qtrSel.value = curQtr;
+
+  allPipelineRows = active;
+  applyTableFilters();
+}
+
+function applyTableFilters() {
+  const se = document.getElementById('filter-se').value;
+  const rag = document.getElementById('filter-rag').value;
+  const region = document.getElementById('filter-region').value;
+  const qtr = document.getElementById('filter-qtr').value;
+  const type = document.getElementById('filter-type').value;
+  const search = (document.getElementById('filter-search').value || '').toLowerCase();
+
+  let rows = allPipelineRows.filter(r => {
+    if (se && (r['Implementation Owner'] || '') !== se) return false;
+    const ragStatus = ragLabel((r['Projected Go-Live Status'] || '').trim() === '' ? 'Unknown' : r['Projected Go-Live Status']);
+    if (rag && ragStatus !== rag) return false;
+    if (region && extractRegion(r['Global Region']) !== region) return false;
+    if (qtr && (r['Committed QTR'] || '') !== qtr) return false;
+    if (type && (r['Type of Opportunity'] || '') !== type) return false;
+    if (search) {
+      const haystack = [
+        r['Opportunity Name'], r['Implementation Owner'], r['Global Region'],
+        r['Sub Status'], r['Status']
+      ].join(' ').toLowerCase();
+      if (!haystack.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const tbody = document.getElementById('pipeline-tbody');
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No records match the current filters</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(r => {
+      const ragStat = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
+      const blockedStatus = (r['Status'] || '').trim() === 'Blocked';
+      const effectiveRag = blockedStatus ? 'Blocked' : ragStat;
+      const rc = ragClass(effectiveRag);
+      const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+      const opType = r['Type of Opportunity'] || '';
+      return `<tr>
+        <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
+        <td>${escHtml(r['Implementation Owner'] || '—')}</td>
+        <td>${escHtml(extractRegion(r['Global Region']))}</td>
+        <td><span class="truncate" title="${escHtml(r['Sub Status'] || r['Status'])}" style="max-width:160px">${escHtml(truncate(r['Sub Status'] || r['Status'] || '—', 30))}</span></td>
+        <td>${escHtml(r['Committed QTR'] || '—')}</td>
+        <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+        <td><span class="badge badge-${rc}">${escHtml(effectiveRag)}</span></td>
+        <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('pipeline-count').textContent = `Showing ${rows.length} of ${allPipelineRows.length} records`;
+}
+
+// =====================================================
+// SECTION 5: RISK RADAR
+// =====================================================
+function renderRiskRadar() {
+  const active = activeData || [];
+
+  // Blocked
+  const blocked = active.filter(r =>
+    (r['Projected Go-Live Status'] || '').trim() === 'Blocked' ||
+    (r['Status'] || '').trim() === 'Blocked' ||
+    (r['Sub Status'] || '').toLowerCase().includes('blocked')
+  );
+
+  const blockedDiv = document.getElementById('blocked-list');
+  if (blocked.length === 0) {
+    blockedDiv.innerHTML = '<div class="empty-state" style="padding:20px;text-align:center;color:var(--sub)">No blocked projects</div>';
+  } else {
+    blockedDiv.innerHTML = blocked.map(r => {
+      const blocker = r['Implementation Blocker'] || r['Current Status'] || '';
+      const text = truncate(blocker, 200);
+      return `<div class="risk-item">
+        <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        ${text ? `<div class="ri-text">${escHtml(text)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // At Risk
+  const atRisk = active.filter(r =>
+    (r['Projected Go-Live Status'] || '').trim() === 'At Risk'
+  );
+
+  const atRiskDiv = document.getElementById('atrisk-list');
+  if (atRisk.length === 0) {
+    atRiskDiv.innerHTML = '<div class="empty-state" style="padding:20px;text-align:center;color:var(--sub)">No at-risk projects</div>';
+  } else {
+    atRiskDiv.innerHTML = atRisk.map(r => {
+      const risk = r['Implementation Risk'] && r['Implementation Risk'].trim()
+        ? r['Implementation Risk']
+        : truncate(r['Current Status'] || '', 150);
+      return `<div class="risk-item amber">
+        <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        ${risk ? `<div class="ri-text">${escHtml(truncate(risk, 200))}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Stale (last activity > 30 days, not live completed)
+  const stale = active.filter(r => {
+    if ((r['Status'] || '').trim() === 'Live Completed') return false;
+    const d = daysSince(r['Install Record: Last Activity Date']);
+    return d !== null && d > 30;
+  }).sort((a, b) => {
+    return (daysSince(b['Install Record: Last Activity Date']) || 0) - (daysSince(a['Install Record: Last Activity Date']) || 0);
+  });
+
+  const staleTbody = document.getElementById('stale-tbody');
+  if (stale.length === 0) {
+    staleTbody.innerHTML = '<tr><td colspan="6" class="empty-state">No stale projects detected</td></tr>';
+  } else {
+    staleTbody.innerHTML = stale.map(r => {
+      const d = daysSince(r['Install Record: Last Activity Date']);
+      return `<tr class="stale-row">
+        <td>${escHtml(truncate(r['Opportunity Name'], 40))}</td>
+        <td>${escHtml(r['Implementation Owner'] || '—')}</td>
+        <td>${escHtml(extractRegion(r['Global Region']))}</td>
+        <td>${escHtml(r['Install Record: Last Activity Date'] || '—')}</td>
+        <td style="font-weight:700">${d !== null ? d + 'd' : '—'}</td>
+        <td>${escHtml(truncate(r['Sub Status'] || r['Status'] || '—', 30))}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// =====================================================
+// SECTION 6: NEXT QUARTER PIPELINE
+// =====================================================
+function renderNextQuarter() {
+  const active = activeData || [];
+  const candidates = active.filter(r => {
+    const qtr = (r['Committed QTR'] || '').trim();
+    const status = (r['Status'] || '').trim();
+    return qtr !== CURRENT_QTR && status !== 'Live Completed' &&
+      (status === 'In Progress' || status === 'Presales' || status === 'Blocked' || qtr === 'Q2-2026' || qtr === 'Q3-2026' || qtr === 'Not Committed');
+  }).sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']));
+
+  const container = document.getElementById('next-qtr-cards');
+  if (candidates.length === 0) {
+    container.innerHTML = '<div class="empty-state">No candidates found</div>';
+    return;
+  }
+  container.innerHTML = candidates.map(r => {
+    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+    const rag = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
+    const rc = ragClass(rag);
+    return `<div class="pipeline-card">
+      <div class="pc-name">${escHtml(truncate(r['Opportunity Name'], 50))}</div>
+      <div class="pc-revenue">${rev > 0 ? fmtRev(rev) : 'TBD'}</div>
+      <div class="pc-row">SE: <span>${escHtml(r['Implementation Owner'] || '—')}</span></div>
+      <div class="pc-row">Region: <span>${escHtml(extractRegion(r['Global Region']))}</span></div>
+      <div class="pc-row">Committed QTR: <span>${escHtml(r['Committed QTR'] || 'Not Set')}</span></div>
+      <div class="pc-row" style="margin-top:8px">
+        <span class="badge badge-${rc}" style="font-size:10px">${escHtml(rag)}</span>
+        ${r['Type of Opportunity'] ? `<span class="badge ${r['Type of Opportunity']==='Frontbook'?'badge-fb':'badge-bb'}" style="font-size:10px">${escHtml(r['Type of Opportunity'])}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// =====================================================
+// WEEKLY VIEW
+// =====================================================
+const WEEK1_END = new Date('2026-04-07');
+const WEEK2_END = new Date('2026-04-14');
+
+function daysDiff(d) {
+  // days from TODAY to d (negative = overdue)
+  return Math.round((d - TODAY) / 86400000);
+}
+
+function wvCard(row, daysLabel, daysClass) {
+  const name = row['Opportunity Name'] || row['Install Record: Implementation Name'] || 'Unnamed';
+  const se = row['Implementation Owner'] || '—';
+  const region = (row['Global Region'] || '').split('|')[0].trim() || '—';
+  const qtr = row['Committed QTR'] || '—';
+  const rev = parseRev(row['Opportunity Net Revenue (converted)']);
+  const rag = (row['Projected Go-Live Status'] || '').trim();
+  const substatus = (row['Sub Status'] || '').trim();
+  const risk = (row['Implementation Risk'] || '').trim() || (row['Implementation Blocker'] || '').trim();
+  const glDate = row['Projected Go-Live Date'] || '—';
+  const ragBadge = rag ? `<span class="badge ${rag === 'On Track' ? 'badge-green' : rag === 'At Risk' ? 'badge-amber' : 'badge-red'}">${rag || 'Unknown'}</span>` : '<span class="badge badge-grey">Unknown</span>';
+  const riskHtml = risk ? `<div class="wv-risk">⚠️ ${risk.length > 100 ? risk.slice(0, 100) + '…' : risk}</div>` : '';
+  return `<div class="wv-card">
+    <div class="wv-name">${name}</div>
+    <div class="wv-rag">${ragBadge}</div>
+    <div class="wv-meta">
+      <span>👤 ${se}</span>
+      <span>🌏 ${region}</span>
+      <span>📅 ${qtr}</span>
+      ${rev > 0 ? `<span>💰 $${(rev/1000).toFixed(0)}k</span>` : ''}
+    </div>
+    <div class="wv-status"><strong>Status:</strong> ${substatus || '—'} &nbsp;|&nbsp; <strong>Go-Live:</strong> ${glDate}</div>
+    ${riskHtml}
+    <div class="wv-days ${daysClass}">${daysLabel}</div>
+  </div>`;
+}
+
+let wvCurrentTab = 'all';
+
+function wvSetTab(tab) {
+  wvCurrentTab = tab;
+  ['all','this','next','over'].forEach(t => {
+    document.getElementById(`wv-tab-${t}`).classList.toggle('wv-tab-active', t === tab);
+  });
+  const showThis = tab === 'all' || tab === 'this';
+  const showNext = tab === 'all' || tab === 'next';
+  const showOver = tab === 'all' || tab === 'over';
+  document.getElementById('wv-block-this').style.display = showThis ? '' : 'none';
+  document.getElementById('wv-block-next').style.display = showNext ? '' : 'none';
+  document.getElementById('wv-block-over').style.display = showOver ? '' : 'none';
+}
+
+function renderWeeklyView() {
+  const active = activeData || [];
+  const inProgress = active.filter(r => {
+    const s = (r['Status'] || '').trim();
+    return s === 'In Progress' || s === 'Presales' || s === 'Blocked';
+  });
+
+  const thisWeek = [], nextWeek = [], overdue = [];
+
+  inProgress.forEach(r => {
+    const gl = parseDate(r['Projected Go-Live Date']);
+    if (!gl) return;
+    const diff = daysDiff(gl);
+    if (diff < 0) {
+      overdue.push({ row: r, diff });
+    } else if (gl <= WEEK1_END) {
+      thisWeek.push({ row: r, diff });
+    } else if (gl <= WEEK2_END) {
+      nextWeek.push({ row: r, diff });
+    }
+  });
+
+  // sort by date ascending
+  [thisWeek, nextWeek, overdue].forEach(arr => arr.sort((a, b) => a.diff - b.diff));
+
+  function fillCards(arr, containerId, emptyId) {
+    const c = document.getElementById(containerId);
+    const e = document.getElementById(emptyId);
+    if (arr.length === 0) {
+      c.innerHTML = '';
+      e.style.display = '';
+    } else {
+      e.style.display = 'none';
+      c.innerHTML = arr.map(({ row, diff }) => {
+        let label, cls;
+        if (diff < 0) {
+          label = `🔴 Overdue by ${Math.abs(diff)} day${Math.abs(diff) !== 1 ? 's' : ''}`;
+          cls = 'overdue';
+        } else if (diff === 0) {
+          label = `🔴 Due TODAY`;
+          cls = 'urgent';
+        } else if (diff <= 3) {
+          label = `🔴 Due in ${diff} day${diff !== 1 ? 's' : ''}`;
+          cls = 'urgent';
+        } else if (diff <= 7) {
+          label = `🟡 Due in ${diff} days`;
+          cls = 'soon';
+        } else {
+          label = `🟢 Due in ${diff} days`;
+          cls = 'ok';
+        }
+        return wvCard(row, label, cls);
+      }).join('');
+    }
+  }
+
+  fillCards(thisWeek, 'wv-this-cards', 'wv-this-empty');
+  fillCards(nextWeek, 'wv-next-cards', 'wv-next-empty');
+  fillCards(overdue, 'wv-over-cards', 'wv-over-empty');
+
+  // Summary strip
+  const onTrackCount = [...thisWeek, ...nextWeek].filter(x => (x.row['Projected Go-Live Status'] || '').trim() === 'On Track').length;
+  const atRiskCount  = [...thisWeek, ...nextWeek].filter(x => (x.row['Projected Go-Live Status'] || '').trim() === 'At Risk').length;
+  const blockedCount = [...thisWeek, ...nextWeek].filter(x =>
+    (x.row['Projected Go-Live Status'] || '').trim() === 'Blocked' || (x.row['Status'] || '').trim() === 'Blocked'
+  ).length;
+  document.getElementById('wv-summary').innerHTML = `
+    <div class="wv-summary-chip"><strong>${thisWeek.length + nextWeek.length}</strong> projects due in 14 days</div>
+    <div class="wv-summary-chip" style="color:var(--red)"><strong>${overdue.length}</strong> overdue</div>
+    <div class="wv-summary-chip" style="color:var(--green)"><strong>${onTrackCount}</strong> on track</div>
+    <div class="wv-summary-chip" style="color:var(--amber)"><strong>${atRiskCount}</strong> at risk</div>
+    <div class="wv-summary-chip" style="color:var(--red)"><strong>${blockedCount}</strong> blocked</div>
+  `;
+}
+
+// =====================================================
+// SECTION 7: FRONTBOOK vs BACKBOOK BY REGION
+// =====================================================
+function renderFBBB() {
+  const active = activeData || [];
+  const presales = presalesData || [];
+  const all = [...active, ...presales];
+
+  const regions = ['APAC & ME', 'Europe', 'Americas'];
+  const fbCount = {}, bbCount = {}, fbVal = {}, bbVal = {};
+  regions.forEach(r => { fbCount[r] = 0; bbCount[r] = 0; fbVal[r] = 0; bbVal[r] = 0; });
+
+  all.forEach(row => {
+    const reg = extractRegion(row['Global Region']);
+    const mapped = regions.find(r => reg.startsWith(r.split(' ')[0])) || null;
+    if (!mapped) return;
+    const type = (row['Type of Opportunity'] || '').trim();
+    const rev = parseRev(row['Opportunity Net Revenue (converted)']);
+    if (type === 'Frontbook') { fbCount[mapped]++; fbVal[mapped] += rev; }
+    else if (type === 'Backbook') { bbCount[mapped]++; bbVal[mapped] += rev; }
+  });
+
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#f8fafc', font: { size: 12 } } }
+    },
+    scales: {
+      x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
+      y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
+    }
+  };
+
+  destroyChart('fbbbCountChart');
+  charts['fbbbCountChart'] = new Chart(document.getElementById('fbbbCountChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: regions,
+      datasets: [
+        { label: 'Frontbook', data: regions.map(r => fbCount[r]), backgroundColor: 'rgba(139,92,246,0.7)', borderRadius: 4 },
+        { label: 'Backbook', data: regions.map(r => bbCount[r]), backgroundColor: 'rgba(20,184,166,0.7)', borderRadius: 4 }
+      ]
+    },
+    options: chartDefaults
+  });
+
+  destroyChart('fbbbValueChart');
+  charts['fbbbValueChart'] = new Chart(document.getElementById('fbbbValueChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: regions,
+      datasets: [
+        { label: 'Frontbook ($M)', data: regions.map(r => +(fbVal[r]/1e6).toFixed(2)), backgroundColor: 'rgba(139,92,246,0.7)', borderRadius: 4 },
+        { label: 'Backbook ($M)', data: regions.map(r => +(bbVal[r]/1e6).toFixed(2)), backgroundColor: 'rgba(20,184,166,0.7)', borderRadius: 4 }
+      ]
+    },
+    options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } } } }
+  });
+}
+
+// =====================================================
+// SECTION 8: SE BANDWIDTH
+// =====================================================
+function renderSEBandwidth() {
+  const active = activeData || [];
+  const presales = presalesData || [];
+
+  const SE_NAMES = ['Saviour Agius', 'Nixon Philip', 'Kemi Chua', 'Su Yeian Low', 'Darshan Singh', 'Aniket Mirvankar', 'David Chen', 'Anurag Mahajan'];
+
+  // Build from data
+  const activeSEs = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))];
+  const presalesSEs = [...new Set(presales.map(r => r['Presales Engineer'] || '').filter(Boolean))];
+  const allSEs = [...new Set([...SE_NAMES, ...activeSEs, ...presalesSEs])].filter(Boolean).sort();
+
+  const seData = {};
+  allSEs.forEach(se => {
+    seData[se] = { active: 0, presalesCount: 0, pipelineVal: 0, atRisk: 0, blocked: 0 };
+  });
+
+  active.forEach(r => {
+    const se = r['Implementation Owner'] || '';
+    if (!se || !seData[se]) return;
+    seData[se].active++;
+    seData[se].pipelineVal += parseRev(r['Opportunity Net Revenue (converted)']);
+    const rag = (r['Projected Go-Live Status'] || '').trim();
+    const status = (r['Status'] || '').trim();
+    if (rag === 'At Risk') seData[se].atRisk++;
+    if (rag === 'Blocked' || status === 'Blocked') seData[se].blocked++;
+  });
+
+  presales.forEach(r => {
+    const se = r['Presales Engineer'] || '';
+    if (!se || !seData[se]) return;
+    seData[se].presalesCount++;
+    seData[se].pipelineVal += parseRev(r['Opportunity Net Revenue (converted)']);
+  });
+
+  // Filter to SEs with data
+  const activeSEList = allSEs.filter(se => seData[se].active + seData[se].presalesCount > 0);
+
+  // Bar chart
+  const colors = activeSEList.map(se => {
+    const total = seData[se].active + seData[se].presalesCount;
+    if (total > 8) return '#ef4444';
+    if (total >= 6) return '#f59e0b';
+    return '#22c55e';
+  });
+
+  destroyChart('seLoadChart');
+  charts['seLoadChart'] = new Chart(document.getElementById('seLoadChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: activeSEList,
+      datasets: [
+        { label: 'Active', data: activeSEList.map(se => seData[se].active), backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 4 },
+        { label: 'Presales', data: activeSEList.map(se => seData[se].presalesCount), backgroundColor: 'rgba(139,92,246,0.5)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#f8fafc', font: { size: 11 } } }
+      },
+      scales: {
+        x: { stacked: false, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+        y: { stacked: false, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#e2e8f0' } }
+      }
+    }
+  });
+
+  destroyChart('seValueChart');
+  charts['seValueChart'] = new Chart(document.getElementById('seValueChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: activeSEList,
+      datasets: [{
+        label: 'Pipeline Value ($M)',
+        data: activeSEList.map(se => +(seData[se].pipelineVal/1e6).toFixed(2)),
+        backgroundColor: 'rgba(59,130,246,0.7)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+        y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } }
+      }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('bw-tbody');
+  tbody.innerHTML = activeSEList.map(se => {
+    const d = seData[se];
+    const total = d.active + d.presalesCount;
+    const rowCls = total > 8 ? 'bw-over' : total >= 6 ? 'bw-warn' : 'bw-ok';
+    const loadBadge = total > 8 ? '<span class="badge badge-red">Overloaded</span>' :
+                      total >= 6 ? '<span class="badge badge-amber">High</span>' :
+                      '<span class="badge badge-green">Healthy</span>';
+    return `<tr class="${rowCls}">
+      <td><strong>${escHtml(se)}</strong></td>
+      <td style="text-align:center">${d.active}</td>
+      <td style="text-align:center">${d.presalesCount}</td>
+      <td style="text-align:center;font-weight:700">${total}</td>
+      <td style="text-align:right">${fmtRev(d.pipelineVal)}</td>
+      <td style="text-align:center">${d.atRisk > 0 ? `<span style="color:var(--amber)">${d.atRisk}</span>` : '0'}</td>
+      <td style="text-align:center">${d.blocked > 0 ? `<span style="color:var(--red)">${d.blocked}</span>` : '0'}</td>
+      <td>${loadBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =====================================================
+// SECTION 9: PRESALES PIPELINE
+// =====================================================
+function renderPresales() {
+  const presales = presalesData || [];
+
+  // Stage funnel
+  const stageOrder = ['Qualifying', 'Proposal', 'Negotiation', 'Contracting', 'On Hold', 'Won', 'Live', 'PreWork'];
+  const stageCounts = {};
+  stageOrder.forEach(s => stageCounts[s] = 0);
+  presales.forEach(r => {
+    const stage = (r['Opportunity: Stage'] || '').trim();
+    if (stageCounts.hasOwnProperty(stage)) stageCounts[stage]++;
+    else stageCounts[stage] = (stageCounts[stage] || 0) + 1;
+  });
+
+  const stageLabels = stageOrder.filter(s => stageCounts[s] > 0);
+  const stageColors = ['#3b82f6','#6366f1','#8b5cf6','#a78bfa','#f59e0b','#22c55e','#10b981','#64748b'];
+
+  destroyChart('presalesFunnelChart');
+  charts['presalesFunnelChart'] = new Chart(document.getElementById('presalesFunnelChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: stageLabels,
+      datasets: [{
+        label: 'Opportunities',
+        data: stageLabels.map(s => stageCounts[s]),
+        backgroundColor: stageColors.slice(0, stageLabels.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
+        y: { ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#e2e8f0' } }
+      }
+    }
+  });
+
+  // Weighted value per SE
+  const seWeighted = {};
+  presales.forEach(r => {
+    const se = r['Presales Engineer'] || 'Unknown';
+    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+    const prob = parseFloat(r['Opportunity: Probability (%)']) || 0;
+    seWeighted[se] = (seWeighted[se] || 0) + rev * (prob / 100);
+  });
+
+  const seLabels = Object.keys(seWeighted).sort((a, b) => seWeighted[b] - seWeighted[a]);
+
+  destroyChart('weightedValueChart');
+  charts['weightedValueChart'] = new Chart(document.getElementById('weightedValueChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: seLabels,
+      datasets: [{
+        label: 'Weighted Value ($K)',
+        data: seLabels.map(se => +(seWeighted[se]/1000).toFixed(1)),
+        backgroundColor: 'rgba(59,130,246,0.7)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+        y: { ticks: { color: '#64748b', callback: v => '$' + v + 'K' }, grid: { color: '#e2e8f0' } }
+      }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('presales-tbody');
+  const sorted = [...presales].sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']));
+  tbody.innerHTML = sorted.map(r => {
+    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+    const prob = parseFloat(r['Opportunity: Probability (%)']) || 0;
+    const stage = (r['Opportunity: Stage'] || '').trim();
+    const stageColor = stage === 'Qualifying' ? 'badge-blue' : stage === 'Proposal' ? 'badge-blue' : stage === 'Negotiation' ? 'badge-amber' : stage === 'Contracting' ? 'badge-green' : stage === 'Won' ? 'badge-green' : 'badge-grey';
+    const opType = r['Type of Opportunity'] || '';
+    return `<tr>
+      <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
+      <td>${escHtml(r['Presales Engineer'] || '—')}</td>
+      <td><span class="badge ${stageColor}">${escHtml(stage || '—')}</span></td>
+      <td style="text-align:center">
+        <span style="color:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--sub)'}">${prob}%</span>
+        <div class="prog-bar"><div class="prog-fill" style="width:${prob}%;background:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--red)'}"></div></div>
+      </td>
+      <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+      <td>${escHtml(extractRegion(r['Global Region']))}</td>
+      <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+      <td>${escHtml(r['Sub Status'] || '—')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// =====================================================
+// SECTION 10: HIGHLIGHTS & LOWLIGHTS
+// =====================================================
+function renderHighlights() {
+  const active = activeData || [];
+  const highlights = [];
+  const lowlights = [];
+
+  active.forEach(r => {
+    const status = (r['Status'] || '').trim();
+    const rag = (r['Projected Go-Live Status'] || '').trim();
+    const qtr = (r['Committed QTR'] || '').trim();
+    const subStatus = (r['Sub Status'] || '').trim();
+    const lastActivity = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
+    const daysAgo = daysSince(lastActivity);
+    const name = truncate(r['Opportunity Name'], 50);
+    const se = r['Implementation Owner'] || '—';
+    const blocker = r['Implementation Blocker'] || '';
+    const risk = r['Implementation Risk'] || '';
+
+    // HIGHLIGHTS
+    if (status === 'Live Completed') {
+      highlights.push({ text: `<strong>${escHtml(name)}</strong> went live`, sub: `SE: ${escHtml(se)} | ${escHtml(extractRegion(r['Global Region']))}` });
+    } else if (rag === 'On Track' && qtr === CURRENT_QTR) {
+      highlights.push({ text: `<strong>${escHtml(name)}</strong> on track for ${escHtml(qtr)}`, sub: `SE: ${escHtml(se)} | ${escHtml(subStatus)}` });
+    } else if (daysAgo !== null && daysAgo <= 7 && status !== 'Live Completed') {
+      highlights.push({ text: `<strong>${escHtml(name)}</strong> recently updated`, sub: `SE: ${escHtml(se)} | ${daysAgo}d ago` });
+    }
+
+    // LOWLIGHTS
+    if (status === 'Blocked' || rag === 'Blocked') {
+      const reason = truncate(blocker || r['Current Status'] || 'No details', 120);
+      lowlights.push({ text: `<strong>${escHtml(name)}</strong> is BLOCKED`, sub: escHtml(reason), cls: 'lo' });
+    } else if (rag === 'At Risk') {
+      const reason = truncate(risk || r['Current Status'] || 'No details', 120);
+      lowlights.push({ text: `<strong>${escHtml(name)}</strong> at risk`, sub: escHtml(reason), cls: 'lo' });
+    } else if (subStatus.toLowerCase().includes('delayed')) {
+      const reason = truncate(blocker || r['Current Status'] || '', 120);
+      lowlights.push({ text: `<strong>${escHtml(name)}</strong> delayed`, sub: reason ? escHtml(reason) : `SE: ${escHtml(se)}`, cls: 'lo' });
+    }
+  });
+
+  const hlDiv = document.getElementById('highlights-list');
+  hlDiv.innerHTML = highlights.length > 0
+    ? highlights.slice(0, 20).map(h => `<div class="hl-item hi"><div class="dot"></div><div class="hl-text">${h.text}<div class="hl-sub">${h.sub}</div></div></div>`).join('')
+    : '<div class="empty-state">No highlights available</div>';
+
+  const llDiv = document.getElementById('lowlights-list');
+  llDiv.innerHTML = lowlights.length > 0
+    ? lowlights.slice(0, 20).map(h => `<div class="hl-item lo"><div class="dot"></div><div class="hl-text">${h.text}<div class="hl-sub">${h.sub}</div></div></div>`).join('')
+    : '<div class="empty-state" style="color:var(--green)">No critical lowlights — great job!</div>';
+}
+
+// =====================================================
+// SECTION 11: LEADERSHIP SUMMARY
+// =====================================================
+function renderLeadership() {
+  const active = activeData || [];
+  const presales = presalesData || [];
+
+  const thisQtrActive = active.filter(r => (r['Committed QTR'] || '') === CURRENT_QTR);
+  const liveCompleted = active.filter(r => (r['Status'] || '').trim() === 'Live Completed');
+  const atRiskBlocked = active.filter(r =>
+    (r['Projected Go-Live Status'] || '').trim() === 'At Risk' ||
+    (r['Projected Go-Live Status'] || '').trim() === 'Blocked' ||
+    (r['Status'] || '').trim() === 'Blocked'
+  );
+
+  const totalActiveRev = active.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const presalesRev = presales.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+  // Exec KPIs
+  const execKpis = [
+    { label: 'Q1 Implementations', val: thisQtrActive.length },
+    { label: 'Live Completed', val: liveCompleted.length },
+    { label: 'At Risk / Blocked', val: atRiskBlocked.length },
+    { label: 'Active Pipeline', val: fmtRev(totalActiveRev) },
+    { label: 'Presales Pipeline', val: fmtRev(presalesRev) },
+    { label: 'Total Pipeline', val: fmtRev(totalActiveRev + presalesRev) },
+  ];
+
+  document.getElementById('exec-kpis').innerHTML = execKpis.map(k => `
+    <div class="exec-kpi">
+      <div class="val">${k.val}</div>
+      <div class="lbl">${k.label}</div>
+    </div>
+  `).join('');
+
+  // Key risks
+  const risks = active
+    .filter(r => r['Implementation Blocker'] && r['Implementation Blocker'].trim())
+    .slice(0, 8);
+
+  const risksList = document.getElementById('exec-risks-list');
+  risksList.innerHTML = risks.length > 0
+    ? risks.map(r => `<li>
+        <span class="bullet-red">▸</span>
+        <span><strong>${escHtml(truncate(r['Opportunity Name'], 35))}</strong> — ${escHtml(truncate(r['Implementation Blocker'], 100))}</span>
+      </li>`).join('')
+    : '<li><span class="bullet-green">✓</span> <span>No active blockers recorded</span></li>';
+
+  // Top 3 by revenue
+  const top3 = [...active, ...presales]
+    .sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']))
+    .slice(0, 3);
+
+  document.getElementById('exec-top-list').innerHTML = top3.map((r, i) => {
+    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+    const se = r['Implementation Owner'] || r['Presales Engineer'] || '—';
+    return `<li>
+      <span style="color:var(--accent);font-weight:700">${i+1}.</span>
+      <span><strong>${escHtml(truncate(r['Opportunity Name'], 35))}</strong> — ${fmtRev(rev)} | SE: ${escHtml(se)}</span>
+    </li>`;
+  }).join('');
+}
+
+// =====================================================
+// TABLE SORTING
+// =====================================================
+const sortState = {};
+function sortTable(tableId, colIdx) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const headers = table.querySelectorAll('th');
+
+  const key = tableId + '_' + colIdx;
+  const asc = sortState[key] !== true;
+  sortState[key] = asc;
+
+  headers.forEach((th, i) => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (i === colIdx) th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+  });
+
+  rows.sort((a, b) => {
+    const aText = (a.cells[colIdx] ? a.cells[colIdx].innerText : '').trim();
+    const bText = (b.cells[colIdx] ? b.cells[colIdx].innerText : '').trim();
+    const aNum = parseFloat(aText.replace(/[^0-9.-]/g, ''));
+    const bNum = parseFloat(bText.replace(/[^0-9.-]/g, ''));
+    if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
+    return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// =====================================================
+// SIDEBAR ACTIVE
+// =====================================================
+function setActive(el) {
+  document.querySelectorAll('#sidebar nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Observe sections for active sidebar link
+window.addEventListener('scroll', () => {
+  const sections = document.querySelectorAll('.anchor');
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 100) current = s.id;
+  });
+  if (current) {
+    document.querySelectorAll('#sidebar nav a').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Exclude data files — these contain sensitive pipeline data
+# Upload via the dashboard UI instead
+*.csv
+SE_Pipeline_Data.json
+SE_Pipeline_Record.md
+generate_store.mjs
+generate_store.py
+
+# macOS
+.DS_Store
