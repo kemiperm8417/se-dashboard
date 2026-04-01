@@ -763,6 +763,69 @@
   .anchor { padding-top: 0; margin-top: 0; }
 
   /* ═══════════════════════════════════════════════
+     LEADERSHIP TAB LAYOUT
+  ═══════════════════════════════════════════════ */
+  .ldr-top-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+  .ldr-year-bar { display:flex; gap:8px; }
+  .ldr-year-btn { padding:7px 22px; border-radius:8px; border:2px solid var(--border); background:var(--card); color:var(--sub); font-weight:700; font-size:13px; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+  .ldr-year-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 2px 8px rgba(79,70,229,0.3); }
+  .ldr-body { display:flex; gap:0; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-md); min-height:560px; }
+  .ldr-qtr-sidebar { width:52px; background:#f8fafc; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:4px; flex-shrink:0; }
+  .ldr-qtr-btn { width:40px; padding:9px 4px; border:1px solid transparent; background:transparent; color:var(--sub); font-weight:700; font-size:12px; cursor:pointer; font-family:inherit; transition:all 0.15s; border-radius:7px; text-align:center; }
+  .ldr-qtr-btn:hover { background:var(--hover); color:var(--accent); border-color:rgba(79,70,229,0.2); }
+  .ldr-qtr-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 1px 6px rgba(79,70,229,0.3); }
+  .ldr-main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .ldr-month-row { display:flex; gap:6px; padding:12px 18px; border-bottom:1px solid var(--border); background:#f8fafc; flex-wrap:wrap; }
+  .ldr-mo-btn { padding:5px 14px; border:1px solid var(--border); border-radius:6px; background:var(--card); color:var(--sub); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+  .ldr-mo-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-light); }
+  .ldr-mo-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
+  .ldr-mo-btn.done::after { content:''; display:inline-block; width:5px; height:5px; background:var(--green); border-radius:50%; margin-left:5px; vertical-align:middle; }
+  .ldr-week-row { display:flex; gap:8px; padding:12px 20px; border-bottom:1px solid var(--border); background:#fff; }
+  .ldr-wk-btn { padding:6px 16px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--sub); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+  .ldr-wk-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .ldr-wk-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
+  .ldr-week-panel { padding:22px 26px; background:#fff; min-height:200px; }
+  .ldr-week-heading { font-size:15px; font-weight:700; color:var(--text); margin-bottom:16px; letter-spacing:-0.2px; }
+  .ldr-wk-lbl { font-size:13px; font-weight:700; margin-bottom:12px; color:var(--text); }
+  .ldr-wk-item { font-size:13px; line-height:1.65; margin-bottom:10px; padding:10px 14px; border-left:3px solid var(--border); background:#fafafa; border-radius:0 6px 6px 0; }
+  .ldr-wk-item.live { border-left-color:var(--green); background:var(--green-bg); }
+  .ldr-wk-item.cug  { border-left-color:var(--accent); background:var(--accent-light); }
+  .ldr-wk-item.kick { border-left-color:#8b5cf6; background:#f5f3ff; }
+  .ldr-wk-item.risk { border-left-color:var(--red); background:var(--red-bg); }
+  .ldr-wk-item.amber{ border-left-color:var(--amber); background:var(--amber-bg); }
+  .ldr-wk-item .wk-label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; opacity:0.7; margin-bottom:4px; }
+  .ldr-wk-item .wk-names { font-size:13px; }
+  .ldr-wk-empty { font-size:13px; color:var(--sub); font-style:italic; padding:8px 0; }
+  /* Monthly summary */
+  .ldr-mo-summary { border-top:2px solid var(--border); padding:22px 26px; background:#fafafa; }
+  .ldr-mo-sum-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+  .ldr-mo-sum-title .mo-badge { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; padding:2px 9px; border-radius:20px; }
+  .ldr-metrics-strip { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .ldr-metric { flex:1; min-width:120px; background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:13px 16px; box-shadow:var(--shadow-sm); position:relative; overflow:hidden; }
+  .ldr-metric::before { content:''; position:absolute; top:0;left:0;right:0;height:3px; background:var(--border); border-radius:var(--radius) var(--radius) 0 0; }
+  .ldr-metric.accent::before { background:var(--accent); }
+  .ldr-metric.green::before  { background:var(--green); }
+  .ldr-metric.amber::before  { background:var(--amber); }
+  .ldr-metric.red::before    { background:var(--red); }
+  .ldr-metric .lm-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--sub); margin-bottom:6px; }
+  .ldr-metric .lm-val { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.8px; line-height:1.1; }
+  .ldr-metric .lm-sub { font-size:10.5px; color:var(--sub); margin-top:4px; line-height:1.45; }
+  .ldr-narrative { font-size:12.5px; line-height:1.75; color:var(--text); }
+  .ldr-narrative p { margin-bottom:9px; }
+  .ldr-narrative ul { list-style:disc; margin-left:20px; margin-bottom:12px; }
+  .ldr-narrative ul li { margin-bottom:3px; }
+  .ldr-narrative ol  { list-style:decimal; margin-left:20px; margin-bottom:12px; }
+  .ldr-narrative ol li { margin-bottom:4px; }
+  .ldr-narrative h4 { font-size:11px; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:0.7px; margin:16px 0 7px; border-top:1px solid var(--border); padding-top:12px; }
+  .ldr-rag-summary { display:flex; align-items:center; gap:14px; font-size:13px; font-weight:600; margin:8px 0 12px; flex-wrap:wrap; }
+  .ldr-rag-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+  .ldr-rag-pill.green { background:var(--green-bg); color:#065f46; border:1px solid rgba(5,150,105,0.2); }
+  .ldr-rag-pill.amber { background:var(--amber-bg); color:#92400e; border:1px solid rgba(217,119,6,0.2); }
+  .ldr-rag-pill.red   { background:var(--red-bg);   color:#991b1b; border:1px solid rgba(220,38,38,0.2); }
+  .ldr-qtr-overview { background:linear-gradient(135deg,var(--accent-light),#f0f4ff); border:1px solid rgba(79,70,229,0.15); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; font-size:13px; line-height:1.7; }
+  .ldr-empty-mo { padding:28px; text-align:center; color:var(--sub); font-size:13px; font-style:italic; }
+
+  /* ═══════════════════════════════════════════════
      RESPONSIVE
   ═══════════════════════════════════════════════ */
   @media (max-width: 960px) {
@@ -1166,13 +1229,34 @@
 
     <!-- SECTION 11: LEADERSHIP SUMMARY -->
     <div id="leadership" class="section anchor">
-      <div class="section-title"><span class="icon">📋</span> Summary — SE Pipeline Report</div>
-      <div class="report-actions">
-        <button onclick="copyReport()">📋 Copy Report Text</button>
-        <button onclick="window.print()">🖨️ Print / Export PDF</button>
+      <div class="ldr-top-bar">
+        <div class="section-title" style="margin:0"><span class="icon">📋</span> Summary — SE Pipeline Report</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <div class="ldr-year-bar" id="ldr-year-bar"></div>
+          <div class="report-actions" style="margin:0">
+            <button onclick="copyReport()">📋 Copy Text</button>
+            <button onclick="window.print()">🖨️ Print</button>
+          </div>
+        </div>
       </div>
-      <div class="report-doc" id="report-doc">
-        <p class="rpt-intro" style="color:var(--sub);font-family:'Segoe UI',system-ui,sans-serif;font-style:italic">Upload CSV files to generate the leadership report.</p>
+
+      <div class="ldr-body">
+        <!-- Quarter sidebar -->
+        <div class="ldr-qtr-sidebar" id="ldr-qtr-sidebar"></div>
+
+        <!-- Main content -->
+        <div class="ldr-main" id="ldr-main">
+          <!-- Month tabs -->
+          <div class="ldr-month-row" id="ldr-month-row"></div>
+          <!-- Week tabs -->
+          <div class="ldr-week-row" id="ldr-week-row"></div>
+          <!-- Weekly content -->
+          <div class="ldr-week-panel" id="ldr-week-panel">
+            <p style="color:var(--sub);font-size:13px;font-style:italic">Upload CSV files to view the implementation summary.</p>
+          </div>
+          <!-- Monthly summary -->
+          <div class="ldr-mo-summary" id="ldr-mo-summary" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -2877,6 +2961,12 @@ function renderPresales() {
 let hlData = [];
 let hlTabState = 'all';
 
+// Leadership tab state
+let ldrYear = null;
+let ldrQtr  = null;
+let ldrMo   = null;
+let ldrWk   = 0;
+
 function hlSetTab(tab, btn) {
   hlTabState = tab;
   document.querySelectorAll('#hltab-all,#hltab-up,#hltab-down').forEach(b => b.classList.remove('active'));
@@ -3190,308 +3280,443 @@ function renderHighlights() {
 // =====================================================
 // SECTION 11: LEADERSHIP SUMMARY
 // =====================================================
+// ─── Leadership helper constants ──────────────────────────────────────────────
+const LDR_QUARTERS = [
+  { label:'Q1', months:[0,1,2] },
+  { label:'Q2', months:[3,4,5] },
+  { label:'Q3', months:[6,7,8] },
+  { label:'Q4', months:[9,10,11] },
+];
+const LDR_MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const LDR_MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function ldrParseDate(s) {
+  if (!s) return null;
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+function ldrInMonth(dateStr, yr, mo) {
+  const d = ldrParseDate(dateStr);
+  if (!d) return false;
+  return d.getFullYear() === yr && d.getMonth() === mo;
+}
+function ldrInWeek(dateStr, yr, mo, s, e) {
+  const d = ldrParseDate(dateStr);
+  if (!d) return false;
+  return d.getFullYear() === yr && d.getMonth() === mo && d.getDate() >= s && d.getDate() <= e;
+}
+function ldrMonthDone(yr, mo)    { return new Date(yr, mo+1, 0) < TODAY; }
+function ldrMonthCurrent(yr, mo) { return TODAY.getMonth()===mo && TODAY.getFullYear()===yr; }
+function ldrQtrDone(yr, qIdx)    { return new Date(yr, LDR_QUARTERS[qIdx].months[2]+1, 0) < TODAY; }
+function ldrLastDay(yr, mo)      { return new Date(yr, mo+1, 0).getDate(); }
+
+function ldrIsExcluded(r) {
+  const status = (r['Status']||'').trim();
+  const type   = (r['Type of Opportunity']||'').trim();
+  const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
+  if (status === 'Presales') return true;
+  if (status === 'In Progress' && type === 'Additional Project' && rev === 0) return true;
+  return false;
+}
+
+// ── Render pieces ──────────────────────────────────────────────────────────────
+
+function ldrRenderYearBar() {
+  const el = document.getElementById('ldr-year-bar');
+  if (!el) return;
+  const yr = TODAY.getFullYear();
+  const years = [yr, yr+1];
+  el.innerHTML = years.map(y =>
+    `<button class="ldr-year-btn${ldrYear===y?' active':''}" onclick="ldrSetYear(${y})">${y}</button>`
+  ).join('');
+}
+
+function ldrRenderQtrSidebar() {
+  const el = document.getElementById('ldr-qtr-sidebar');
+  if (!el) return;
+  el.innerHTML = LDR_QUARTERS.map((q,i) =>
+    `<button class="ldr-qtr-btn${ldrQtr===i?' active':''}" onclick="ldrSetQtr(${i})">${q.label}</button>`
+  ).join('');
+}
+
+function ldrRenderMonthRow() {
+  const el = document.getElementById('ldr-month-row');
+  if (!el) return;
+  const months = LDR_QUARTERS[ldrQtr].months;
+  el.innerHTML = months.map(mo => {
+    const done = ldrMonthDone(ldrYear, mo);
+    const cls = `ldr-mo-btn${ldrMo===mo?' active':''}${done?' done':''}`;
+    return `<button class="${cls}" onclick="ldrSetMo(${mo})">${LDR_MONTH_SHORT[mo]}</button>`;
+  }).join('');
+}
+
+function ldrRenderWeekRow() {
+  const el = document.getElementById('ldr-week-row');
+  if (!el) return;
+  const lastDay = ldrLastDay(ldrYear, ldrMo);
+  const weeks = [
+    { label:'Week 1', s:1,  e:7 },
+    { label:'Week 2', s:8,  e:14 },
+    { label:'Week 3', s:15, e:21 },
+    { label:'Week 4', s:22, e:lastDay },
+  ];
+  el.innerHTML = weeks.map((w,i) =>
+    `<button class="ldr-wk-btn${ldrWk===i?' active':''}" onclick="ldrSetWk(${i})">${w.label}</button>`
+  ).join('');
+}
+
+function ldrRenderWeekPanel() {
+  const el = document.getElementById('ldr-week-panel');
+  if (!el) return;
+  const active = activeData || [];
+  const lastDay = ldrLastDay(ldrYear, ldrMo);
+  const weekRanges = [
+    { s:1,  e:7 },
+    { s:8,  e:14 },
+    { s:15, e:21 },
+    { s:22, e:lastDay },
+  ];
+  const { s, e } = weekRanges[ldrWk];
+  const moName  = LDR_MONTH_NAMES[ldrMo];
+  const yr = ldrYear, mo = ldrMo;
+
+  const wLive = active.filter(r => ldrInWeek(r['Actual Live Date'], yr, mo, s, e));
+  const wCug  = active.filter(r => ldrInWeek(r['Production Environment Created'], yr, mo, s, e) && !r['Actual Live Date']);
+  const wKick = active.filter(r => ldrInWeek(r['Kick-Off Meeting'], yr, mo, s, e));
+  // At-risk and blocked records with activity in this week
+  const wRisk = active.filter(r => {
+    const rag    = (r['Projected Go-Live Status']||'').trim();
+    const status = (r['Status']||'').trim();
+    return (rag==='Blocked'||rag==='At Risk'||status==='Blocked') &&
+           ldrInWeek(r['Install Record: Last Activity Date']||r['Last Activity Date']||'', yr, mo, s, e);
+  });
+
+  const esc = escHtml;
+  const rv  = v => fmtRev(parseRev(v));
+  const typeTag = r => { const t=(r['Type of Opportunity']||'').trim(); return t?` <span style="font-size:10px;opacity:.65">[${t}]</span>`:''; };
+
+  let h = `<div class="ldr-week-heading">${moName} ${yr}</div>`;
+  h += `<div class="ldr-wk-lbl">Week ${ldrWk+1} &nbsp;<span style="font-size:11px;color:var(--sub);font-weight:400">${s}–${e} ${LDR_MONTH_SHORT[mo]} ${yr}</span></div>`;
+
+  if (!wLive.length && !wCug.length && !wKick.length && !wRisk.length) {
+    h += `<div class="ldr-wk-empty">No activity recorded for Week ${ldrWk+1}.</div>`;
+    el.innerHTML = h; return;
+  }
+
+  if (wLive.length) {
+    h += `<div class="ldr-wk-item live">
+      <div class="wk-label">✅ Go-Live (${wLive.length})</div>
+      <div class="wk-names">${wLive.map(r=>`<strong>${esc(r['Opportunity Name'])}</strong>${typeTag(r)} — ${rv(r['Opportunity Net Revenue (converted)'])}`).join(' &nbsp;·&nbsp; ')}</div>
+    </div>`;
+  }
+  if (wCug.length) {
+    h += `<div class="ldr-wk-item cug">
+      <div class="wk-label">🔵 CUG / Production Deployment (${wCug.length})</div>
+      <div class="wk-names">${wCug.map(r=>`<strong>${esc(r['Opportunity Name'])}</strong>${typeTag(r)}`).join(' &nbsp;·&nbsp; ')}</div>
+    </div>`;
+  }
+  if (wKick.length) {
+    h += `<div class="ldr-wk-item kick">
+      <div class="wk-label">🚀 New Kick-off (${wKick.length})</div>
+      <div class="wk-names">${wKick.map(r=>`<strong>${esc(r['Opportunity Name'])}</strong> <span style="font-size:11px;color:var(--sub)">(SE: ${esc(r['Implementation Owner']||'—')})</span>`).join(' &nbsp;·&nbsp; ')}</div>
+    </div>`;
+  }
+  if (wRisk.length) {
+    h += `<div class="ldr-wk-item risk">
+      <div class="wk-label">⚠️ Lowlights / Risk / Challenges (${wRisk.length})</div>
+      <div class="wk-names">`;
+    wRisk.forEach(r => {
+      const rag = (r['Projected Go-Live Status']||'').trim()||'Blocked';
+      const blocker = (r['Implementation Blocker']||r['Implementation Risk']||'').trim();
+      h += `<div style="margin-bottom:5px">• <strong>${esc(r['Opportunity Name'])}</strong> [${rag}]`;
+      if (blocker) h += ` — <span style="color:var(--sub)">${esc(blocker.slice(0,120))}</span>`;
+      h += `</div>`;
+    });
+    h += `</div></div>`;
+  }
+
+  el.innerHTML = h;
+}
+
+function ldrRenderMonthSummary() {
+  const el = document.getElementById('ldr-mo-summary');
+  if (!el) return;
+  const active = activeData || [];
+  const yr = ldrYear, mo = ldrMo, qIdx = ldrQtr;
+  const qtr = LDR_QUARTERS[qIdx];
+  const qKey = `${qtr.label}-${yr}`;
+  const moName = LDR_MONTH_NAMES[mo];
+
+  // Only show for past or current months
+  const future = !ldrMonthDone(yr, mo) && !ldrMonthCurrent(yr, mo);
+  if (future) {
+    // Show upcoming projection
+    const proj = active.filter(r => {
+      const d = ldrParseDate(r['Projected Go-Live Date']);
+      return d && d.getFullYear()===yr && d.getMonth()===mo && (r['Status']||'').trim()==='In Progress';
+    });
+    const projNR = proj.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+    el.style.display = '';
+    let h = `<div class="ldr-mo-sum-title">`;
+    h += `${moName} ${yr} — Projected Pipeline`;
+    h += `<span class="mo-badge rpt-badge soon">Upcoming</span></div>`;
+    if (proj.length) {
+      h += `<div class="ldr-qtr-overview">📅 <strong>${proj.length} project${proj.length!==1?'s':''}</strong> projected to go live in ${moName} &mdash; <strong>${fmtRev(projNR)}</strong> potential NR<br>`;
+      h += proj.map(r=>`${escHtml(r['Opportunity Name'])} (${escHtml(r['Implementation Owner']||'—')})`).join(' &nbsp;·&nbsp; ');
+      h += `</div>`;
+    } else {
+      h += `<div class="ldr-empty-mo">No projects projected for ${moName}.</div>`;
+    }
+    el.innerHTML = h; return;
+  }
+
+  el.style.display = '';
+  const esc = escHtml;
+  const rv  = v => fmtRev(parseRev(v));
+
+  // ── Core data ──────────────────────────────────────────────────────────────
+  const qStart = new Date(yr, qtr.months[0], 1);
+  const qEnd   = new Date(yr, qtr.months[2]+1, 0);
+  const moEnd  = new Date(yr, mo+1, 0);
+
+  // LTS records for this quarter (excluding)
+  const ltsRecs = active.filter(r => (r['Committed QTR']||'').trim()===qKey && !ldrIsExcluded(r));
+
+  // Go-lives this month and QTD
+  const liveMo  = active.filter(r => ldrInMonth(r['Actual Live Date'], yr, mo));
+  const liveQTD = active.filter(r => {
+    const d = ldrParseDate(r['Actual Live Date']);
+    return d && d >= qStart && d <= moEnd;
+  });
+  const liveMoNR  = liveMo.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+  const liveQTDNR = liveQTD.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+
+  // Remaining LTS (not yet live)
+  const remaining = ltsRecs.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+  const remOnTrack = remaining.filter(r => (r['Projected Go-Live Status']||'').trim()==='On Track');
+  const remAtRisk  = remaining.filter(r => (r['Projected Go-Live Status']||'').trim()==='At Risk');
+  const remBlocked = remaining.filter(r => (r['Projected Go-Live Status']||'').trim()==='Blocked'||(r['Status']||'').trim()==='Blocked');
+
+  // Revenue at risk = blocked + at-risk NR
+  const revAtRisk = [...remAtRisk, ...remBlocked].reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+  // Revenue recoverable = at-risk (not blocked) with future projected date
+  const revRecoverable = remAtRisk.filter(r => {
+    const d = ldrParseDate(r['Projected Go-Live Date']);
+    return d && d > TODAY;
+  }).reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+
+  // Median TTL
+  const ttlVals = liveQTD.map(r => parseInt(r['Number of days in implementation']||'0')).filter(v=>v>0).sort((a,b)=>a-b);
+  const medTTL  = ttlVals.length ? ttlVals[Math.floor(ttlVals.length/2)] : null;
+
+  // Slipped from this month = LTS committed to qtr, projected for ≤ this month, not live
+  const slippedMo = ltsRecs.filter(r => {
+    if ((r['Status']||'').trim()==='Live Completed') return false;
+    const d = ldrParseDate(r['Projected Go-Live Date']);
+    return d && d <= moEnd;
+  });
+  const slippedNR = slippedMo.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0);
+
+  // Top 5 by NR in remaining
+  const top5 = [...remaining].sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,5);
+
+  // Top at-risk / blocked for narrative
+  const topAtRisk  = [...remAtRisk].sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,5);
+  const topBlocked = [...remBlocked].sort((a,b)=>parseRev(b['Opportunity Net Revenue (converted)'])-parseRev(a['Opportunity Net Revenue (converted)'])).slice(0,3);
+
+  // Prior months in quarter for go-live breakdown
+  const priorMos = qtr.months.filter(m => m <= mo && (ldrMonthDone(yr, m) || ldrMonthCurrent(yr, m)));
+
+  // ── Build HTML ─────────────────────────────────────────────────────────────
+  const isDone    = ldrMonthDone(yr, mo);
+  const isCurrent = ldrMonthCurrent(yr, mo);
+  const badgeCls  = isDone ? 'done' : 'now';
+  const badgeTxt  = isDone ? 'Completed' : 'In Progress';
+
+  let h = `<div class="ldr-mo-sum-title">`;
+  h += `${moName} ${yr} — Monthly Implementation Summary`;
+  h += ` <span class="mo-badge rpt-badge ${badgeCls}">${badgeTxt}</span>`;
+  h += `</div>`;
+
+  // KEY METRICS strip
+  h += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--sub);margin-bottom:8px">Key Metrics</div>`;
+  h += `<div class="ldr-metrics-strip">`;
+  h += `<div class="ldr-metric green"><div class="lm-label">Go-Lives QTD</div><div class="lm-val">${liveQTD.length}</div><div class="lm-sub">of ${ltsRecs.length} Forecast (${ltsRecs.length?Math.round(liveQTD.length/ltsRecs.length*100):0}%)<br>This month: ${liveMo.length}</div></div>`;
+  h += `<div class="ldr-metric accent"><div class="lm-label">Revenue Unlocked</div><div class="lm-val">${rv(String(liveQTDNR))}</div><div class="lm-sub">QTD total<br>This month: ${rv(String(liveMoNR))}</div></div>`;
+  h += `<div class="ldr-metric red"><div class="lm-label">Revenue at Risk</div><div class="lm-val">${rv(String(revAtRisk))}</div><div class="lm-sub">${rv(String(revRecoverable))} recoverable<br>${remBlocked.length} blocked project${remBlocked.length!==1?'s':''}</div></div>`;
+  h += `<div class="ldr-metric amber"><div class="lm-label">Remaining LTS</div><div class="lm-val">${remaining.length}</div><div class="lm-sub">QT: ${remOnTrack.length} &nbsp;AT: ${remAtRisk.length} &nbsp;BL: ${remBlocked.length}</div></div>`;
+  h += `<div class="ldr-metric"><div class="lm-label">Median TTL</div><div class="lm-val">${medTTL ? medTTL + ' days' : '—'}</div><div class="lm-sub">Completed projects</div></div>`;
+  h += `</div>`;
+
+  h += `<div class="ldr-narrative">`;
+
+  // Go-live breakdown by prior months
+  if (priorMos.length) {
+    priorMos.forEach(m => {
+      const ml = active.filter(r => ldrInMonth(r['Actual Live Date'], yr, m));
+      if (!ml.length) return;
+      const fb = ml.filter(r => (r['Type of Opportunity']||'').includes('Front'));
+      const bb = ml.filter(r => !(r['Type of Opportunity']||'').includes('Front'));
+      const names = ml.map(r => {
+        const t = (r['Type of Opportunity']||'').trim();
+        const tag = t ? ` [${t.replace('Frontbook','FB').replace('Backbook','BB')}]` : '';
+        return `${esc(r['Opportunity Name'])}${tag}`;
+      }).join(', ');
+      h += `<p><strong>${LDR_MONTH_SHORT[m]} go-lives (${ml.length}):</strong> ${names}</p>`;
+    });
+  }
+
+  // Slippage narrative
+  if (slippedMo.length) {
+    h += `<p><strong>${slippedMo.length} project${slippedMo.length!==1?'s':''} slipped from ${moName} '${String(yr).slice(2)}</strong>, representing <strong>${rv(String(slippedNR))}</strong> in potential ${qtr.label} revenue slippage.</p>`;
+    h += `<ul>`;
+    h += `<li><strong>${rv(String(revRecoverable))}</strong> is recoverable if ${remAtRisk.length} project${remAtRisk.length!==1?'s':''} deliver later in the quarter as currently projected</li>`;
+    if (remBlocked.length) {
+      h += `<li><strong>${rv(String(remBlocked.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0)))}</strong> is at risk of being lost from ${qtr.label} entirely &mdash; <strong>${remBlocked.length} Blocked</strong> project${remBlocked.length!==1?'s':''} with no confirmed go-live date (${remBlocked.map(r=>esc(r['Opportunity Name'])).join(', ')})</li>`;
+    }
+    h += `</ul>`;
+    // Slipped project detail
+    h += `<p>Slipped projects: ${slippedMo.map(r => `${esc(r['Opportunity Name'])} [${(r['Type of Opportunity']||'—')}]`).join(', ')}</p>`;
+    h += `<p style="color:var(--sub);font-size:12px">Key reasons: integration delays, client readiness, resource constraints — refer to blocker fields for per-project detail.</p>`;
+  }
+
+  // Projects moved out (committed to qtr, projected beyond qtr end)
+  const movedOut = ltsRecs.filter(r => {
+    if ((r['Status']||'').trim()==='Live Completed') return false;
+    const d = ldrParseDate(r['Projected Go-Live Date']);
+    return d && d > qEnd;
+  });
+  if (movedOut.length) {
+    h += `<p><strong>${movedOut.length} project${movedOut.length!==1?'s':''}</strong> (total NR <strong>${rv(String(movedOut.reduce((s,r)=>s+parseRev(r['Opportunity Net Revenue (converted)']),0)))}</strong>) projected beyond ${qtr.label} ${yr}:</p>`;
+    h += `<ul>${movedOut.slice(0,8).map(r=>`<li>${esc(r['Opportunity Name'])} — projected ${r['Projected Go-Live Date']||'TBD'}</li>`).join('')}${movedOut.length>8?`<li>… and ${movedOut.length-8} more</li>`:''}</ul>`;
+  }
+
+  // Top 5 projects by NR
+  if (top5.length) {
+    h += `<h4>Top 5 Remaining Projects by Revenue</h4>`;
+    h += `<ol>`;
+    top5.forEach((r, i) => {
+      const rag    = (r['Projected Go-Live Status']||'—').trim();
+      const ragCol = rag==='On Track'?'var(--green)':rag==='At Risk'?'var(--amber)':'var(--red)';
+      const projDt = r['Projected Go-Live Date'] || 'TBD';
+      h += `<li><strong>${esc(r['Opportunity Name'])}</strong> (NR: ${rv(r['Opportunity Net Revenue (converted)'])}) &nbsp;|&nbsp; SE: ${esc(r['Implementation Owner']||'—')} &nbsp;|&nbsp; Status: <span style="color:${ragCol};font-weight:700">${rag}</span> &nbsp;|&nbsp; Go-Live: ${projDt}</li>`;
+    });
+    h += `</ol>`;
+  }
+
+  // Remaining LTS RAG summary
+  h += `<h4>${qtr.label} Remaining LTS (${remaining.length}) — RAG Status</h4>`;
+  h += `<div class="ldr-rag-summary">`;
+  h += `<span class="ldr-rag-pill green">🟢 On Track: ${remOnTrack.length}</span>`;
+  h += `<span class="ldr-rag-pill amber">🟡 At Risk: ${remAtRisk.length}</span>`;
+  h += `<span class="ldr-rag-pill red">🔴 Blocked: ${remBlocked.length}</span>`;
+  h += `</div>`;
+
+  // Top at-risk
+  if (topAtRisk.length) {
+    h += `<p><strong>Top ${topAtRisk.length} At Risk</strong> (excl. Top 5 above):</p><ol>`;
+    topAtRisk.forEach(r => {
+      const notes = (r['Current Status']||r['Implementation Risk']||'').trim().slice(0,100);
+      h += `<li>${esc(r['Opportunity Name'])} (NR: ${rv(r['Opportunity Net Revenue (converted)'])})${notes?' — <span style="color:var(--sub)">'+esc(notes)+'</span>':''}</li>`;
+    });
+    h += `</ol>`;
+  }
+
+  // Top blocked
+  if (topBlocked.length) {
+    h += `<p><strong>Top ${topBlocked.length} Blocked</strong>:</p><ol>`;
+    topBlocked.forEach(r => {
+      const blocker = (r['Implementation Blocker']||r['Current Status']||'').trim().slice(0,100);
+      h += `<li>${esc(r['Opportunity Name'])} (NR: ${rv(r['Opportunity Net Revenue (converted)'])})${blocker?' — <span style="color:var(--red)">'+esc(blocker)+'</span>':''}</li>`;
+    });
+    h += `</ol>`;
+  }
+
+  h += `</div>`;
+  el.innerHTML = h;
+}
+
+// ── Public nav functions (called from onclick) ────────────────────────────────
+
+function ldrSetYear(yr) {
+  ldrYear = yr;
+  // Recalculate qtr/mo to sensible defaults for new year
+  if (yr === TODAY.getFullYear()) {
+    ldrQtr = Math.floor(TODAY.getMonth()/3);
+    ldrMo  = TODAY.getMonth();
+  } else {
+    ldrQtr = 0; ldrMo = 0;
+  }
+  ldrWk = 0;
+  ldrRenderYearBar();
+  ldrRenderQtrSidebar();
+  ldrRenderMonthRow();
+  ldrRenderWeekRow();
+  ldrRenderWeekPanel();
+  ldrRenderMonthSummary();
+}
+
+function ldrSetQtr(qIdx) {
+  ldrQtr = qIdx;
+  ldrMo  = LDR_QUARTERS[qIdx].months[0]; // first month of quarter
+  ldrWk  = 0;
+  ldrRenderQtrSidebar();
+  ldrRenderMonthRow();
+  ldrRenderWeekRow();
+  ldrRenderWeekPanel();
+  ldrRenderMonthSummary();
+}
+
+function ldrSetMo(mo) {
+  ldrMo = mo;
+  ldrWk = 0;
+  ldrRenderMonthRow();
+  ldrRenderWeekRow();
+  ldrRenderWeekPanel();
+  ldrRenderMonthSummary();
+}
+
+function ldrSetWk(wk) {
+  ldrWk = wk;
+  ldrRenderWeekRow();
+  ldrRenderWeekPanel();
+}
+
+// ── Main entry point ──────────────────────────────────────────────────────────
 function renderLeadership() {
   const active   = activeData   || [];
   const presales = presalesData || [];
   if (!active.length && !presales.length) return;
 
-  const $r  = s => `<span class="rpt-red">${s}</span>`;
-  const $a  = s => `<span class="rpt-amber">${s}</span>`;
-  const $g  = s => `<span class="rpt-green">${s}</span>`;
-  const $i  = s => `<span class="rpt-italic">${s}</span>`;
-  const $b  = s => `<span class="rpt-bold">${s}</span>`;
-  const $bl = s => `<span class="rpt-blue">${s}</span>`;
-  const rv  = v => fmtRev(parseRev(v));
-  const esc = escHtml;
+  // Initialise state based on today
+  if (ldrYear === null) ldrYear = TODAY.getFullYear();
+  if (ldrQtr  === null) ldrQtr  = Math.min(3, Math.floor(TODAY.getMonth() / 3));
+  if (ldrMo   === null) ldrMo   = TODAY.getMonth();
 
-  const REPORT_YEAR = TODAY.getFullYear();
+  // Clamp month to selected quarter
+  const qMos = LDR_QUARTERS[ldrQtr].months;
+  if (!qMos.includes(ldrMo)) ldrMo = qMos[0];
 
-  // ── date helpers ──────────────────────────────────────────────────────────
-  const MONTH_NAMES  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const MONTH_SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  function lastDayOfMonth(yr, mo) { return new Date(yr, mo + 1, 0).getDate(); }
-
-  function inMonthRange(dateStr, yr, mo) {
-    const d = parseDate(dateStr);
-    if (!d) return false;
-    return d.getFullYear() === yr && d.getMonth() === mo;
-  }
-
-  function inWeekRange(dateStr, yr, mo, wkStart, wkEnd) {
-    const d = parseDate(dateStr);
-    if (!d) return false;
-    return d.getFullYear() === yr && d.getMonth() === mo &&
-           d.getDate() >= wkStart && d.getDate() <= wkEnd;
-  }
-
-  function monthEnd(yr, mo)   { return new Date(yr, mo + 1, 0); }
-  function monthStart(yr, mo) { return new Date(yr, mo, 1); }
-  function isMonthDone(yr, mo)    { return monthEnd(yr, mo) < TODAY; }
-  function isMonthCurrent(yr, mo) { return TODAY.getMonth() === mo && TODAY.getFullYear() === yr; }
-
-  // ── live records for a month ───────────────────────────────────────────────
-  function liveInMonth(yr, mo) {
-    return active.filter(r => inMonthRange(r['Actual Live Date'], yr, mo));
-  }
-  function cugInMonth(yr, mo) {
-    return active.filter(r => inMonthRange(r['CUG Sign off'], yr, mo));
-  }
-  function kickoffInMonth(yr, mo) {
-    return active.filter(r => inMonthRange(r['Kick-Off Meeting'], yr, mo));
-  }
-
-  // ── fmtRevK helper ────────────────────────────────────────────────────────
-  function fmtRevK(v) {
-    const n = parseRev(v);
-    return n >= 1e6 ? `~$${(n/1e6).toFixed(1)}M` : n > 0 ? `~$${Math.round(n/1000)}K` : '—';
-  }
-
-  // ── week section within a month (past/current only) ───────────────────────
-  function buildWeekHtml(wkLabel, yr, mo, wkStart, wkEnd, liveRecs, cugRecs, kickRecs) {
-    const wLive = liveRecs.filter(r => inWeekRange(r['Actual Live Date'], yr, mo, wkStart, wkEnd));
-    const wCug  = cugRecs.filter(r  => inWeekRange(r['CUG Sign off'],    yr, mo, wkStart, wkEnd));
-    const wKick = kickRecs.filter(r => inWeekRange(r['Kick-Off Meeting'], yr, mo, wkStart, wkEnd));
-    if (!wLive.length && !wCug.length && !wKick.length) return '';
-
-    let h = `<div class="rpt-week-head">${wkLabel} (${wkStart}–${wkEnd} ${MONTH_SHORT[mo]} ${yr})</div>`;
-    h += `<ul class="rpt-ul" style="margin-left:24px">`;
-    if (wLive.length) {
-      h += `<li>${$g('✅ Go-Lives (' + wLive.length + ')')} — `;
-      h += wLive.map(r => {
-        const tag = (r['Type of Opportunity']||'').trim();
-        return `${$i(esc(r['Opportunity Name']))} (${rv(r['Opportunity Net Revenue (converted)'])})${tag ? ' ['+tag+']' : ''}`;
-      }).join('; ');
-      h += '</li>';
-    }
-    if (wCug.length) {
-      h += `<li>${$bl('🔵 CUG Sign-offs (' + wCug.length + ')')} — `;
-      h += wCug.map(r => $i(esc(r['Opportunity Name']))).join(', ');
-      h += '</li>';
-    }
-    if (wKick.length) {
-      h += `<li>${$b('🚀 Kick-offs (' + wKick.length + ')')} — `;
-      h += wKick.map(r => `${$i(esc(r['Opportunity Name']))} (SE: ${esc(r['Implementation Owner']||'—')})`).join(', ');
-      h += '</li>';
-    }
-    h += '</ul>';
-    return h;
-  }
-
-  // ── build a single month ───────────────────────────────────────────────────
-  function buildMonthHtml(yr, mo) {
-    const moName  = MONTH_NAMES[mo];
-    const done    = isMonthDone(yr, mo);
-    const current = isMonthCurrent(yr, mo);
-    const future  = !done && !current;
-
-    const badge = done    ? '<span class="rpt-badge done">Completed</span>' :
-                  current ? '<span class="rpt-badge now">In Progress</span>' :
-                            '<span class="rpt-badge soon">Upcoming</span>';
-
-    const moClass = done ? 'done' : current ? 'now' : '';
-    let h = `<div class="rpt-month-head ${moClass}">${moName} ${yr} ${badge}</div>`;
-
-    if (future) {
-      // Show projected pipeline for this month
-      const proj = active.filter(r => {
-        const d = parseDate(r['Projected Go-Live Date']);
-        return d && d.getFullYear() === yr && d.getMonth() === mo &&
-               (r['Status']||'').trim() === 'In Progress';
-      });
-      const projNR = proj.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-      if (proj.length) {
-        h += `<div class="rpt-upcoming-box">📅 ${proj.length} project${proj.length!==1?'s':''} projected — ${fmtRev(projNR)} potential NR<br>`;
-        h += proj.map(r => `${esc(r['Opportunity Name']||'—')} (${esc(r['Implementation Owner']||'—')})`).join(' · ');
-        h += '</div>';
-      } else {
-        h += `<div class="rpt-upcoming-box">No projects projected for this month.</div>`;
-      }
-      return h;
-    }
-
-    // Past or current month — weekly breakdown
-    const liveRecs = liveInMonth(yr, mo);
-    const cugRecs  = cugInMonth(yr, mo);
-    const kickRecs = kickoffInMonth(yr, mo);
-    const lastDay  = lastDayOfMonth(yr, mo);
-
-    const weeks = [
-      { label: 'Week 1', start: 1,  end: 7 },
-      { label: 'Week 2', start: 8,  end: 14 },
-      { label: 'Week 3', start: 15, end: 21 },
-      { label: 'Week 4', start: 22, end: lastDay },
-    ];
-
-    weeks.forEach(wk => {
-      h += buildWeekHtml(wk.label, yr, mo, wk.start, wk.end, liveRecs, cugRecs, kickRecs);
-    });
-
-    if (!liveRecs.length && !cugRecs.length && !kickRecs.length) {
-      h += `<div style="margin-left:12px;font-size:12px;color:#94a3b8;font-style:italic">No activity recorded for ${moName}.</div>`;
-    }
-
-    // Month summary (completed months only)
-    if (done) {
-      const moNR = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-      h += `<div class="rpt-month-summary">`;
-      h += `📊 ${$b(moName + ' Summary:')} `;
-      h += liveRecs.length
-        ? `${$g(liveRecs.length + ' project' + (liveRecs.length!==1?'s':'')+' live')} · ${$bl(fmtRev(moNR) + ' NR unlocked')}`
-        : `No go-lives recorded`;
-      if (cugRecs.length) h += ` · ${cugRecs.length} CUG sign-off${cugRecs.length!==1?'s':''}`;
-      if (kickRecs.length) h += ` · ${kickRecs.length} new kick-off${kickRecs.length!==1?'s':''}`;
-      h += `</div>`;
-    }
-
-    return h;
-  }
-
-  // ── build a quarter ────────────────────────────────────────────────────────
-  function buildQtrHtml(qLabel, qMonths, qKey) {
-    const qStart  = monthStart(REPORT_YEAR, qMonths[0]);
-    const qEnd    = monthEnd(REPORT_YEAR, qMonths[2]);
-    const done    = qEnd < TODAY;
-    const current = qStart <= TODAY && TODAY <= qEnd;
-
-    const badge = done    ? '<span class="rpt-badge done">Completed</span>' :
-                  current ? '<span class="rpt-badge now">In Progress</span>' :
-                            '<span class="rpt-badge soon">Upcoming</span>';
-
-    // Quarter-level stats
-    const ltsRecs  = active.filter(r => (r['Committed QTR']||'').trim() === qKey);
-    const liveRecs = active.filter(r => {
-      const d = parseDate(r['Actual Live Date']);
-      return d && d >= qStart && d <= qEnd;
-    });
-    const liveNR   = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-
-    let h = `<div class="rpt-qtr-head">${qLabel} ${REPORT_YEAR} ${badge}</div>`;
-    h += `<div class="rpt-qtr-meta">LTS Forecast: ${ltsRecs.length} · Live: ${liveRecs.length} · NR Unlocked: ${fmtRev(liveNR)}</div>`;
-
-    // Monthly breakdown
-    qMonths.forEach(mo => { h += buildMonthHtml(REPORT_YEAR, mo); });
-
-    // Quarter summary — only when completed
-    if (done && ltsRecs.length) {
-      const onTrack = ltsRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track').length;
-      const atRisk  = ltsRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
-      const blocked = ltsRecs.filter(r =>
-        (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked'
-      ).length;
-      // Slipped = committed to this QTR but still In Progress (missed the quarter)
-      const slipped = ltsRecs.filter(r => (r['Status']||'').trim() !== 'Live Completed');
-
-      h += `<hr class="rpt-divider" style="margin:10px 0">`;
-      h += `<div class="rpt-qtr-summary">`;
-      h += `📈 ${$b(qLabel + ' ' + REPORT_YEAR + ' Summary:')} `;
-      h += `${$g(liveRecs.length + ' live')} of ${ltsRecs.length} LTS`;
-      h += ` · ${$bl(fmtRev(liveNR) + ' NR')}`;
-      if (slipped.length) h += ` · ${$a(slipped.length + ' slipped/carried to next quarter')}`;
-      h += ` &nbsp;|&nbsp; RAG: ${$g('🟢' + onTrack)} ${$a('🟡' + atRisk)} ${$r('🔴' + blocked)}`;
-      h += `</div>`;
-    }
-
-    return h;
-  }
-
-  // ── quarters definition ────────────────────────────────────────────────────
-  const QUARTERS = [
-    { label: 'Q1', months: [0,1,2], key: `Q1-${REPORT_YEAR}` },
-    { label: 'Q2', months: [3,4,5], key: `Q2-${REPORT_YEAR}` },
-    { label: 'Q3', months: [6,7,8], key: `Q3-${REPORT_YEAR}` },
-    { label: 'Q4', months: [9,10,11], key: `Q4-${REPORT_YEAR}` },
-  ];
-
-  // ── Year-level stats ───────────────────────────────────────────────────────
-  const yearLive   = active.filter(r => {
-    const d = parseDate(r['Actual Live Date']);
-    return d && d.getFullYear() === REPORT_YEAR;
-  });
-  const yearLiveNR = yearLive.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const isYearDone = new Date(REPORT_YEAR, 11, 31) < TODAY;
-
-  // ── Build HTML ─────────────────────────────────────────────────────────────
-  let h = '';
-
-  // Greeting
-  h += `<p class="rpt-greeting">Dear All,</p>`;
-  h += `<p class="rpt-intro">Please find the ${$b(REPORT_YEAR + ' SE Implementation Report')} providing a full breakdown by year, quarter, month and week. Summaries are shown for each completed period.</p>`;
-
-  // Year-level summary bar
-  h += `<div class="rpt-year-bar">`;
-  h += `📅 ${$b(REPORT_YEAR + (isYearDone ? ' Year' : ' YTD') + ':')} `;
-  h += `${$g(yearLive.length + ' projects live')} · ${$bl(fmtRev(yearLiveNR) + ' NR unlocked')} · `;
-  h += `${active.filter(r=>(r['Status']||'').trim()==='In Progress').length} still in progress · `;
-  h += `${presales.length} presales opportunities`;
-  h += `</div>`;
-
-  // Quarters
-  QUARTERS.forEach(q => {
-    h += `<hr class="rpt-divider">`;
-    h += buildQtrHtml(q.label, q.months, q.key);
-  });
-
-  // Year summary (at end — YTD or annual)
-  if (isYearDone || yearLive.length > 0) {
-    h += `<hr class="rpt-divider">`;
-    h += `<div class="rpt-section">`;
-    h += `<div class="rpt-head">${isYearDone ? '📅 ' + REPORT_YEAR + ' Annual Summary' : '📅 ' + REPORT_YEAR + ' Year-to-Date Summary'}</div>`;
-    h += `<ul class="rpt-ul">`;
-    h += `<li>${$b('Total live:')} ${$g(yearLive.length + ' projects')} · ${$bl(fmtRev(yearLiveNR) + ' NR unlocked')}</li>`;
-
-    // Quarter-by-quarter live breakdown
-    QUARTERS.forEach(q => {
-      const qStart = monthStart(REPORT_YEAR, q.months[0]);
-      const qEnd   = monthEnd(REPORT_YEAR, q.months[2]);
-      const qLive  = yearLive.filter(r => {
-        const d = parseDate(r['Actual Live Date']);
-        return d && d >= qStart && d <= qEnd;
-      });
-      const qLiveNR = qLive.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-      const isDone  = qEnd < TODAY;
-      if (isDone || qLive.length) {
-        h += `<li>${$b(q.label + ':')} ${qLive.length} live · ${fmtRev(qLiveNR)} NR</li>`;
-      }
-    });
-
-    // Monthly breakdown table for completed months
-    const doneMonths = Array.from({length:12},(_,i)=>i).filter(mo => isMonthDone(REPORT_YEAR, mo));
-    if (doneMonths.length) {
-      h += `<li>${$b('Monthly breakdown:')}`;
-      h += `<ul class="rpt-ul">`;
-      doneMonths.forEach(mo => {
-        const recs = liveInMonth(REPORT_YEAR, mo);
-        const nr   = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-        h += `<li>${MONTH_SHORT[mo]}: ${recs.length > 0 ? $g(recs.length + ' live') + ' · ' + fmtRev(nr) : 'no go-lives'}</li>`;
-      });
-      h += `</ul></li>`;
-    }
-
-    h += `</ul></div>`;
-  }
-
-  // Footer
-  h += `<hr class="rpt-divider">`;
-  h += `<p class="rpt-footer">Data sourced from NIUM Salesforce and can be accessed via the SE Dashboard. Summaries reflect completed periods only; ongoing periods show current status.</p>`;
-  h += `<div class="rpt-signoff"><p>Thanks,</p><p>${$b('Kemi')}</p></div>`;
-
-  document.getElementById('report-doc').innerHTML = h;
+  ldrRenderYearBar();
+  ldrRenderQtrSidebar();
+  ldrRenderMonthRow();
+  ldrRenderWeekRow();
+  ldrRenderWeekPanel();
+  ldrRenderMonthSummary();
 }
 
 function copyReport() {
-  const el = document.getElementById('report-doc');
-  if (!el) return;
-  // Get plain text version
-  const text = el.innerText;
+  // Compose plain-text from week panel + monthly summary
+  const wp = document.getElementById('ldr-week-panel');
+  const ms = document.getElementById('ldr-mo-summary');
+  const text = [(wp||{}).innerText, (ms||{}).innerText].filter(Boolean).join('\n\n---\n\n');
   navigator.clipboard.writeText(text).then(() => {
     const btn = event.target;
     btn.textContent = '✅ Copied!';
-    setTimeout(() => btn.textContent = '📋 Copy Report Text', 2000);
+    setTimeout(() => btn.textContent = '📋 Copy Text', 2000);
   }).catch(() => {
-    // Fallback: select the text
     const range = document.createRange();
-    range.selectNode(el);
+    range.selectNode(document.getElementById('ldr-week-panel') || document.body);
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
     document.execCommand('copy');
