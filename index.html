@@ -1328,7 +1328,21 @@ let pendingImport   = null;   // { type, rawData } waiting for merge modal decis
 function rebuildActiveData() {
   const a = _rawActiveData || [];
   const l = _rawLiveData   || [];
-  activeData = (a.length || l.length) ? [...a, ...l] : null;
+  if (!a.length && !l.length) { activeData = null; return; }
+  // Live record takes precedence — deduplicate by Opportunity Name so uploading
+  // both a combined Active CSV and a separate Live Records CSV doesn't double-count
+  const seen = new Set();
+  const result = [];
+  for (const r of l) {
+    const k = (r['Opportunity Name']||'').trim().toLowerCase();
+    seen.add(k);
+    result.push(r);
+  }
+  for (const r of a) {
+    const k = (r['Opportunity Name']||'').trim().toLowerCase();
+    if (!seen.has(k)) result.push(r);
+  }
+  activeData = result;
 }
 
 // Chart instances
@@ -1996,8 +2010,8 @@ function renderQ1Tracker() {
   if (!active.length) return;
 
   const QTR      = 'Q1-2026';
-  const Q1_START = new Date('2026-01-01');
-  const Q1_END   = new Date('2026-03-31');
+  const Q1_START = new Date(2026, 0, 1);   // Jan 1 local time
+  const Q1_END   = new Date(2026, 2, 31);  // Mar 31 local time
 
   // ── Exclusion rules ───────────────────────────────────────────────────
   // 1. Exclude if Status = 'Presales' (any NR)
