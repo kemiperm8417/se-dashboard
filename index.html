@@ -1934,12 +1934,14 @@ function fmtRev(val) {
 
 function extractRegion(raw) {
   if (!raw) return 'Unknown';
-  const s = String(raw).trim();
-  const main = s.includes('|') ? s.split('|')[0].trim() : s;
-  if (main.toUpperCase().includes('APAC') || main.toUpperCase().includes('ASIA')) return 'APAC & ME';
-  if (main.toUpperCase().includes('EUROPE')) return 'Europe';
-  if (main.toUpperCase().includes('AMERIC')) return 'Americas';
-  return main || 'Unknown';
+  const s = String(raw).trim().toUpperCase();
+  // MEA must be checked first: "APAC & ME | AFRICA" and "APAC & ME | MIDDLE EAST"
+  if (s.includes('AFRICA') || s.includes('MIDDLE EAST')) return 'MEA';
+  // APAC: rest of "APAC & ME" (no Africa/Middle East sub-region)
+  if (s.includes('APAC') || s.includes('ASIA')) return 'APAC';
+  if (s.includes('EUROPE')) return 'Europe';
+  if (s.includes('AMERIC')) return 'Americas';
+  return String(raw).trim().split('|')[0].trim() || 'Unknown';
 }
 
 function ragClass(status) {
@@ -3430,13 +3432,13 @@ function renderFBBB() {
   const presales = presalesData || [];
   const all = [...active, ...presales];
 
-  const regions = ['APAC & ME', 'Europe', 'Americas'];
+  const regions = ['APAC', 'MEA', 'Europe', 'Americas'];
   const fbCount = {}, bbCount = {}, fbVal = {}, bbVal = {};
   regions.forEach(r => { fbCount[r] = 0; bbCount[r] = 0; fbVal[r] = 0; bbVal[r] = 0; });
 
   all.forEach(row => {
     const reg = extractRegion(row['Global Region']);
-    const mapped = regions.find(r => reg.startsWith(r.split(' ')[0])) || null;
+    const mapped = regions.find(r => r === reg) || null;
     if (!mapped) return;
     const type = (row['Type of Opportunity'] || '').trim();
     const rev = parseRev(row['Opportunity Net Revenue (converted)']);
