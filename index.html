@@ -6,6 +6,11 @@
 <title>Solution Engineering Health Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Firebase SDK (compat — works without bundler) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -67,10 +72,12 @@
     top: 0; left: 0; bottom: 0;
     overflow-y: auto;
     z-index: 100;
-    padding: 0 0 24px 0;
+    padding: 0 0 0 0;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.1) transparent;
+    display: flex; flex-direction: column;
   }
+  #sidebar > nav { flex: 1; }
   #sidebar::-webkit-scrollbar { width: 4px; }
   #sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
@@ -888,9 +895,245 @@
     #leadership { page-break-before: always; }
     .section { display: block !important; }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     AUTH OVERLAY
+  ═══════════════════════════════════════════════════════════ */
+  #auth-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .auth-card {
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 40px;
+    width: 420px;
+    max-width: calc(100vw - 40px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  }
+  .auth-logo {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .auth-logo-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+  }
+  .auth-logo-text { color: #f1f5f9; }
+  .auth-logo-text strong { display: block; font-size: 15px; font-weight: 700; }
+  .auth-logo-text span { font-size: 11px; color: #94a3b8; }
+  .auth-tabs {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .auth-tab {
+    flex: 1; padding: 8px;
+    background: none; border: none;
+    color: #94a3b8; font-size: 13px; font-weight: 500;
+    border-radius: 6px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .auth-tab.active { background: rgba(99,102,241,0.25); color: #a5b4fc; font-weight: 600; }
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+  .auth-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+  .auth-input {
+    width: 100%; padding: 10px 13px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #f1f5f9; font-size: 13.5px;
+    outline: none; transition: border 0.15s;
+    font-family: inherit;
+  }
+  .auth-input:focus { border-color: #6366f1; background: rgba(99,102,241,0.08); }
+  .auth-input::placeholder { color: #475569; }
+  .auth-submit {
+    padding: 11px;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    border: none; border-radius: 8px;
+    color: #fff; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; transition: opacity 0.15s;
+    margin-top: 4px;
+  }
+  .auth-submit:hover { opacity: 0.88; }
+  .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-msg {
+    padding: 10px 13px; border-radius: 8px;
+    font-size: 12.5px; line-height: 1.5;
+    display: none;
+  }
+  .auth-msg.error  { background: rgba(220,38,38,0.15); color: #fca5a5; border: 1px solid rgba(220,38,38,0.25); display: block; }
+  .auth-msg.success{ background: rgba(5,150,105,0.15); color: #6ee7b7; border: 1px solid rgba(5,150,105,0.25); display: block; }
+  .auth-msg.info   { background: rgba(99,102,241,0.12); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); display: block; }
+  .auth-pending {
+    text-align: center; padding: 24px 0 8px;
+  }
+  .auth-pending .pending-icon { font-size: 40px; margin-bottom: 12px; }
+  .auth-pending h3 { color: #f1f5f9; font-size: 16px; margin-bottom: 8px; }
+  .auth-pending p  { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+  .auth-pending .auth-logout-link {
+    margin-top: 20px; color: #6366f1; font-size: 12px;
+    background: none; border: none; cursor: pointer; text-decoration: underline;
+  }
+  /* Sidebar user info strip */
+  .sidebar-user {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--sidebar-border);
+    margin-top: auto;
+  }
+  .sidebar-user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .sidebar-user-name { font-size: 11.5px; color: #d1d5db; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-user-role { font-size: 10px; color: #6b7280; }
+  .btn-logout {
+    background: none; border: none; color: #6b7280;
+    cursor: pointer; font-size: 14px; padding: 4px;
+    border-radius: 4px; transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-logout:hover { color: #f87171; }
+  /* Admin panel */
+  .admin-user-list { display: flex; flex-direction: column; gap: 8px; }
+  .admin-user-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 13px;
+  }
+  .admin-user-email { flex: 1; font-weight: 500; }
+  .admin-user-meta  { font-size: 11.5px; color: var(--sub); }
+  .admin-user-badge {
+    padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .admin-user-badge.pending  { background: #fffbeb; color: #d97706; }
+  .admin-user-badge.approved { background: #ecfdf5; color: #059669; }
+  .admin-user-badge.rejected { background: #fef2f2; color: #dc2626; }
+  .admin-user-badge.admin    { background: #eef2ff; color: #4f46e5; }
+  .admin-action-btn {
+    padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    border: 1px solid; cursor: pointer; transition: opacity 0.15s;
+  }
+  .admin-action-btn:hover { opacity: 0.75; }
+  .admin-action-btn.approve { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+  .admin-action-btn.reject  { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .admin-section-hd {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--sub); margin: 20px 0 10px;
+  }
+  .admin-json-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .admin-json-info { flex: 1; min-width: 200px; }
+  .admin-json-info strong { font-size: 14px; }
+  .admin-json-info span   { font-size: 12px; color: var(--sub); display: block; margin-top: 3px; }
+  .loading-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.85);
+    z-index: 8888; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    color: #f1f5f9;
+  }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(99,102,241,0.3);
+    border-top-color: #6366f1; border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { font-size: 14px; color: #94a3b8; }
 </style>
 </head>
 <body>
+
+<!-- LOADING OVERLAY (shown while fetching data from Firebase) -->
+<div id="loading-overlay" class="loading-overlay" style="display:none">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loading-msg">Loading…</div>
+</div>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">⚡</div>
+      <div class="auth-logo-text">
+        <strong>SE Dashboard</strong>
+        <span>Solution Engineering · Nium</span>
+      </div>
+    </div>
+
+    <!-- Login / Signup tabs -->
+    <div id="auth-tabs" class="auth-tabs">
+      <button class="auth-tab active" onclick="authShowTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="authShowTab('signup')">Request Access</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="auth-login-form">
+      <div class="auth-form">
+        <div>
+          <label class="auth-label">Email</label>
+          <input id="auth-email" class="auth-input" type="email" placeholder="you@company.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="auth-label">Password</label>
+          <input id="auth-password" class="auth-input" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div id="auth-login-msg" class="auth-msg"></div>
+        <button class="auth-submit" onclick="authSignIn()">Sign In →</button>
+        <div style="text-align:center;margin-top:4px">
+          <button onclick="authShowTab('signup')" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer;text-decoration:underline">Don't have access? Request here</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signup form -->
+    <div id="auth-signup-form" style="display:none">
+      <div class="auth-form">
+        <div>
+          <label class="auth-label">Full Name</label>
+          <input id="auth-name" class="auth-input" type="text" placeholder="Your name" autocomplete="name">
+        </div>
+        <div>
+          <label class="auth-label">Work Email</label>
+          <input id="auth-signup-email" class="auth-input" type="email" placeholder="you@company.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="auth-label">Password</label>
+          <input id="auth-signup-password" class="auth-input" type="password" placeholder="Min. 8 characters" autocomplete="new-password">
+        </div>
+        <div id="auth-signup-msg" class="auth-msg"></div>
+        <button class="auth-submit" onclick="authSignUp()">Request Access</button>
+        <div style="text-align:center;margin-top:4px">
+          <button onclick="authShowTab('login')" style="background:none;border:none;color:#6366f1;font-size:12px;cursor:pointer;text-decoration:underline">Already have access? Sign in</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending approval state (replaces forms) -->
+    <div id="auth-pending" style="display:none" class="auth-pending">
+      <div class="pending-icon">⏳</div>
+      <h3>Access Pending Approval</h3>
+      <p>Your account has been created.<br>The admin will review and approve your access shortly.<br>You'll be able to sign in once approved.</p>
+      <button class="auth-logout-link" onclick="authSignOut()">Sign out</button>
+    </div>
+  </div>
+</div>
 
 <!-- SIDEBAR -->
 <nav id="sidebar">
@@ -917,7 +1160,18 @@
     <a href="#highlights" onclick="showPage('highlights');return false"><span class="nav-icon">✨</span> Highlights</a>
     <a href="#leadership" onclick="showPage('leadership');return false"><span class="nav-icon">📋</span> Summary</a>
     <a href="#audit-trail" onclick="showPage('audit-trail');return false"><span class="nav-icon">🔍</span> Audit Trail</a>
+    <div class="section-label" id="nav-admin-label" style="display:none">Admin</div>
+    <a href="#admin-panel" id="nav-admin" onclick="showPage('admin-panel');return false" style="display:none"><span class="nav-icon">🔐</span> Admin Panel</a>
   </nav>
+  <!-- Sidebar user strip (shown after login) -->
+  <div class="sidebar-user" id="sidebar-user" style="display:none">
+    <div class="sidebar-user-avatar" id="sidebar-avatar">?</div>
+    <div style="flex:1;min-width:0">
+      <div class="sidebar-user-name" id="sidebar-username">—</div>
+      <div class="sidebar-user-role" id="sidebar-userrole">—</div>
+    </div>
+    <button class="btn-logout" title="Sign out" onclick="authSignOut()">⏻</button>
+  </div>
 </nav>
 
 <!-- MAIN CONTENT -->
@@ -929,7 +1183,8 @@
       <h1>Solution Engineering Health Dashboard</h1>
       <div class="date-badge">📅 As of <span id="date-display">31 March 2026</span></div>
     </div>
-    <div class="upload-area">
+    <!-- Upload area: hidden for regular users, shown for admin -->
+    <div class="upload-area" id="upload-area" style="display:none">
       <label class="upload-btn" id="btn-active">
         <span>📁</span>
         <span>Upload Active Records</span>
@@ -951,13 +1206,13 @@
     </div>
   </div>
 
-  <!-- STORE BAR -->
-  <div class="store-bar">
+  <!-- STORE BAR: admin only -->
+  <div class="store-bar" id="store-bar" style="display:none">
     <label class="btn-store" title="Load SE_Pipeline_Data.json to enable merge/update mode and audit trail">
       🗄️ Load Data Store (.json)
       <input type="file" accept=".json" style="display:none" onchange="handleStoreUpload(event)">
     </label>
-    <span class="store-status" id="store-status">No data store loaded — upload SE_Pipeline_Data.json to enable merge &amp; audit trail</span>
+    <span class="store-status" id="store-status">No data store loaded</span>
     <span style="flex:1"></span>
     <button class="btn-store" id="btn-download-json" style="display:none" onclick="downloadStore('json')">⬇️ Download JSON Store</button>
     <button class="btn-store" id="btn-download-md"   style="display:none" onclick="downloadStore('md')">⬇️ Download MD Snapshot</button>
@@ -984,9 +1239,9 @@
   <!-- PLACEHOLDER -->
   <div id="placeholder">
     <div class="big-icon">📊</div>
-    <h2>No data loaded yet</h2>
-    <p>Upload your CSV files using the buttons in the header to populate the dashboard. Files can be uploaded in any order — the dashboard will auto-detect the file type.</p>
-    <div class="upload-hint">
+    <h2 id="placeholder-title">Loading pipeline data…</h2>
+    <p id="placeholder-msg">Fetching the latest data from the server. This should only take a moment.</p>
+    <div class="upload-hint" id="placeholder-hint" style="display:none">
       <span class="hint-chip">📁 Active Records CSV</span>
       <span class="hint-chip">📁 Live Records CSV</span>
       <span class="hint-chip">📁 Presales Records CSV</span>
@@ -1339,6 +1594,42 @@
       </div>
     </div>
 
+    <!-- SECTION: ADMIN PANEL -->
+    <div id="admin-panel" class="section anchor">
+      <div class="section-title"><span class="icon">🔐</span> Admin Panel</div>
+
+      <!-- Pipeline Data Management -->
+      <div class="admin-section-hd">Pipeline Data</div>
+      <div class="admin-json-box">
+        <div class="admin-json-info">
+          <strong>SE_Pipeline_Data.json</strong>
+          <span id="admin-json-status">No file published yet — upload to make data available to all users.</span>
+        </div>
+        <label class="upload-btn" style="flex-shrink:0;margin:0" title="Upload a new SE_Pipeline_Data.json to Firebase Storage. All users will get the latest data on next refresh.">
+          <span>☁️</span>
+          <span>Publish to Firebase</span>
+          <span class="check">✓</span>
+          <input type="file" accept=".json" style="display:none" onchange="adminUploadJSON(event)">
+        </label>
+        <button class="btn-store" onclick="adminRefreshData()" style="flex-shrink:0">🔄 Refresh Data</button>
+      </div>
+
+      <!-- User Management -->
+      <div class="admin-section-hd" style="margin-top:28px">User Management</div>
+      <div id="admin-pending-section">
+        <div style="font-size:12.5px;font-weight:600;color:var(--amber);margin-bottom:8px">⏳ Pending Approval</div>
+        <div class="admin-user-list" id="admin-pending-list">
+          <div style="color:var(--sub);font-size:13px;padding:12px 0">No pending requests.</div>
+        </div>
+      </div>
+      <div id="admin-all-users-section" style="margin-top:20px">
+        <div style="font-size:12.5px;font-weight:600;color:var(--sub);margin-bottom:8px">All Users</div>
+        <div class="admin-user-list" id="admin-all-list">
+          <div style="color:var(--sub);font-size:13px;padding:12px 0">Loading…</div>
+        </div>
+      </div>
+    </div>
+
     <!-- SECTION: AUDIT TRAIL -->
     <div id="audit-trail" class="section anchor">
       <div class="section-title"><span class="icon">🔍</span> Audit Trail — Projected Go-Live Date History</div>
@@ -1384,9 +1675,393 @@
 </div><!-- /main -->
 
 <script>
-// =====================================================
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  FIREBASE CONFIGURATION                                          ║
+// ║  1. Go to https://console.firebase.google.com                    ║
+// ║  2. Create a project → Add web app → copy the config below       ║
+// ║  3. Enable Email/Password in Authentication > Sign-in methods    ║
+// ║  4. Create Firestore Database (Start in production mode)         ║
+// ║  5. Enable Storage                                               ║
+// ║  6. Set your email as ADMIN_EMAIL below                          ║
+// ╚══════════════════════════════════════════════════════════════════╝
+const FIREBASE_CONFIG = {
+  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
+  authDomain:        "REPLACE_WITH_YOUR_PROJECT.firebaseapp.com",
+  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket:     "REPLACE_WITH_YOUR_PROJECT.appspot.com",
+  messagingSenderId: "REPLACE_WITH_YOUR_SENDER_ID",
+  appId:             "REPLACE_WITH_YOUR_APP_ID"
+};
+
+// ── Your email address — you are the admin ────────────────────────
+const ADMIN_EMAIL = "REPLACE_WITH_YOUR_EMAIL@example.com";
+
+// ══════════════════════════════════════════════════════════════════
+// FIREBASE INIT & AUTH
+// ══════════════════════════════════════════════════════════════════
+let fbAuth, fbDb, fbStorage;
+let currentUser    = null;
+let currentUserDoc = null;
+
+(function initFirebase() {
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth    = firebase.auth();
+    fbDb      = firebase.firestore();
+    fbStorage = firebase.storage();
+    fbAuth.onAuthStateChanged(handleAuthStateChange);
+  } catch(e) {
+    console.warn('Firebase not configured:', e.message);
+    // If config is missing/invalid, show login overlay so user sees the error
+    setAuthMsg('login', 'Firebase is not configured yet. Contact your admin.', 'error');
+  }
+})();
+
+async function handleAuthStateChange(user) {
+  if (!user) {
+    showAuthOverlay('login');
+    return;
+  }
+  currentUser = user;
+  showLoadingOverlay('Verifying access…');
+
+  try {
+    const docRef = fbDb.collection('users').doc(user.uid);
+    let snap = await docRef.get();
+
+    if (!snap.exists) {
+      // First-time login: create user record
+      const isAdmin = user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+      await docRef.set({
+        email:       user.email,
+        displayName: user.displayName || '',
+        approved:    isAdmin,
+        role:        isAdmin ? 'admin' : 'user',
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+      });
+      snap = await docRef.get();
+    }
+
+    currentUserDoc = snap.data();
+    const isAdmin  = currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()
+                  || currentUserDoc.role === 'admin';
+
+    if (!currentUserDoc.approved && !isAdmin) {
+      hideLoadingOverlay();
+      showAuthOverlay('pending');
+      return;
+    }
+
+    // Approved — set up UI
+    hideAuthOverlay();
+    hideLoadingOverlay();
+    setSidebarUser(user, currentUserDoc, isAdmin);
+    if (isAdmin) showAdminUI();
+
+    // Auto-load latest pipeline JSON from Firebase Storage
+    await loadPipelineFromStorage();
+
+  } catch(e) {
+    hideLoadingOverlay();
+    console.error('Auth state error:', e);
+    showAuthOverlay('login');
+    setAuthMsg('login', 'Error verifying access: ' + e.message, 'error');
+  }
+}
+
+// ── Load pipeline JSON from Firebase Storage ─────────────────────
+async function loadPipelineFromStorage() {
+  try {
+    showLoadingOverlay('Loading latest pipeline data…');
+    const ref = fbStorage.ref('pipeline/SE_Pipeline_Data.json');
+    const url = await ref.getDownloadURL();
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const jsonText = await resp.text();
+    loadStoreFromText(jsonText, /*fromStorage=*/true);
+    hideLoadingOverlay();
+    updateAdminJSONStatus();
+  } catch(e) {
+    hideLoadingOverlay();
+    if (e.code === 'storage/object-not-found') {
+      setPlaceholder('No pipeline data published yet',
+        'The admin has not published data to Firebase Storage yet. Check back soon.',
+        /*showUploadHint=*/false);
+    } else {
+      console.error('Failed to load from Storage:', e);
+      setPlaceholder('Could not load pipeline data',
+        'Error: ' + e.message + '. Try refreshing the page.',
+        /*showUploadHint=*/false);
+    }
+  }
+}
+
+function loadStoreFromText(jsonText, fromStorage) {
+  try {
+    pipelineStore = JSON.parse(jsonText);
+    const el = document.getElementById('store-status');
+    if (el) el.textContent = fromStorage
+      ? `☁️ Cloud data — v${pipelineStore._meta?.version||1}, updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales`
+      : `✅ Store loaded — v${pipelineStore._meta?.version||1}, updated ${pipelineStore._meta?.last_updated_on||'unknown'}`;
+
+    _rawActiveData = storeRecordsToCSVRows(
+      (pipelineStore.active_records||[]).filter(r => r.record_type !== 'live'), 'active');
+    _rawLiveData   = storeRecordsToCSVRows(
+      (pipelineStore.active_records||[]).filter(r => r.record_type === 'live'), 'active');
+    rebuildActiveData();
+    if (pipelineStore.presales_records?.length) {
+      presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
+    }
+    if (activeData || presalesData) {
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('dashboard').style.display   = 'block';
+      renderDashboard();
+    }
+    const dlJ = document.getElementById('btn-download-json');
+    const dlM = document.getElementById('btn-download-md');
+    if (dlJ) dlJ.style.display = '';
+    if (dlM) dlM.style.display = '';
+  } catch(e) {
+    alert('Failed to parse pipeline JSON: ' + e.message);
+  }
+}
+
+// ── Admin: publish new JSON to Firebase Storage ───────────────────
+async function adminUploadJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    showLoadingOverlay('Publishing pipeline data…');
+    const ref  = fbStorage.ref('pipeline/SE_Pipeline_Data.json');
+    await ref.put(file, { contentType: 'application/json' });
+    hideLoadingOverlay();
+    alert('✅ Pipeline data published! All users will see the latest data on next refresh.');
+    updateAdminJSONStatus();
+    // Also load it locally
+    const reader = new FileReader();
+    reader.onload = e => loadStoreFromText(e.target.result, true);
+    reader.readAsText(file);
+  } catch(e) {
+    hideLoadingOverlay();
+    alert('Failed to publish: ' + e.message);
+  }
+  event.target.value = '';
+}
+
+async function adminRefreshData() {
+  await loadPipelineFromStorage();
+}
+
+async function updateAdminJSONStatus() {
+  try {
+    const ref  = fbStorage.ref('pipeline/SE_Pipeline_Data.json');
+    const meta = await ref.getMetadata();
+    const el   = document.getElementById('admin-json-status');
+    if (el) {
+      const updated = new Date(meta.updated).toLocaleString();
+      const size    = (meta.size / 1024).toFixed(1);
+      el.textContent = `Last published: ${updated}  ·  ${size} KB`;
+    }
+  } catch(e) {
+    const el = document.getElementById('admin-json-status');
+    if (el && e.code === 'storage/object-not-found') {
+      el.textContent = 'No file published yet — upload to make data available to all users.';
+    }
+  }
+}
+
+// ── Admin: load & render user list ───────────────────────────────
+async function adminLoadUsers() {
+  try {
+    const snap = await fbDb.collection('users').orderBy('createdAt', 'asc').get();
+    const pending = [], all = [];
+    snap.forEach(doc => {
+      const d = { id: doc.id, ...doc.data() };
+      all.push(d);
+      if (!d.approved && d.role !== 'admin') pending.push(d);
+    });
+    renderAdminPending(pending);
+    renderAdminAllUsers(all);
+  } catch(e) {
+    console.error('Failed to load users:', e);
+  }
+}
+
+function renderAdminPending(users) {
+  const el = document.getElementById('admin-pending-list');
+  if (!el) return;
+  if (!users.length) { el.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px 0">No pending requests.</div>'; return; }
+  el.innerHTML = users.map(u => `
+    <div class="admin-user-row">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">${(u.displayName||u.email||'?')[0].toUpperCase()}</div>
+      <div class="admin-user-email">${escHtml(u.email)}</div>
+      <div class="admin-user-meta">${escHtml(u.displayName||'—')}</div>
+      <span class="admin-user-badge pending">Pending</span>
+      <button class="admin-action-btn approve" onclick="adminApproveUser('${u.id}',true)">✓ Approve</button>
+      <button class="admin-action-btn reject"  onclick="adminApproveUser('${u.id}',false)">✕ Reject</button>
+    </div>`).join('');
+}
+
+function renderAdminAllUsers(users) {
+  const el = document.getElementById('admin-all-list');
+  if (!el) return;
+  el.innerHTML = users.map(u => {
+    const isAdmin   = u.role === 'admin' || u.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const badgeCls  = isAdmin ? 'admin' : u.approved ? 'approved' : 'pending';
+    const badgeTxt  = isAdmin ? '🔐 Admin' : u.approved ? '✓ Approved' : '⏳ Pending';
+    const actions   = (!isAdmin && u.approved)
+      ? `<button class="admin-action-btn reject" onclick="adminApproveUser('${u.id}',false)">Revoke</button>`
+      : (!isAdmin && !u.approved)
+      ? `<button class="admin-action-btn approve" onclick="adminApproveUser('${u.id}',true)">Approve</button>`
+      : '';
+    return `
+    <div class="admin-user-row">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0">${(u.displayName||u.email||'?')[0].toUpperCase()}</div>
+      <div class="admin-user-email">${escHtml(u.email)}</div>
+      <div class="admin-user-meta">${escHtml(u.displayName||'—')}</div>
+      <span class="admin-user-badge ${badgeCls}">${badgeTxt}</span>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function adminApproveUser(uid, approve) {
+  try {
+    await fbDb.collection('users').doc(uid).update({ approved: approve });
+    adminLoadUsers();
+  } catch(e) {
+    alert('Error updating user: ' + e.message);
+  }
+}
+
+// ── Auth UI helpers ───────────────────────────────────────────────
+function showAuthOverlay(tab) {
+  const ov = document.getElementById('auth-overlay');
+  if (ov) ov.style.display = 'flex';
+  if (tab) authShowTab(tab);
+}
+function hideAuthOverlay() {
+  const ov = document.getElementById('auth-overlay');
+  if (ov) ov.style.display = 'none';
+}
+function showLoadingOverlay(msg) {
+  document.getElementById('loading-overlay').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = msg || 'Loading…';
+}
+function hideLoadingOverlay() {
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+function authShowTab(tab) {
+  document.getElementById('auth-login-form').style.display  = tab === 'login'   ? '' : 'none';
+  document.getElementById('auth-signup-form').style.display = tab === 'signup'  ? '' : 'none';
+  document.getElementById('auth-pending').style.display     = tab === 'pending' ? '' : 'none';
+  document.getElementById('auth-tabs').style.display        = tab === 'pending' ? 'none' : 'flex';
+  document.querySelectorAll('.auth-tab').forEach((b,i) =>
+    b.classList.toggle('active', (tab === 'login' && i===0) || (tab === 'signup' && i===1)));
+}
+function setAuthMsg(form, msg, type) {
+  const id = form === 'login' ? 'auth-login-msg' : 'auth-signup-msg';
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'auth-msg ' + (type||'');
+}
+function setPlaceholder(title, msg, showHint) {
+  const t = document.getElementById('placeholder-title');
+  const m = document.getElementById('placeholder-msg');
+  const h = document.getElementById('placeholder-hint');
+  if (t) t.textContent = title;
+  if (m) m.textContent = msg;
+  if (h) h.style.display = showHint ? '' : 'none';
+  document.getElementById('placeholder').style.display = '';
+  document.getElementById('dashboard').style.display   = 'none';
+}
+function setSidebarUser(user, doc, isAdmin) {
+  const strip = document.getElementById('sidebar-user');
+  const av    = document.getElementById('sidebar-avatar');
+  const nm    = document.getElementById('sidebar-username');
+  const rl    = document.getElementById('sidebar-userrole');
+  if (!strip) return;
+  strip.style.display = 'flex';
+  if (av) av.textContent = (doc?.displayName || user.email || '?')[0].toUpperCase();
+  if (nm) nm.textContent = doc?.displayName || user.email || '';
+  if (rl) rl.textContent = isAdmin ? 'Admin' : 'Viewer';
+}
+function showAdminUI() {
+  const nl = document.getElementById('nav-admin-label');
+  const na = document.getElementById('nav-admin');
+  const ub = document.getElementById('upload-area');
+  const sb = document.getElementById('store-bar');
+  if (nl) nl.style.display = '';
+  if (na) na.style.display = 'flex';
+  if (ub) ub.style.display = 'flex';
+  if (sb) sb.style.display = 'flex';
+  adminLoadUsers();
+  updateAdminJSONStatus();
+}
+
+// ── Sign In / Sign Up / Sign Out ──────────────────────────────────
+async function authSignIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-password').value;
+  if (!email || !pass) { setAuthMsg('login','Please enter email and password.','error'); return; }
+  setAuthMsg('login','','');
+  try {
+    document.querySelector('#auth-login-form .auth-submit').disabled = true;
+    await fbAuth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    const friendly = e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
+      ? 'Incorrect email or password.' : e.message;
+    setAuthMsg('login', friendly, 'error');
+  } finally {
+    const btn = document.querySelector('#auth-login-form .auth-submit');
+    if (btn) btn.disabled = false;
+  }
+}
+async function authSignUp() {
+  const name  = document.getElementById('auth-name').value.trim();
+  const email = document.getElementById('auth-signup-email').value.trim();
+  const pass  = document.getElementById('auth-signup-password').value;
+  if (!name)  { setAuthMsg('signup','Please enter your full name.','error'); return; }
+  if (!email) { setAuthMsg('signup','Please enter your work email.','error'); return; }
+  if (pass.length < 8) { setAuthMsg('signup','Password must be at least 8 characters.','error'); return; }
+  setAuthMsg('signup','','');
+  try {
+    document.querySelector('#auth-signup-form .auth-submit').disabled = true;
+    const cred = await fbAuth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    // Firestore record created in handleAuthStateChange
+    // If not admin, show pending state (handleAuthStateChange handles this)
+  } catch(e) {
+    const friendly = e.code === 'auth/email-already-in-use'
+      ? 'An account with this email already exists. Try signing in instead.'
+      : e.message;
+    setAuthMsg('signup', friendly, 'error');
+    const btn = document.querySelector('#auth-signup-form .auth-submit');
+    if (btn) btn.disabled = false;
+  }
+}
+async function authSignOut() {
+  try {
+    await fbAuth.signOut();
+    currentUser = null; currentUserDoc = null;
+    // Reset dashboard state
+    _rawActiveData = null; _rawLiveData = null; activeData = null; presalesData = null; pipelineStore = null;
+    document.getElementById('dashboard').style.display   = 'none';
+    document.getElementById('placeholder').style.display = '';
+    document.getElementById('sidebar-user').style.display = 'none';
+    const na = document.getElementById('nav-admin');
+    const nl = document.getElementById('nav-admin-label');
+    if (na) na.style.display = 'none';
+    if (nl) nl.style.display = 'none';
+    setPlaceholder('Loading pipeline data…','Fetching the latest data from the server.',false);
+    showAuthOverlay('login');
+  } catch(e) { alert('Sign out error: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════════════════════
 // DATA STORE
-// =====================================================
+// ══════════════════════════════════════════════════════════════════
 const TODAY = new Date('2026-04-01');
 const CURRENT_QTR = 'Q1-2026';
 
