@@ -248,7 +248,7 @@
   ═══════════════════════════════════════════════ */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 4px;
   }
@@ -275,13 +275,32 @@
   .kpi-card .value { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
   .kpi-card .sub { font-size: 11.5px; color: var(--sub); margin-top: 6px; }
   .kpi-card.green::before { background: var(--green); }
-  .kpi-card.green .value { color: var(--green); }
   .kpi-card.amber::before { background: var(--amber); }
-  .kpi-card.amber .value { color: var(--amber); }
-  .kpi-card.red::before { background: var(--red); }
-  .kpi-card.red .value { color: var(--red); }
-  .kpi-card.blue::before { background: var(--accent); }
-  .kpi-card.blue .value { color: var(--accent); }
+  .kpi-card.red::before   { background: var(--red); }
+  .kpi-card.blue::before  { background: var(--accent); }
+  /* New wide KPI card layout */
+  .kpi-card.kpi-wide { padding: 20px 22px; }
+  .kpi-badge { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:10px; letter-spacing:0.3px; }
+  .kpi-big   { font-size:48px; font-weight:800; line-height:1; letter-spacing:-2px; margin-bottom:14px; }
+  .kpi-card.green .kpi-big { color:var(--green); }
+  .kpi-card.blue  .kpi-big { color:var(--accent); }
+  .kpi-card.amber .kpi-big { color:var(--amber); }
+  .kpi-line  { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:4px 0; border-bottom:1px solid var(--border); color:var(--sub); }
+  .kpi-line span:last-child { font-weight:700; color:var(--text); }
+  .kpi-line.rag-line { justify-content:flex-start; gap:14px; border-bottom:none; padding-top:6px; }
+  .rag-pill { font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; }
+  .rag-pill.green { background:var(--green-bg); color:var(--green); }
+  .rag-pill.amber { background:var(--amber-bg); color:var(--amber); }
+  .rag-pill.red   { background:var(--red-bg);   color:var(--red); }
+  .kpi-value-bar  { display:flex; gap:12px; margin-top:14px; padding-top:12px; border-top:2px solid var(--border); }
+  .kpi-vl { flex:1; }
+  .kpi-vl-lbl { font-size:10px; text-transform:uppercase; letter-spacing:0.6px; color:var(--sub); margin-bottom:3px; }
+  .kpi-vl-val { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+  /* Pipeline tab bar */
+  .pl-tab-bar { display:flex; align-items:center; gap:6px; margin-bottom:14px; border-bottom:2px solid var(--border); padding-bottom:0; }
+  .pl-tab { background:none; border:none; padding:9px 18px; font-size:13px; font-weight:600; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; border-radius:0; transition:all 0.15s; }
+  .pl-tab:hover { color:var(--text); }
+  .pl-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
   /* ═══════════════════════════════════════════════
      CHARTS
@@ -1008,11 +1027,20 @@
 
     <!-- SECTION 4: PIPELINE TABLE -->
     <div id="pipeline-table" class="section anchor">
-      <div class="section-title"><span class="icon">📋</span> All Active &amp; Live Projects</div>
+      <div class="section-title"><span class="icon">📋</span> All Projects</div>
+
+      <!-- Tab bar -->
+      <div class="pl-tab-bar">
+        <button id="tab-btn-active" class="pl-tab active" onclick="setPipelineTab('active')">⚙️ Active Implementation</button>
+        <button id="tab-btn-live"   class="pl-tab"        onclick="setPipelineTab('live')">✅ Live Completed</button>
+        <div id="pl-tab-counts" style="margin-left:auto;font-size:12px;color:var(--sub);align-self:center"></div>
+      </div>
+
+      <!-- Shared filters -->
       <div class="filters" id="table-filters">
         <span class="filter-label">Filter:</span>
         <select id="filter-se" onchange="applyTableFilters()"><option value="">All SEs</option></select>
-        <select id="filter-rag" onchange="applyTableFilters()">
+        <select id="filter-rag" onchange="applyTableFilters()" id="filter-rag-wrap">
           <option value="">All RAG</option>
           <option value="On Track">On Track</option>
           <option value="At Risk">At Risk</option>
@@ -1028,25 +1056,45 @@
         </select>
         <input type="text" id="filter-search" placeholder="Search..." oninput="applyTableFilters()" style="min-width:150px">
       </div>
-      <div class="table-scroll">
+
+      <!-- Active Implementation table -->
+      <div id="pl-active-wrap" class="table-scroll">
         <div class="table-wrap">
           <table id="pipeline-tbl">
-            <thead>
-              <tr>
-                <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name</th>
-                <th onclick="sortTable('pipeline-tbl',1)">SE</th>
-                <th onclick="sortTable('pipeline-tbl',2)">Region</th>
-                <th onclick="sortTable('pipeline-tbl',3)">Status / Sub Status</th>
-                <th onclick="sortTable('pipeline-tbl',4)">Committed QTR</th>
-                <th onclick="sortTable('pipeline-tbl',5)">Revenue (USD)</th>
-                <th onclick="sortTable('pipeline-tbl',6)">RAG</th>
-                <th onclick="sortTable('pipeline-tbl',7)">Type</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name</th>
+              <th onclick="sortTable('pipeline-tbl',1)">SE</th>
+              <th onclick="sortTable('pipeline-tbl',2)">Region</th>
+              <th onclick="sortTable('pipeline-tbl',3)">Sub Status</th>
+              <th onclick="sortTable('pipeline-tbl',4)">Committed QTR</th>
+              <th onclick="sortTable('pipeline-tbl',5)">Revenue (USD)</th>
+              <th onclick="sortTable('pipeline-tbl',6)">RAG</th>
+              <th onclick="sortTable('pipeline-tbl',7)">Type</th>
+            </tr></thead>
             <tbody id="pipeline-tbody"></tbody>
           </table>
         </div>
       </div>
+
+      <!-- Live Completed table -->
+      <div id="pl-live-wrap" class="table-scroll" style="display:none">
+        <div class="table-wrap">
+          <table id="live-tbl">
+            <thead><tr>
+              <th onclick="sortTable('live-tbl',0)">Opportunity Name</th>
+              <th onclick="sortTable('live-tbl',1)">SE</th>
+              <th onclick="sortTable('live-tbl',2)">Region</th>
+              <th onclick="sortTable('live-tbl',3)">Actual Live Date</th>
+              <th onclick="sortTable('live-tbl',4)">Committed QTR</th>
+              <th onclick="sortTable('live-tbl',5)">Revenue (USD)</th>
+              <th onclick="sortTable('live-tbl',6)">Type</th>
+              <th onclick="sortTable('live-tbl',7)">Days to Live</th>
+            </tr></thead>
+            <tbody id="live-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="pipeline-count" style="margin-top:8px;font-size:12px;color:var(--sub)"></div>
     </div>
 
@@ -2249,46 +2297,84 @@ function renderQ1Tracker() {
 }
 
 function renderKPIs() {
-  const active = activeData || [];
+  const active   = activeData   || [];
   const presales = presalesData || [];
 
-  const totalActive = active.filter(r => {
-    const s = (r['Status'] || '').trim();
-    return s === 'In Progress' || s === 'Presales';
-  }).length;
+  // ── Live Completed ───────────────────────────────────────────────────
+  const liveRecs   = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
+  const liveCount  = liveRecs.length;
+  const liveFB     = liveRecs.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
+  const liveBB     = liveCount - liveFB;
+  const liveNR     = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  // Q rev using same formula (determine month from actual live date)
+  const liveQRev   = liveRecs.reduce((s,r) => {
+    const d = parseDate(r['Actual Live Date']);
+    const mo = d ? d.getMonth() : -1;  // 0=Jan,1=Feb,2=Mar
+    const mult = mo === 0 ? 3 : mo === 1 ? 2 : mo === 2 ? 1 : 0;
+    return s + (parseRev(r['Opportunity Net Revenue (converted)']) * 0.5 / 12 * mult);
+  }, 0);
+  const liveQ1Count = liveRecs.filter(r => (r['Committed QTR']||'').trim() === 'Q1-2026').length;
 
-  const totalPresales = presales.length;
+  // ── Active Implementation ────────────────────────────────────────────
+  const implRecs   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+  const implCount  = implRecs.length;
+  const implOnTrack= implRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'On Track').length;
+  const implAtRisk = implRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
+  const implBlocked= implRecs.filter(r =>
+    (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked').length;
+  const implFB     = implRecs.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
+  const implBB     = implCount - implFB;
+  const implNR     = implRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
 
-  const activeRev = active.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const presalesRev = presales.reduce((s, r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const totalPipeline = activeRev + presalesRev;
-
-  const onTrack = active.filter(r => (r['Projected Go-Live Status'] || '').trim() === 'On Track').length;
-  const atRisk = active.filter(r => (r['Projected Go-Live Status'] || '').trim() === 'At Risk').length;
-  const blocked = active.filter(r =>
-    (r['Projected Go-Live Status'] || '').trim() === 'Blocked' ||
-    (r['Status'] || '').trim() === 'Blocked'
-  ).length;
-  const liveCompleted = active.filter(r => (r['Status'] || '').trim() === 'Live Completed').length;
-
-  const kpiData = [
-    { label: 'Total Active Projects', value: totalActive, sub: 'In Progress + Presales', cls: 'blue' },
-    { label: 'Presales Opportunities', value: totalPresales, sub: 'From presales file', cls: 'blue' },
-    { label: 'Total Pipeline Value', value: fmtRev(totalPipeline), sub: 'Active + Presales', cls: 'blue', raw: true },
-    { label: 'On Track', value: onTrack, sub: 'Green status', cls: 'green' },
-    { label: 'At Risk', value: atRisk, sub: 'Amber status', cls: 'amber' },
-    { label: 'Blocked', value: blocked, sub: 'Red / blocked', cls: 'red' },
-    { label: 'Live Completed (Q)', value: liveCompleted, sub: 'This quarter', cls: 'green' },
-  ];
+  // ── Presales ─────────────────────────────────────────────────────────
+  const presalesCount = presales.length;
+  const presalesFB    = presales.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
+  const presalesBB    = presalesCount - presalesFB;
+  const presalesNR    = presales.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const presalesHigh  = presales.filter(r => parseFloat(r['Opportunity: Probability (%)']||'0') >= 70).length;
 
   const grid = document.getElementById('kpi-grid');
-  grid.innerHTML = kpiData.map(k => `
-    <div class="kpi-card ${k.cls}">
-      <div class="label">${k.label}</div>
-      <div class="value">${k.raw ? k.value : k.value}</div>
-      <div class="sub">${k.sub}</div>
+  grid.innerHTML = `
+    <div class="kpi-card green kpi-wide">
+      <div class="kpi-badge" style="background:var(--green-bg);color:var(--green)">✅ Live Completed</div>
+      <div class="kpi-big">${liveCount}</div>
+      <div class="kpi-line"><span>Frontbook</span><span>${liveFB}</span></div>
+      <div class="kpi-line"><span>Backbook</span><span>${liveBB}</span></div>
+      <div class="kpi-line"><span>Q1-2026 Committed</span><span>${liveQ1Count}</span></div>
+      <div class="kpi-value-bar">
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Total NR</div><div class="kpi-vl-val">${fmtRev(liveNR)}</div></div>
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Q Rev (~50%)</div><div class="kpi-vl-val" style="color:var(--green)">${fmtRev(liveQRev)}</div></div>
+      </div>
     </div>
-  `).join('');
+
+    <div class="kpi-card blue kpi-wide">
+      <div class="kpi-badge" style="background:var(--accent-light);color:var(--accent)">⚙️ Active Implementation</div>
+      <div class="kpi-big">${implCount}</div>
+      <div class="kpi-line"><span>Frontbook</span><span>${implFB}</span></div>
+      <div class="kpi-line"><span>Backbook</span><span>${implBB}</span></div>
+      <div class="kpi-line rag-line">
+        <span class="rag-pill green">🟢 ${implOnTrack}</span>
+        <span class="rag-pill amber">🟡 ${implAtRisk}</span>
+        <span class="rag-pill red">🔴 ${implBlocked}</span>
+      </div>
+      <div class="kpi-value-bar">
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Total NR</div><div class="kpi-vl-val">${fmtRev(implNR)}</div></div>
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Pipeline NR</div><div class="kpi-vl-val" style="color:var(--accent)">${fmtRev(implNR)}</div></div>
+      </div>
+    </div>
+
+    <div class="kpi-card amber kpi-wide">
+      <div class="kpi-badge" style="background:var(--amber-bg);color:var(--amber)">🔍 Presales Opportunities</div>
+      <div class="kpi-big">${presalesCount}</div>
+      <div class="kpi-line"><span>Frontbook</span><span>${presalesFB}</span></div>
+      <div class="kpi-line"><span>Backbook</span><span>${presalesBB}</span></div>
+      <div class="kpi-line"><span>High Probability (≥70%)</span><span>${presalesHigh}</span></div>
+      <div class="kpi-value-bar">
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Total NR</div><div class="kpi-vl-val">${fmtRev(presalesNR)}</div></div>
+        <div class="kpi-vl"><div class="kpi-vl-lbl">Potential Value</div><div class="kpi-vl-val" style="color:var(--amber)">${fmtRev(presalesNR)}</div></div>
+      </div>
+    </div>
+  `;
 }
 
 // =====================================================
@@ -2398,15 +2484,27 @@ function renderPipelineHealth() {
 // =====================================================
 // SECTION 4: PIPELINE TABLE
 // =====================================================
-let allPipelineRows = [];
+let allPipelineRows    = [];
+let currentPipelineTab = 'active'; // 'active' | 'live'
+
+function setPipelineTab(tab) {
+  currentPipelineTab = tab;
+  document.getElementById('tab-btn-active').classList.toggle('active', tab === 'active');
+  document.getElementById('tab-btn-live').classList.toggle('active',  tab === 'live');
+  document.getElementById('pl-active-wrap').style.display = tab === 'active' ? '' : 'none';
+  document.getElementById('pl-live-wrap').style.display   = tab === 'live'   ? '' : 'none';
+  // RAG filter only applies to active tab
+  document.getElementById('filter-rag').style.display = tab === 'active' ? '' : 'none';
+  applyTableFilters();
+}
 
 function renderPipelineTable() {
   const active = activeData || [];
 
-  // Populate filter dropdowns
-  const ses = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))].sort();
+  // Populate filter dropdowns from all records
+  const ses     = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))].sort();
   const regions = [...new Set(active.map(r => extractRegion(r['Global Region'])).filter(r => r !== 'Unknown'))].sort();
-  const qtrs = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
+  const qtrs    = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
 
   const seSel = document.getElementById('filter-se');
   const curSE = seSel.value;
@@ -2424,58 +2522,100 @@ function renderPipelineTable() {
   qtrSel.value = curQtr;
 
   allPipelineRows = active;
-  applyTableFilters();
+  // Update tab counts
+  const activeCount = active.filter(r => (r['Status']||'').trim() !== 'Live Completed').length;
+  const liveCount   = active.filter(r => (r['Status']||'').trim() === 'Live Completed').length;
+  document.getElementById('pl-tab-counts').textContent = `${activeCount} active · ${liveCount} live`;
+  setPipelineTab(currentPipelineTab);
 }
 
 function applyTableFilters() {
-  const se = document.getElementById('filter-se').value;
-  const rag = document.getElementById('filter-rag').value;
+  const se     = document.getElementById('filter-se').value;
+  const rag    = document.getElementById('filter-rag').value;
   const region = document.getElementById('filter-region').value;
-  const qtr = document.getElementById('filter-qtr').value;
-  const type = document.getElementById('filter-type').value;
+  const qtr    = document.getElementById('filter-qtr').value;
+  const type   = document.getElementById('filter-type').value;
   const search = (document.getElementById('filter-search').value || '').toLowerCase();
 
-  let rows = allPipelineRows.filter(r => {
+  // Common filter predicate (excluding RAG which is Active-only)
+  function baseFilter(r) {
     if (se && (r['Implementation Owner'] || '') !== se) return false;
-    const ragStatus = ragLabel((r['Projected Go-Live Status'] || '').trim() === '' ? 'Unknown' : r['Projected Go-Live Status']);
-    if (rag && ragStatus !== rag) return false;
     if (region && extractRegion(r['Global Region']) !== region) return false;
     if (qtr && (r['Committed QTR'] || '') !== qtr) return false;
     if (type && (r['Type of Opportunity'] || '') !== type) return false;
     if (search) {
-      const haystack = [
-        r['Opportunity Name'], r['Implementation Owner'], r['Global Region'],
-        r['Sub Status'], r['Status']
-      ].join(' ').toLowerCase();
-      if (!haystack.includes(search)) return false;
+      const hay = [r['Opportunity Name'], r['Implementation Owner'],
+                   r['Global Region'], r['Sub Status'], r['Status']].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
     }
     return true;
-  });
-
-  const tbody = document.getElementById('pipeline-tbody');
-  if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No records match the current filters</td></tr>';
-  } else {
-    tbody.innerHTML = rows.map(r => {
-      const ragStat = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
-      const blockedStatus = (r['Status'] || '').trim() === 'Blocked';
-      const effectiveRag = blockedStatus ? 'Blocked' : ragStat;
-      const rc = ragClass(effectiveRag);
-      const rev = parseRev(r['Opportunity Net Revenue (converted)']);
-      const opType = r['Type of Opportunity'] || '';
-      return `<tr>
-        <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
-        <td>${escHtml(r['Implementation Owner'] || '—')}</td>
-        <td>${escHtml(extractRegion(r['Global Region']))}</td>
-        <td><span class="truncate" title="${escHtml(r['Sub Status'] || r['Status'])}" style="max-width:160px">${escHtml(truncate(r['Sub Status'] || r['Status'] || '—', 30))}</span></td>
-        <td>${escHtml(r['Committed QTR'] || '—')}</td>
-        <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
-        <td><span class="badge badge-${rc}">${escHtml(effectiveRag)}</span></td>
-        <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
-      </tr>`;
-    }).join('');
   }
-  document.getElementById('pipeline-count').textContent = `Showing ${rows.length} of ${allPipelineRows.length} records`;
+
+  if (currentPipelineTab === 'active') {
+    // Active = not Live Completed
+    let rows = allPipelineRows.filter(r => (r['Status']||'').trim() !== 'Live Completed' && baseFilter(r));
+    if (rag) rows = rows.filter(r => {
+      const ragStat = ragLabel((r['Projected Go-Live Status']||'').trim() || 'Unknown');
+      return ragStat === rag;
+    });
+
+    const tbody = document.getElementById('pipeline-tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No records match the current filters</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const ragStat      = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
+        const effectiveRag = (r['Status']||'').trim() === 'Blocked' ? 'Blocked' : ragStat;
+        const rc  = ragClass(effectiveRag);
+        const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+        const opType = r['Type of Opportunity'] || '';
+        return `<tr>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
+          <td>${escHtml(r['Implementation Owner'] || '—')}</td>
+          <td>${escHtml(extractRegion(r['Global Region']))}</td>
+          <td><span class="truncate" title="${escHtml(r['Sub Status']||r['Status'])}" style="max-width:160px">${escHtml(truncate(r['Sub Status']||r['Status']||'—',30))}</span></td>
+          <td>${escHtml(r['Committed QTR'] || '—')}</td>
+          <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+          <td><span class="badge badge-${rc}">${escHtml(effectiveRag)}</span></td>
+          <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} active records`;
+
+  } else {
+    // Live Completed tab
+    let rows = allPipelineRows.filter(r => (r['Status']||'').trim() === 'Live Completed' && baseFilter(r));
+    // Sort by Actual Live Date descending
+    rows.sort((a,b) => {
+      const da = parseDate(a['Actual Live Date']), db = parseDate(b['Actual Live Date']);
+      if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
+      return db - da;
+    });
+
+    const tbody = document.getElementById('live-tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No live records match the current filters</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const rev     = parseRev(r['Opportunity Net Revenue (converted)']);
+        const opType  = r['Type of Opportunity'] || '';
+        const days    = parseInt(r['Number of days in implementation'] || '0') || null;
+        const actDate = (r['Actual Live Date'] || '').trim();
+        return `<tr>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
+          <td>${escHtml(r['Implementation Owner'] || '—')}</td>
+          <td>${escHtml(extractRegion(r['Global Region']))}</td>
+          <td style="font-weight:600;color:var(--green)">${escHtml(actDate || '—')}</td>
+          <td>${escHtml(r['Committed QTR'] || '—')}</td>
+          <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+          <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+          <td style="text-align:right">${days ? `${days}d` : '—'}</td>
+        </tr>`;
+      }).join('');
+    }
+    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} live records`;
+  }
 }
 
 // =====================================================
