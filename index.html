@@ -519,6 +519,20 @@
     border:1px solid var(--border); border-radius:var(--radius-sm);
     padding:8px 14px; margin-top:14px; line-height:1.5;
   }
+  .q1-lts-movement {
+    display:flex; flex-direction:column; gap:8px;
+    margin:14px 0 4px; padding:12px 16px;
+    background:var(--card2); border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+  }
+  .lts-move-row { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .lts-move-badge {
+    display:inline-block; font-size:11px; font-weight:700;
+    padding:2px 8px; border-radius:20px; white-space:nowrap; flex-shrink:0;
+  }
+  .lts-move-badge.added  { background:var(--green-bg); color:var(--green); }
+  .lts-move-badge.moved  { background:var(--red-bg); color:var(--red); }
+  .lts-move-names { font-size:11.5px; color:var(--text); line-height:1.6; }
 
   /* ═══════════════════════════════════════════════
      LEADERSHIP / SUMMARY REPORT
@@ -2038,12 +2052,49 @@ function renderQ1Tracker() {
     return d >= Q1_START && d <= Q1_END;
   }
 
+  // ── Original Q1 LTS baseline (25 projects agreed at quarter start per CLAUDE.md) ─
+  const ORIGINAL_LTS_25 = [
+    'Paytal.ai','LUCKY INBOUND TRAVEL - VCC','YeepayHK_payouts','Finofo US',
+    'Ebury Partners UK - N1 Integration (moving from Masspay portal only)',
+    'Relay nonFI Platform','Midtrans - 6 new currencies','Colma - Travel VCC',
+    'Polani Travel Ltd (Flightcatchers) - VCC',
+    'Phnom Penh Commercial Bank Plc_(Payout)','Weel - Direct Debit and PayTo',
+    'Internode Pay Ltd (Bamboo)','Koronet - Flower Wholesaler - CA','Tumapay',
+    'letsbundle UAE','1YUNHUI - Payout','Jillion Group - FI Payout',
+    'OneGate Capital AG','Jebsen Travel - Travel VCC',
+    'Sky Nest (HK) Travel & Trading Co., Limited - VCC HK-issuing',
+    'Sky Nest (HK) Travel & Trading Co., Limited - VCC SG-issuing',
+    'Tasman FX- Payouts','Warner Music Group','Bank Jatim- Send',
+    'KBank upsell - New Corridor CAD,NOK,SEK,DKK,PLN',
+  ];
+  // Normalise for fuzzy matching: lowercase, collapse whitespace, strip punctuation
+  function normLTS(s) {
+    return (s||'').toLowerCase().trim().replace(/[^a-z0-9]/g,'');
+  }
+  const origNormed = new Set(ORIGINAL_LTS_25.map(normLTS));
+
   // ── LTS: committed to Q1-2026, after exclusions ───────────────────────
   const ltsRecords = active.filter(r =>
     (r['Committed QTR'] || '').trim() === QTR && !isExcluded(r)
   );
   const ltsCount = ltsRecords.length;
   const ltsNR    = ltsRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+
+  // ── Added during quarter: in current LTS but NOT in original 25 ───────
+  const addedRecs = ltsRecords.filter(r => !origNormed.has(normLTS(r['Opportunity Name'])));
+  const addedCount = addedRecs.length;
+
+  // ── Moved out: in original 25 but now committed to a DIFFERENT quarter ─
+  // (appears in data with Committed QTR ≠ Q1-2026, or no longer in data at all)
+  const allByName = {};
+  for (const r of active) {
+    const k = normLTS(r['Opportunity Name']);
+    if (!allByName[k]) allByName[k] = r;   // first occurrence wins
+  }
+  const movedOutRecs = ORIGINAL_LTS_25
+    .map(n => ({ name: n, rec: allByName[normLTS(n)] }))
+    .filter(({ rec }) => rec && (rec['Committed QTR']||'').trim() !== QTR && (rec['Status']||'').trim() !== 'Live Completed');
+  const movedOutCount = movedOutRecs.length;
 
   // ── QTD: went live in Q1, after exclusions ────────────────────────────
   const qtdRecords = active.filter(r =>
@@ -2098,9 +2149,17 @@ function renderQ1Tracker() {
   // Stat cards row
   h += `<div class="q1-stat-row">
     <div class="q1-stat accent">
-      <div class="q1-val">${ltsCount}</div>
-      <div class="q1-lbl">Q1 LTS Forecast</div>
-      <div class="q1-sub">${fmtRev(ltsNR)} total NR</div>
+      <div class="q1-val">${ltsCount}
+        ${addedCount > 0 ? `<span style="font-size:13px;font-weight:600;color:var(--green);margin-left:4px">+${addedCount}</span>` : ''}
+        ${movedOutCount > 0 ? `<span style="font-size:13px;font-weight:600;color:var(--red);margin-left:2px">−${movedOutCount}</span>` : ''}
+      </div>
+      <div class="q1-lbl">Q1 LTS Total</div>
+      <div class="q1-sub">
+        Original: ${ORIGINAL_LTS_25.length}
+        ${addedCount > 0 ? `&nbsp;·&nbsp;<span style="color:var(--green)">+${addedCount} added</span>` : ''}
+        ${movedOutCount > 0 ? `&nbsp;·&nbsp;<span style="color:var(--red)">−${movedOutCount} moved out</span>` : ''}
+      </div>
+      <div style="font-size:10px;color:var(--sub);margin-top:3px">${fmtRev(ltsNR)} total NR</div>
     </div>
     <div class="q1-stat green">
       <div class="q1-val">${qtdCount}</div>
@@ -2158,6 +2217,26 @@ function renderQ1Tracker() {
     </div>`;
   });
   h += `</div>`;
+
+  // LTS movement detail
+  if (addedCount > 0 || movedOutCount > 0) {
+    h += `<div class="q1-lts-movement">`;
+    if (addedCount > 0) {
+      h += `<div class="lts-move-row lts-added">
+        <span class="lts-move-badge added">+${addedCount} Added</span>
+        <span class="lts-move-names">${addedRecs.map(r => escHtml(r['Opportunity Name'])).join(' · ')}</span>
+      </div>`;
+    }
+    if (movedOutCount > 0) {
+      h += `<div class="lts-move-row lts-moved">
+        <span class="lts-move-badge moved">−${movedOutCount} Moved Out</span>
+        <span class="lts-move-names">${movedOutRecs.map(({name, rec}) =>
+          `${escHtml(name)} <span style="color:var(--sub)">(→ ${escHtml((rec['Committed QTR']||'').trim()||'unscheduled')})</span>`
+        ).join(' · ')}</span>
+      </div>`;
+    }
+    h += `</div>`;
+  }
 
   // Exclusion note
   h += `<div class="q1-exclusion-note">
