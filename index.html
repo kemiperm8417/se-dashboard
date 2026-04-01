@@ -903,9 +903,7 @@
   </div>
   <nav>
     <div class="section-label">Overview</div>
-    <a href="#kpis" onclick="showPage('kpis');return false"><span class="nav-icon">📊</span> KPI Summary</a>
-    <a href="#q1-tracker" onclick="showPage('q1-tracker');return false"><span class="nav-icon">🎯</span> Q1 LTS Tracker</a>
-    <a href="#pipeline-health" onclick="showPage('pipeline-health');return false"><span class="nav-icon">📡</span> Pipeline Health</a>
+    <a href="#overview" onclick="showPage('overview');return false"><span class="nav-icon">🏠</span> Overview</a>
     <div class="section-label">Detail Views</div>
     <a href="#pipeline-table" onclick="showPage('pipeline-table');return false"><span class="nav-icon">📋</span> All Projects</a>
     <a href="#risk-radar" onclick="showPage('risk-radar');return false"><span class="nav-icon">🚨</span> Risk Radar</a>
@@ -998,31 +996,42 @@
   <!-- DASHBOARD CONTENT (hidden until data loaded) -->
   <div id="dashboard" style="display:none">
 
-    <!-- SECTION 2: KPI CARDS -->
-    <div id="kpis" class="section anchor">
-      <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
-      <div class="kpi-grid" id="kpi-grid"></div>
-    </div>
+    <!-- OVERVIEW: KPI CARDS + QUARTERLY LTS TRACKER + PIPELINE HEALTH -->
+    <div id="overview" class="section anchor">
 
-    <!-- Q1 LTS TRACKER -->
-    <div id="q1-tracker" class="section anchor">
-      <div class="section-title"><span class="icon">🎯</span> Q1 2026 — LTS Forecast vs Actuals</div>
-      <div id="q1-tracker-body"><p style="color:var(--sub);font-size:13px">Upload CSV files to view Q1 tracker.</p></div>
-    </div>
+      <!-- KPI CARDS -->
+      <div id="kpis">
+        <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
+        <div class="kpi-grid" id="kpi-grid"></div>
+      </div>
 
-    <!-- SECTION 3: PIPELINE HEALTH -->
-    <div id="pipeline-health" class="section anchor">
-      <div class="section-title"><span class="icon">🟢</span> Pipeline Health</div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <h3>RAG Status Distribution</h3>
-          <canvas id="ragChart"></canvas>
+      <!-- QUARTERLY LTS TRACKER -->
+      <div id="q1-tracker" style="margin-top:32px">
+        <div class="section-title" style="margin-bottom:12px"><span class="icon">🎯</span> Quarterly LTS Tracker</div>
+        <div class="tab-bar" id="lts-qtr-tabs" style="margin-bottom:16px">
+          <button class="tab-btn active" onclick="setLTSQtr('Q1-2026',this)">Q1 2026</button>
+          <button class="tab-btn" onclick="setLTSQtr('Q2-2026',this)">Q2 2026</button>
+          <button class="tab-btn" onclick="setLTSQtr('Q3-2026',this)">Q3 2026</button>
+          <button class="tab-btn" onclick="setLTSQtr('Q4-2026',this)">Q4 2026</button>
         </div>
-        <div class="chart-card">
-          <h3>Implementation Stage Distribution</h3>
-          <canvas id="stageChart"></canvas>
+        <div id="q1-tracker-body"><p style="color:var(--sub);font-size:13px">Upload CSV files to view LTS tracker.</p></div>
+      </div>
+
+      <!-- PIPELINE HEALTH -->
+      <div id="pipeline-health" style="margin-top:32px">
+        <div class="section-title"><span class="icon">🟢</span> Pipeline Health</div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h3>RAG Status Distribution</h3>
+            <canvas id="ragChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Implementation Stage Distribution</h3>
+            <canvas id="stageChart"></canvas>
+          </div>
         </div>
       </div>
+
     </div>
 
     <!-- SECTION 4: PIPELINE TABLE -->
@@ -1303,6 +1312,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <div class="ldr-year-bar" id="ldr-year-bar"></div>
           <div class="report-actions" style="margin:0">
+            <button onclick="copyEmailReport()" title="Copy monthly summary in plain-text email format">✉️ Export Email</button>
             <button onclick="copyReport()">📋 Copy Text</button>
             <button onclick="window.print()">🖨️ Print</button>
           </div>
@@ -2065,15 +2075,33 @@ function renderDashboard() {
 // SECTION 2: KPI CARDS
 // =====================================================
 // =====================================================
-// Q1 LTS TRACKER
+// QUARTERLY LTS TRACKER
 // =====================================================
+let _ltsQtr = 'Q1-2026';  // currently displayed quarter
+
+function setLTSQtr(qCode, btn) {
+  _ltsQtr = qCode;
+  document.querySelectorAll('#lts-qtr-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderQ1Tracker();
+}
+
 function renderQ1Tracker() {
   const active = activeData || [];
   if (!active.length) return;
 
-  const QTR      = 'Q1-2026';
-  const Q1_START = new Date(2026, 0, 1);   // Jan 1 local time
-  const Q1_END   = new Date(2026, 2, 31);  // Mar 31 local time
+  const QTR = _ltsQtr;   // e.g. 'Q1-2026', 'Q2-2026', etc.
+
+  // Quarter date ranges
+  const QUARTER_DATES = {
+    'Q1-2026': { start: new Date(2026,0,1), end: new Date(2026,2,31), months:[{name:'January',short:'Jan',yr:2026,mo:1},{name:'February',short:'Feb',yr:2026,mo:2},{name:'March',short:'Mar',yr:2026,mo:3}], origLTS: 25 },
+    'Q2-2026': { start: new Date(2026,3,1), end: new Date(2026,5,30), months:[{name:'April',short:'Apr',yr:2026,mo:4},{name:'May',short:'May',yr:2026,mo:5},{name:'June',short:'Jun',yr:2026,mo:6}], origLTS: null },
+    'Q3-2026': { start: new Date(2026,6,1), end: new Date(2026,8,30), months:[{name:'July',short:'Jul',yr:2026,mo:7},{name:'August',short:'Aug',yr:2026,mo:8},{name:'September',short:'Sep',yr:2026,mo:9}], origLTS: null },
+    'Q4-2026': { start: new Date(2026,9,1), end: new Date(2026,11,31), months:[{name:'October',short:'Oct',yr:2026,mo:10},{name:'November',short:'Nov',yr:2026,mo:11},{name:'December',short:'Dec',yr:2026,mo:12}], origLTS: null },
+  };
+  const qInfo = QUARTER_DATES[QTR];
+  const Q1_START = qInfo ? qInfo.start : new Date(2026,0,1);
+  const Q1_END   = qInfo ? qInfo.end   : new Date(2026,2,31);
 
   // ── Exclusion rules ───────────────────────────────────────────────────
   // 1. Exclude if Status = 'Presales' (any NR)
@@ -2121,30 +2149,42 @@ function renderQ1Tracker() {
   }
   const origNormed = new Set(ORIGINAL_LTS_25.map(normLTS));
 
-  // ── LTS: committed to Q1-2026, after exclusions ───────────────────────
+  // ── LTS: committed to this quarter, after exclusions ─────────────────
   const ltsRecords = active.filter(r =>
     (r['Committed QTR'] || '').trim() === QTR && !isExcluded(r)
   );
   const ltsCount = ltsRecords.length;
   const ltsNR    = ltsRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
 
-  // ── Added during quarter: in current LTS but NOT in original 25 ───────
-  const addedRecs = ltsRecords.filter(r => !origNormed.has(normLTS(r['Opportunity Name'])));
+  // ── For non-Q1 quarters with no LTS data, show a placeholder ────────
+  if (ltsCount === 0 && QTR !== 'Q1-2026') {
+    document.getElementById('q1-tracker-body').innerHTML =
+      `<div style="padding:32px;text-align:center;color:var(--sub);font-size:13px">
+        <div style="font-size:28px;margin-bottom:12px">📭</div>
+        <strong>No LTS projects committed to ${QTR} yet.</strong><br>
+        Upload updated CSV files or ensure projects have Committed QTR = <code>${QTR}</code>.
+      </div>`;
+    return;
+  }
+
+  // ── Added during quarter: in current LTS but NOT in original 25 (Q1 only) ──
+  const addedRecs  = QTR === 'Q1-2026' ? ltsRecords.filter(r => !origNormed.has(normLTS(r['Opportunity Name']))) : [];
   const addedCount = addedRecs.length;
 
-  // ── Moved out: in original 25 but now committed to a DIFFERENT quarter ─
-  // (appears in data with Committed QTR ≠ Q1-2026, or no longer in data at all)
+  // ── Moved out: in original 25 but now committed to a DIFFERENT quarter (Q1 only) ─
   const allByName = {};
   for (const r of active) {
     const k = normLTS(r['Opportunity Name']);
-    if (!allByName[k]) allByName[k] = r;   // first occurrence wins
+    if (!allByName[k]) allByName[k] = r;
   }
-  const movedOutRecs = ORIGINAL_LTS_25
-    .map(n => ({ name: n, rec: allByName[normLTS(n)] }))
-    .filter(({ rec }) => rec && (rec['Committed QTR']||'').trim() !== QTR && (rec['Status']||'').trim() !== 'Live Completed');
+  const movedOutRecs = QTR === 'Q1-2026'
+    ? ORIGINAL_LTS_25
+        .map(n => ({ name: n, rec: allByName[normLTS(n)] }))
+        .filter(({ rec }) => rec && (rec['Committed QTR']||'').trim() !== QTR && (rec['Status']||'').trim() !== 'Live Completed')
+    : [];
   const movedOutCount = movedOutRecs.length;
 
-  // ── QTD: went live in Q1, after exclusions ────────────────────────────
+  // ── QTD: went live in this quarter, after exclusions ─────────────────
   const qtdRecords = active.filter(r =>
     (r['Status'] || '').trim() === 'Live Completed' &&
     inQ1(r['Actual Live Date']) &&
@@ -2153,19 +2193,17 @@ function renderQ1Tracker() {
   const qtdCount = qtdRecords.length;
   const qtdNR    = qtdRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
 
-  // ── Quarterly Revenue formula: (NR × 50%) / 12 × remaining months in quarter
-  // Jan go-live → ×3, Feb go-live → ×2, Mar go-live → ×1
-  function calcQRev(nr, moNum) {          // moNum: 1=Jan, 2=Feb, 3=Mar
-    const mult = 4 - moNum;               // 3, 2, 1
+  // ── Quarterly Revenue formula: (NR × 50%) / 12 × remaining months
+  // Position in quarter: 1st month → ×3, 2nd → ×2, 3rd → ×1
+  const qMonths = qInfo ? qInfo.months : [{name:'January',short:'Jan',yr:2026,mo:1},{name:'February',short:'Feb',yr:2026,mo:2},{name:'March',short:'Mar',yr:2026,mo:3}];
+  function calcQRev(nr, moNum) {
+    const pos = qMonths.findIndex(m => m.mo === moNum) + 1 || 1;  // 1-based position in quarter
+    const mult = 4 - pos;   // 3, 2, 1
     return (nr * 0.5) / 12 * mult;
   }
 
   // ── Monthly breakdown ─────────────────────────────────────────────────
-  const months = [
-    { name: 'January',  short: 'Jan', yr: 2026, mo: 1 },
-    { name: 'February', short: 'Feb', yr: 2026, mo: 2 },
-    { name: 'March',    short: 'Mar', yr: 2026, mo: 3 },
-  ].map(m => {
+  const months = qMonths.map(m => {
     const recs  = qtdRecords.filter(r => inMonth(r['Actual Live Date'], m.yr, m.mo));
     const nr    = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
     const qrev  = recs.reduce((s,r) => s + calcQRev(parseRev(r['Opportunity Net Revenue (converted)']), m.mo), 0);
@@ -2201,9 +2239,9 @@ function renderQ1Tracker() {
         ${addedCount > 0 ? `<span style="font-size:13px;font-weight:600;color:var(--green);margin-left:4px">+${addedCount}</span>` : ''}
         ${movedOutCount > 0 ? `<span style="font-size:13px;font-weight:600;color:var(--red);margin-left:2px">−${movedOutCount}</span>` : ''}
       </div>
-      <div class="q1-lbl">Q1 LTS Total</div>
+      <div class="q1-lbl">${QTR} LTS Total</div>
       <div class="q1-sub">
-        Original: ${ORIGINAL_LTS_25.length}
+        ${QTR === 'Q1-2026' ? `Original: ${ORIGINAL_LTS_25.length}` : `Total committed`}
         ${addedCount > 0 ? `&nbsp;·&nbsp;<span style="color:var(--green)">+${addedCount} added</span>` : ''}
         ${movedOutCount > 0 ? `&nbsp;·&nbsp;<span style="color:var(--red)">−${movedOutCount} moved out</span>` : ''}
       </div>
@@ -2234,7 +2272,7 @@ function renderQ1Tracker() {
   // Progress bar
   h += `<div class="q1-progress-wrap">
     <div class="q1-progress-label">
-      <span>Q1 Progress — <strong>${qtdCount} of ${ltsCount}</strong> projects live</span>
+      <span>${QTR} Progress — <strong>${qtdCount} of ${ltsCount}</strong> projects live</span>
       <span style="font-weight:700;color:${barColor}">${pct}% achieved</span>
     </div>
     <div class="q1-progress-track">
@@ -2243,10 +2281,10 @@ function renderQ1Tracker() {
       </div>
     </div>
     <div style="display:flex;margin-top:6px;font-size:10px;color:var(--sub);gap:0">
-      <div style="flex:${months[0].count};text-align:center;border-right:1px dashed #cbd5e1;padding-right:4px">Jan ${months[0].count}</div>
-      <div style="flex:${months[1].count};text-align:center;border-right:1px dashed #cbd5e1;padding:0 4px">Feb ${months[1].count}</div>
-      <div style="flex:${months[2].count};text-align:center;padding-left:4px">Mar ${months[2].count}</div>
-      <div style="flex:${remaining};text-align:center;color:#94a3b8;border-left:1px dashed #cbd5e1;padding-left:4px">Remaining ${remaining}</div>
+      <div style="flex:${months[0].count||1};text-align:center;border-right:1px dashed #cbd5e1;padding-right:4px">${months[0].short} ${months[0].count}</div>
+      <div style="flex:${months[1].count||1};text-align:center;border-right:1px dashed #cbd5e1;padding:0 4px">${months[1].short} ${months[1].count}</div>
+      <div style="flex:${months[2].count||1};text-align:center;padding-left:4px">${months[2].short} ${months[2].count}</div>
+      <div style="flex:${remaining||1};text-align:center;color:#94a3b8;border-left:1px dashed #cbd5e1;padding-left:4px">Remaining ${remaining}</div>
     </div>
   </div>`;
 
@@ -2255,13 +2293,14 @@ function renderQ1Tracker() {
   months.forEach(m => {
     const barPct = maxMonthCt > 0 ? Math.round((m.count / maxMonthCt) * 100) : 0;
     const col    = m.count >= 10 ? '#16a34a' : m.count >= 5 ? '#2563eb' : '#d97706';
+    const mPos = qMonths.findIndex(qm => qm.mo === m.mo) + 1;
     h += `<div class="q1-month-card">
-      <div class="month-name">${m.name} 2026</div>
+      <div class="month-name">${m.name} ${m.yr}</div>
       <div class="month-count" style="color:${col}">${m.count}</div>
       <div style="font-size:11px;color:var(--sub);margin-bottom:4px">projects live</div>
       <div class="month-bar-wrap"><div class="month-bar-fill" style="width:${barPct}%;background:${col}"></div></div>
       <div class="month-nr">${fmtRev(m.nr)} NR</div>
-      <div style="font-size:11px;color:var(--green);margin-top:2px">~${fmtRev(m.qrev)} Q rev <span style="color:var(--sub)">(×${4-m.mo})</span></div>
+      <div style="font-size:11px;color:var(--green);margin-top:2px">~${fmtRev(m.qrev)} Q rev <span style="color:var(--sub)">(×${4-mPos})</span></div>
     </div>`;
   });
   h += `</div>`;
@@ -4056,7 +4095,7 @@ function ldrRenderMonthSummary() {
     h += `<h4>Top 5 Projects Update (by NR)</h4>`;
     top5.forEach(r => {
       const nr       = parseRev(r['Opportunity Net Revenue (converted)']);
-      const status   = (r['Current Status']||r['current_status_notes']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ').slice(0,120);
+      const status   = (r['Current Status']||r['current_status_notes']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ');
       const projDt   = r['Projected Go-Live Date']||'TBD';
       const slipNote = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
       const slipStr  = slipNote ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))}` : '';
@@ -4078,14 +4117,14 @@ function ldrRenderMonthSummary() {
     h += `<div style="border-top:1px solid var(--border);padding-top:10px">`;
     topAtRisk.forEach(r => {
       const nr     = parseRev(r['Opportunity Net Revenue (converted)']);
-      const notes  = (r['Current Status']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ').slice(0,120);
+      const notes  = (r['Current Status']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ');
       const slipAR = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
       const slipStr= slipAR ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))}` : '';
       h += `<p style="margin-bottom:5px">🟡 <strong>${esc(r['Opportunity Name'])}</strong> (NR ${ldrFmtNR(nr)})${slipStr}: <span style="color:var(--sub)">${notes||r['Projected Go-Live Date']||'No status available'}</span></p>`;
     });
     topBlocked.forEach(r => {
       const nr      = parseRev(r['Opportunity Net Revenue (converted)']);
-      const blocker = (r['Implementation Blocker']||r['Current Status']||'').trim().replace(/\s+/g,' ').slice(0,120);
+      const blocker = (r['Implementation Blocker']||r['Current Status']||'').trim().replace(/\s+/g,' ');
       const slipBL  = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
       const slipStr = slipBL ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))} fully at risk` : '';
       h += `<p style="margin-bottom:5px">🔴 <strong>${esc(r['Opportunity Name'])}</strong> (NR ${ldrFmtNR(nr)})${slipStr}: <span style="color:var(--red)">${blocker||'No blocker details recorded'}</span></p>`;
@@ -4185,6 +4224,38 @@ function copyReport() {
   });
 }
 
+function copyEmailReport() {
+  // Generate clean plain-text email from the monthly summary
+  const ms = document.getElementById('ldr-mo-summary');
+  if (!ms || !ms.innerText.trim()) {
+    alert('No monthly summary available. Please upload CSV files and select a month.');
+    return;
+  }
+
+  // Clean up the innerText: collapse multiple blank lines, trim
+  const raw = ms.innerText
+    .replace(/\t/g, ' ')
+    .replace(/[ ]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  const btn = event.target;
+  navigator.clipboard.writeText(raw).then(() => {
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '✉️ Export Email', 2000);
+  }).catch(() => {
+    // Fallback: select text in element
+    const range = document.createRange();
+    range.selectNode(ms);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    window.getSelection().removeAllRanges();
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '✉️ Export Email', 2000);
+  });
+}
+
 // =====================================================
 // TABLE SORTING
 // =====================================================
@@ -4219,7 +4290,7 @@ function sortTable(tableId, colIdx) {
 // =====================================================
 // SIDEBAR ACTIVE
 // =====================================================
-let currentPage = 'kpis';
+let currentPage = 'overview';
 
 function showPage(id) {
   currentPage = id;
