@@ -4225,28 +4225,39 @@ function copyReport() {
 }
 
 function copyEmailReport() {
-  // Generate clean plain-text email from the monthly summary
+  // Export only the narrative section (not the KPI metric cards)
   const ms = document.getElementById('ldr-mo-summary');
   if (!ms || !ms.innerText.trim()) {
     alert('No monthly summary available. Please upload CSV files and select a month.');
     return;
   }
 
-  // Clean up the innerText: collapse multiple blank lines, trim
-  const raw = ms.innerText
+  // Get the title line (first element in the summary)
+  const titleEl = ms.querySelector('.ldr-mo-sum-title');
+  const titleText = titleEl ? titleEl.innerText.replace(/\s+(Completed|In Progress|Upcoming)\s*$/i, '').trim() : '';
+
+  // Get only the narrative div — skips the KPI metric cards strip
+  const narrative = ms.querySelector('.ldr-narrative');
+  if (!narrative) {
+    alert('No narrative content available for this month yet.');
+    return;
+  }
+
+  const narrativeText = narrative.innerText
     .replace(/\t/g, ' ')
     .replace(/[ ]{2,}/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
+  const fullText = (titleText ? titleText + '\n' + '─'.repeat(Math.min(titleText.length, 60)) + '\n\n' : '') + narrativeText;
+
   const btn = event.target;
-  navigator.clipboard.writeText(raw).then(() => {
+  navigator.clipboard.writeText(fullText).then(() => {
     btn.textContent = '✅ Copied!';
     setTimeout(() => btn.textContent = '✉️ Export Email', 2000);
   }).catch(() => {
-    // Fallback: select text in element
     const range = document.createRange();
-    range.selectNode(ms);
+    range.selectNode(narrative);
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
     document.execCommand('copy');
