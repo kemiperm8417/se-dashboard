@@ -1140,19 +1140,21 @@
 
       <!-- KPI CARDS -->
       <div id="kpis">
-        <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:0"><span class="icon">📊</span> Overview KPIs</div>
+          <div class="tab-bar" id="lts-qtr-tabs" style="margin-bottom:0">
+            <button class="tab-btn active" onclick="setLTSQtr('Q1-2026',this)">Q1 2026</button>
+            <button class="tab-btn" onclick="setLTSQtr('Q2-2026',this)">Q2 2026</button>
+            <button class="tab-btn" onclick="setLTSQtr('Q3-2026',this)">Q3 2026</button>
+            <button class="tab-btn" onclick="setLTSQtr('Q4-2026',this)">Q4 2026</button>
+          </div>
+        </div>
         <div class="kpi-grid" id="kpi-grid"></div>
       </div>
 
       <!-- QUARTERLY LTS TRACKER -->
       <div id="q1-tracker" style="margin-top:32px">
         <div class="section-title" style="margin-bottom:12px"><span class="icon">🎯</span> Quarterly LTS Tracker</div>
-        <div class="tab-bar" id="lts-qtr-tabs" style="margin-bottom:16px">
-          <button class="tab-btn active" onclick="setLTSQtr('Q1-2026',this)">Q1 2026</button>
-          <button class="tab-btn" onclick="setLTSQtr('Q2-2026',this)">Q2 2026</button>
-          <button class="tab-btn" onclick="setLTSQtr('Q3-2026',this)">Q3 2026</button>
-          <button class="tab-btn" onclick="setLTSQtr('Q4-2026',this)">Q4 2026</button>
-        </div>
         <div id="q1-tracker-body"><p style="color:var(--sub);font-size:13px">Upload CSV files to view LTS tracker.</p></div>
       </div>
 
