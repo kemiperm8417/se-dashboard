@@ -495,14 +495,40 @@
     line-height: 1.5; margin-top: 2px; padding-left: 2px;
   }
   .hl-empty { text-align: center; padding: 48px; color: var(--sub); font-size: 13px; }
-  /* Weekly Digest preview box */
-  .hl-digest-box {
+  /* Weekly Digest editor */
+  .hl-digest-editor {
+    width: 100%; min-height: 360px;
     background: #1e293b; color: #e2e8f0;
-    border-radius: var(--radius); padding: 24px 28px;
+    border: 2px solid transparent; border-radius: var(--radius);
+    padding: 22px 26px;
     font-family: 'Courier New', monospace; font-size: 12.5px;
-    line-height: 1.75; white-space: pre-wrap; overflow-x: auto;
-    box-shadow: var(--shadow-md); max-height: 640px; overflow-y: auto;
+    line-height: 1.75; resize: vertical;
+    box-shadow: var(--shadow-md); outline: none;
+    transition: border-color 0.15s;
   }
+  .hl-digest-editor:focus { border-color: #6366f1; }
+  .hl-digest-controls {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
+  }
+  .hl-week-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hl-week-nav label { font-size: 12px; color: var(--sub); font-weight: 600; }
+  .hl-week-nav select {
+    padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 12px; background: var(--card2); color: var(--text);
+    cursor: pointer; font-family: inherit; max-width: 280px;
+  }
+  .btn-sm {
+    padding: 5px 12px; background: var(--card2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
+    cursor: pointer; color: var(--text); transition: all 0.15s; font-family: inherit;
+  }
+  .btn-sm:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+  .btn-sm-green {
+    background: #ecfdf5; border-color: #6ee7b7; color: #065f46;
+  }
+  .btn-sm-green:hover { background: #d1fae5; border-color: #34d399; }
+  .hl-save-status { font-size: 11px; color: var(--sub); min-height: 16px; margin-bottom: 6px; }
 
   /* ═══════════════════════════════════════════════
      Q1 TRACKER
@@ -1304,14 +1330,22 @@
 
       <!-- WEEKLY DIGEST tab -->
       <div id="hl-view-digest" class="hl-view" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-          <div style="font-size:13px;color:var(--sub)">Formatted for Slack or Email — copy and paste directly into your update.</div>
+        <div class="hl-digest-controls">
+          <div class="hl-week-nav">
+            <label>Week:</label>
+            <select id="hl-week-select" onchange="loadWeeklyDigest(this.value)">
+              <option value="__current__">Current Week</option>
+            </select>
+            <button class="btn-sm" onclick="generateDigest()">🔄 Regenerate</button>
+            <button class="btn-sm btn-sm-green" onclick="saveWeeklyDigest()">💾 Save This Week</button>
+          </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn-export" id="hl-btn-slack" onclick="copyWeeklyDigest('slack')">📤 Copy for Slack</button>
             <button class="btn-export" id="hl-btn-email" onclick="copyWeeklyDigest('email')" style="background:#059669">✉️ Copy for Email</button>
           </div>
         </div>
-        <div id="hl-digest-preview" class="hl-digest-box">Upload CSV data to generate the weekly digest.</div>
+        <div class="hl-save-status" id="hl-save-status"></div>
+        <textarea id="hl-digest-editor" class="hl-digest-editor" spellcheck="false" placeholder="Upload CSV data to generate the weekly digest."></textarea>
       </div>
     </div>
 
@@ -3360,15 +3394,96 @@ function renderHLGroups(type, containerId) {
   }).join('');
 }
 
-function buildWeeklyDigestText(format) {
-  // format: 'slack' or 'email'
-  // One line per signal — project names comma-joined. Stays under ~15 lines total.
-  const isSlack = format === 'slack';
-  const b  = (s) => isSlack ? `*${s}*` : s;   // bold only for Slack
+// ── Weekly digest storage ─────────────────────────────────────────────────────
+const DIGEST_STORE_KEY = 'se_weekly_digests';
+
+function getWeekKey(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yr = d.getUTCFullYear();
+  const wk = Math.ceil((((d - new Date(Date.UTC(yr, 0, 1))) / 86400000) + 1) / 7);
+  return `${yr}-W${String(wk).padStart(2,'0')}`;
+}
+
+function getWeekLabel(weekKey) {
+  const [yr, wStr] = weekKey.split('-W');
+  const year = parseInt(yr), week = parseInt(wStr);
+  const jan4 = new Date(year, 0, 4);
+  const mon = new Date(jan4);
+  mon.setDate(jan4.getDate() + (week - 1) * 7 - ((jan4.getDay() + 6) % 7));
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+  return `Week ${week} · ${fmt(mon)}–${fmt(sun)} ${year}`;
+}
+
+function listSavedWeeks() {
+  try { return Object.keys(JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}')).sort().reverse(); }
+  catch { return []; }
+}
+
+function refreshWeekSelector() {
+  const sel = document.getElementById('hl-week-select');
+  if (!sel) return;
+  const currentKey = getWeekKey(TODAY);
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}'); } catch {}
+  const past = Object.keys(store).sort().reverse().filter(k => k !== currentKey);
+  sel.innerHTML = `<option value="__current__">Current — ${getWeekLabel(currentKey)}</option>` +
+    past.map(k => `<option value="${escHtml(k)}">${escHtml(store[k]?.weekLabel || getWeekLabel(k))}</option>`).join('');
+}
+
+function saveWeeklyDigest() {
+  const editor = document.getElementById('hl-digest-editor');
+  if (!editor || !editor.value.trim()) return;
+  const weekKey = getWeekKey(TODAY);
+  try {
+    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
+    store[weekKey] = { text: editor.value, savedAt: new Date().toISOString(), weekLabel: getWeekLabel(weekKey) };
+    localStorage.setItem(DIGEST_STORE_KEY, JSON.stringify(store));
+    const st = document.getElementById('hl-save-status');
+    if (st) { st.textContent = `✅ Saved at ${new Date().toLocaleTimeString()}`; setTimeout(() => st.textContent = '', 3000); }
+    refreshWeekSelector();
+  } catch(e) { alert('Save failed: ' + e.message); }
+}
+
+function loadWeeklyDigest(weekKey) {
+  const editor = document.getElementById('hl-digest-editor');
+  if (!editor) return;
+  if (weekKey === '__current__') { editor.value = buildWeeklyDigestText(); editor.readOnly = false; return; }
+  try {
+    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
+    if (store[weekKey]) { editor.value = store[weekKey].text; editor.readOnly = false; }
+  } catch {}
+}
+
+function generateDigest() {
+  const editor = document.getElementById('hl-digest-editor');
+  if (!editor) return;
+  editor.value = buildWeeklyDigestText();
+  editor.readOnly = false;
+  const sel = document.getElementById('hl-week-select');
+  if (sel) sel.value = '__current__';
+}
+
+function refreshDigestEditor() {
+  const editor = document.getElementById('hl-digest-editor');
+  if (editor && hlData.length) editor.value = buildWeeklyDigestText();
+  refreshWeekSelector();
+  // Auto-load saved digest for current week if one exists
+  const weekKey = getWeekKey(TODAY);
+  try {
+    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
+    if (store[weekKey] && editor) editor.value = store[weekKey].text;
+  } catch {}
+}
+
+// ── Build digest text (Slack format with *bold*) ──────────────────────────────
+function buildWeeklyDigestText() {
+  const b   = s => `*${s}*`;
   const sep = '─'.repeat(40);
   const today = TODAY.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
 
-  function groupBySignal(arr) {
+  function grouped(arr) {
     const g = {}, ord = [];
     arr.forEach(r => { if (!g[r.signal]) { g[r.signal] = []; ord.push(r.signal); } g[r.signal].push(r); });
     return { g, ord };
@@ -3381,14 +3496,13 @@ function buildWeeklyDigestText(format) {
   lines.push(b(`📊 SE Weekly Update — ${today}`));
   lines.push('');
 
-  // ── HIGHLIGHTS: one bullet per signal, names comma-joined ─────────────────
+  // HIGHLIGHTS — one line per type, names comma-joined
   lines.push(b('✨ Highlights'));
   if (up.length) {
-    const { g, ord } = groupBySignal(up);
+    const { g, ord } = grouped(up);
     ord.forEach(sig => {
       const items = g[sig];
-      const names = items.map(r => r.name).join(', ');
-      lines.push(`${items[0].icon} ${b(sig + ' (' + items.length + ')')}: ${names}`);
+      lines.push(`${items[0].icon} ${b(sig + ' (' + items.length + ')')}: ${items.map(r => r.name).join(', ')}`);
     });
   } else {
     lines.push('   — No highlights this week.');
@@ -3396,14 +3510,13 @@ function buildWeeklyDigestText(format) {
 
   lines.push('');
 
-  // ── LOWLIGHTS: one bullet per signal, names comma-joined ──────────────────
+  // LOWLIGHTS — one line per theme (derived from text), names comma-joined
   lines.push(b('⚠️ Lowlights'));
   if (down.length) {
-    const { g, ord } = groupBySignal(down);
+    const { g, ord } = grouped(down);
     ord.forEach(sig => {
       const items = g[sig];
-      // For Overdue/Stale include the duration inline: "Name (5d)"
-      const showDur = sig === 'Overdue' || sig === 'Stale';
+      const showDur = sig === 'Overdue / Slipped' || sig === 'No Recent Activity';
       const names = items.map(r => showDur && r.dur ? `${r.name} (${r.dur}d)` : r.name).join(', ');
       lines.push(`${items[0].icon} ${b(sig + ' (' + items.length + ')')}: ${names}`);
     });
@@ -3413,55 +3526,46 @@ function buildWeeklyDigestText(format) {
 
   lines.push('');
 
-  // ── PIPELINE: upcoming go-lives this week / next week (compact) ───────────
-  const active = activeData || [];
-  const inProg = active.filter(r => { const s=(r['Status']||'').trim(); return s==='In Progress'||s==='Presales'||s==='Blocked'; });
+  // PIPELINE — upcoming go-lives, compact
+  const inProg = (activeData||[]).filter(r => { const s=(r['Status']||'').trim(); return s==='In Progress'||s==='Blocked'; });
   const thisWk = [], nextWk = [], overdue = [];
   inProg.forEach(r => {
-    const gl = parseDate(r['Projected Go-Live Date']);
-    if (!gl) return;
+    const gl = parseDate(r['Projected Go-Live Date']); if (!gl) return;
     const diff = daysDiff(gl);
     const rag  = (r['Projected Go-Live Status']||'').trim();
     const ri   = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
-    const entry = `${ri} ${r['Opportunity Name']||'—'}`;
-    if (diff < 0)            overdue.push({ entry, days: Math.abs(diff) });
-    else if (gl <= WEEK1_END) thisWk.push(entry);
-    else if (gl <= WEEK2_END) nextWk.push(entry);
+    const nm   = r['Opportunity Name']||'—';
+    if (diff < 0)             overdue.push({ nm: `${ri} ${nm}`, days: Math.abs(diff) });
+    else if (gl <= WEEK1_END)  thisWk.push(`${ri} ${nm}`);
+    else if (gl <= WEEK2_END)  nextWk.push(`${ri} ${nm}`);
   });
 
   lines.push(b('📅 Pipeline'));
   if (thisWk.length) lines.push(`   This week: ${thisWk.join(' · ')}`);
   if (nextWk.length) lines.push(`   Next week: ${nextWk.join(' · ')}`);
-  if (overdue.length) {
-    const od = overdue.sort((a,b)=>b.days-a.days).map(x=>`${x.entry} (${x.days}d)`).join(', ');
-    lines.push(`   ⏰ Overdue: ${od}`);
-  }
+  if (overdue.length) lines.push(`   ⏰ Overdue: ${overdue.sort((a,b)=>b.days-a.days).map(x=>`${x.nm} (${x.days}d)`).join(', ')}`);
   if (!thisWk.length && !nextWk.length && !overdue.length) lines.push('   — No upcoming go-lives in the next 14 days.');
 
   lines.push('');
   lines.push(sep);
-
   return lines.join('\n');
 }
 
 function copyWeeklyDigest(format) {
-  const text = buildWeeklyDigestText(format);
+  const editor = document.getElementById('hl-digest-editor');
+  let text = editor ? editor.value : buildWeeklyDigestText();
+  // Email: strip Slack *bold* markers
+  if (format === 'email') text = text.replace(/\*([^*]+)\*/g, '$1');
   const btnId = format === 'slack' ? 'hl-btn-slack' : 'hl-btn-email';
-  const btn   = document.getElementById(btnId);
-  navigator.clipboard.writeText(text).then(() => {
-    if (btn) { const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); }
-  }).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    if (btn) { const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); }
-  });
-}
-
-function refreshDigestPreview() {
-  const el = document.getElementById('hl-digest-preview');
-  if (el && hlData.length) {
-    el.textContent = buildWeeklyDigestText('slack');
-  }
+  const btn = document.getElementById(btnId);
+  const flash = orig => { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); };
+  navigator.clipboard.writeText(text)
+    .then(() => btn && flash(btn.textContent))
+    .catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      btn && flash(btn.textContent);
+    });
 }
 
 function renderHighlights() {
@@ -3480,27 +3584,6 @@ function renderHighlights() {
     return gl < TODAY && (r['Status'] || '').trim() === 'In Progress';
   }
 
-  const NEG_KW = ['delay','delayed','on hold','pending client','waiting on client','no response',
-    'client unresponsive','escalat','stuck','behind schedule','missing','failed','unable to',
-    'legal issue','compliance issue','resourcing','resource constraint','deprioritised','deprioritized',
-    'pushed back','deferred','not progressing'];
-
-  function matchKw(text, kwList) {
-    if (!text) return null;
-    const lower = text.toLowerCase();
-    return kwList.find(k => lower.includes(k)) || null;
-  }
-
-  // Duration badge pill
-  function durBadge(days, color) {
-    return `<span style="display:inline-block;background:${color}18;color:${color};border:1px solid ${color}40;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:700;margin-right:6px;vertical-align:middle">${days}d</span>`;
-  }
-
-  // Group header within the highlights column
-  function grpHdr(icon, label, n, color) {
-    return `<div style="font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:${color};margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid ${color}30">${icon} ${label} <span style="font-weight:400;opacity:.7">(${n})</span></div>`;
-  }
-
   // ── SIGNAL 1: Went Live — sorted by Actual Live Date (most recent first) ──
   const wentLive = pipeline
     .filter(r => r['Actual Live Date'])
@@ -3516,23 +3599,8 @@ function renderHighlights() {
     .filter(x => x.dur !== null)
     .sort((a, b) => b.dur - a.dur);   // longest in CUG first
 
-  // ── SIGNAL 3 (lowlight): Stale — Last Activity Date > 14 days ───────────
-  const staleItems = pipeline
-    .filter(r => {
-      if ((r['Status']||'').trim() !== 'In Progress') return false;
-      const last = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
-      const d = daysSince(last);
-      return d !== null && d > 14;
-    })
-    .map(r => {
-      const last = r['Install Record: Last Activity Date'] || r['Install Record: Last Modified Date'] || '';
-      return { r, dur: daysSince(last) };
-    })
-    .sort((a, b) => b.dur - a.dur);   // most stale first
-
-  // ── Build hlData (normalised rows for table + filtering) ─────────────────
+  // ── Build hlData ───────────────────────────────────────────────────────────
   hlData = [];
-  const loIds = new Set();
 
   // HIGHLIGHTS: Went Live
   wentLive.forEach(({ r, dur }) => {
@@ -3561,12 +3629,35 @@ function renderHighlights() {
     });
   });
 
-  // LOWLIGHTS
+  // ── deriveTheme: classify lowlight reason from text fields (NOT RAG status) ──
+  function deriveTheme(notes, blocker, risk) {
+    const txt = [notes, blocker, risk].filter(Boolean).join(' ').toLowerCase();
+    if (!txt.trim()) return null;
+    if (/on hold|put on hold|parked|paused|deprioritis|deprioritiz|deferred|pushed.{0,5}back|not.{0,10}priorit|currently.{0,10}hold|currently on hold/.test(txt))
+      return { theme:'On Hold / Parked', icon:'⏸️' };
+    if (/waiting.{0,20}client|pending.{0,10}client|client.{0,15}not.{0,10}respond|client.{0,15}slow|no response from|client unresponsive|awaiting.{0,15}client|client.{0,20}delay|chasing.{0,15}client|client.{0,20}yet to|follow.{0,5}up with client|client.{0,20}not provid/.test(txt))
+      return { theme:'Client Unresponsive', icon:'🟡' };
+    if (/uat|user acceptance|sign.{0,5}off|awaiting.{0,15}approv|pending.{0,15}approv|pending.{0,15}sign|awaiting.{0,15}sign|go.live approv|pending testing|testing.{0,15}complet|cert.{0,15}pending|final.{0,10}testing/.test(txt))
+      return { theme:'Awaiting UAT / Sign-off', icon:'🟡' };
+    if (/compliance|regulatory|regulation|legal.{0,15}review|kyc|aml|licens|legal hold|legal clearance|legal.{0,10}approv|legal.{0,10}sign|legal.{0,10}check/.test(txt))
+      return { theme:'Compliance / Regulatory Hold', icon:'🟠' };
+    if (/technical.{0,15}block|technical.{0,15}issue|api.{0,20}issue|api.{0,20}error|integration.{0,20}issue|integration.{0,20}error|system.{0,15}issue|dev.{0,10}block|vendor.{0,15}depend|infrastructure.{0,15}issue|code.{0,10}fix|bug.{0,10}fix|technical.{0,15}depend/.test(txt))
+      return { theme:'Technical / Integration Blocker', icon:'🔴' };
+    if (/resource.{0,15}constraint|bandwidth.{0,15}issue|team.{0,15}capacit|staffing|team.{0,15}not available|under.{0,10}resourc|resource.{0,15}unavailable/.test(txt))
+      return { theme:'Resource Constraint', icon:'🟡' };
+    if (/escalat/.test(txt))
+      return { theme:'Escalated', icon:'🔺' };
+    return null;
+  }
+
+  // ── LOWLIGHTS — text-first classification, RAG is not the grouping key ──────
+  const loIds = new Set();
+
   pipeline.forEach(r => {
     const status  = (r['Status']||'').trim();
     const rag     = (r['Projected Go-Live Status']||'').trim();
     const name    = (r['Opportunity Name']||'').trim();
-    const id      = name;
+    if (!name || loIds.has(name)) return;
     const se      = r['Implementation Owner']||'—';
     const region  = extractRegion(r['Global Region']||'');
     const blocker = (r['Implementation Blocker']||'').trim();
@@ -3575,62 +3666,59 @@ function renderHighlights() {
     const rev     = parseRev(r['Opportunity Net Revenue (converted)']);
     const revFmt  = fmtRev(rev);
     const glDate  = r['Projected Go-Live Date']||'';
+    const shortNote = s => s ? (s.length > 100 ? s.slice(0,100)+'…' : s) : '';
 
+    // 1. Structurally Blocked — always surface regardless of text
     if (status === 'Blocked' || rag === 'Blocked') {
       hlData.push({ type:'down', signal:'Blocked', icon:'🔴', name, se, region, rev, revFmt, dur:0,
-        details: truncate(blocker||notes||'No details', 160) });
-      loIds.add(id); return;
+        details: shortNote(blocker||notes) });
+      loIds.add(name); return;
     }
-    if (rag === 'At Risk') {
-      const odStr = isOverdue(r) ? ` | ⏰ overdue ${daysSince(glDate)}d` : '';
-      hlData.push({ type:'down', signal:'At Risk', icon:'🟡', name, se, region, rev, revFmt,
-        dur: daysSince(glDate)||0,
-        details: truncate(risk||blocker||notes||'No risk details', 160) + odStr });
-      loIds.add(id); return;
+
+    // 2. Text-based theme (from Current Status + Risk + Blocker) — main classification
+    const derived = deriveTheme(notes, blocker, risk);
+    if (derived) {
+      const dur = isOverdue(r) ? (daysSince(glDate)||0) : 0;
+      hlData.push({ type:'down', signal: derived.theme, icon: derived.icon,
+        name, se, region, rev, revFmt, dur,
+        details: shortNote(notes||blocker||risk) });
+      loIds.add(name); return;
     }
-    if (isOverdue(r) && !loIds.has(id)) {
+
+    // 3. Structurally Overdue with no explanatory text — surface with date context
+    if (isOverdue(r)) {
       const od = daysSince(glDate)||0;
-      hlData.push({ type:'down', signal:'Overdue', icon:'⏰', name, se, region, rev, revFmt, dur: od,
-        details: `Projected: ${glDate} | RAG: ${rag||'—'}` });
-      loIds.add(id); return;
+      hlData.push({ type:'down', signal:'Overdue / Slipped', icon:'⏰', name, se, region, rev, revFmt, dur: od,
+        details: `Projected go-live: ${glDate} — ${od}d overdue` });
+      loIds.add(name); return;
     }
-    if (!loIds.has(id)) {
-      const kw = matchKw(blocker||risk||notes, NEG_KW);
-      if (kw) {
-        hlData.push({ type:'down', signal:'Flag', icon:'📉', name, se, region, rev, revFmt, dur:0,
-          details: truncate(blocker||risk||notes, 160) });
-        loIds.add(id); return;
-      }
+
+    // 4. No activity >30 days, no other theme found — low-signal bucket
+    const lastAct = r['Install Record: Last Activity Date']||r['Install Record: Last Modified Date']||'';
+    const staleD = daysSince(lastAct);
+    if (staleD !== null && staleD > 30 && status === 'In Progress') {
+      hlData.push({ type:'down', signal:'No Recent Activity', icon:'🕐',
+        name, se, region, rev, revFmt, dur: staleD,
+        details: `No updates in ${staleD} days` });
+      loIds.add(name);
     }
   });
 
-  // Stale → lowlights
-  staleItems.forEach(({ r, dur }) => {
-    const id = (r['Opportunity Name']||'').trim();
-    if (loIds.has(id)) return;
-    const last = r['Install Record: Last Activity Date']||r['Install Record: Last Modified Date']||'';
-    hlData.push({ type:'down', signal:'Stale', icon:'🕐',
-      name: id, se: r['Implementation Owner']||'—',
-      region: extractRegion(r['Global Region']||''),
-      rev: parseRev(r['Opportunity Net Revenue (converted)']),
-      revFmt: fmtRev(parseRev(r['Opportunity Net Revenue (converted)'])),
-      dur, details: `${dur}d no activity | Last: ${last||'—'} | Go-Live: ${r['Projected Go-Live Date']||'—'}` });
-  });
-
-  // ── Trend summary bar ─────────────────────────────────────────────────────
+  // ── Trend summary bar — counts derived from hlData (text-classified) ────────
   const bar = document.getElementById('hl-trend-bar');
   if (bar) {
-    const atRiskCnt  = pipeline.filter(r=>(r['Projected Go-Live Status']||'').trim()==='At Risk').length;
-    const blockedCnt = pipeline.filter(r=>(r['Status']||'').trim()==='Blocked'||(r['Projected Go-Live Status']||'').trim()==='Blocked').length;
-    const overdueCnt = pipeline.filter(r=>isOverdue(r)).length;
+    const blockedCnt  = hlData.filter(r=>r.type==='down'&&r.signal==='Blocked').length;
+    const overdueCnt  = hlData.filter(r=>r.type==='down'&&r.signal==='Overdue / Slipped').length;
+    const staleCnt    = hlData.filter(r=>r.type==='down'&&r.signal==='No Recent Activity').length;
+    const themedCnt   = hlData.filter(r=>r.type==='down'&&r.signal!=='Blocked'&&r.signal!=='Overdue / Slipped'&&r.signal!=='No Recent Activity').length;
     bar.style.display = 'flex';
     bar.innerHTML = [
-      wentLive.length      ? `<span class="trend-chip up">🏆 ${wentLive.length} Went Live</span>` : '',
+      wentLive.length ? `<span class="trend-chip up">🏆 ${wentLive.length} Went Live</span>` : '',
       cugInProgress.length ? `<span class="trend-chip up">🔵 ${cugInProgress.length} In CUG</span>` : '',
-      atRiskCnt            ? `<span class="trend-chip warn">🟡 ${atRiskCnt} At Risk</span>` : '',
-      blockedCnt           ? `<span class="trend-chip down">🔴 ${blockedCnt} Blocked</span>` : '',
-      overdueCnt           ? `<span class="trend-chip down">⏰ ${overdueCnt} Overdue</span>` : '',
-      staleItems.length    ? `<span class="trend-chip warn">🕐 ${staleItems.length} Stale &gt;14d</span>` : '',
+      themedCnt  ? `<span class="trend-chip warn">⚠️ ${themedCnt} At Risk (identified reason)</span>` : '',
+      blockedCnt ? `<span class="trend-chip down">🔴 ${blockedCnt} Blocked</span>` : '',
+      overdueCnt ? `<span class="trend-chip down">⏰ ${overdueCnt} Overdue</span>` : '',
+      staleCnt   ? `<span class="trend-chip warn">🕐 ${staleCnt} No Activity &gt;30d</span>` : '',
     ].filter(Boolean).join('');
   }
 
@@ -3638,8 +3726,8 @@ function renderHighlights() {
   renderHLGroups('up',   'hl-groups-hi');
   renderHLGroups('down', 'hl-groups-lo');
 
-  // ── Pre-render digest preview ─────────────────────────────────────────────
-  refreshDigestPreview();
+  // ── Populate digest editor ────────────────────────────────────────────────
+  refreshDigestEditor();
 
   // ── Reset to Highlights tab ───────────────────────────────────────────────
   hlSetView('hi', document.getElementById('hltab-hi'));
