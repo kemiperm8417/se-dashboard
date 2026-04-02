@@ -1140,7 +1140,7 @@
 
       <!-- KPI CARDS -->
       <div id="kpis">
-        <div class="section-title"><span class="icon">📊</span> Overview KPIs</div>
+        <div class="section-title"><span class="icon">📊</span> Overview YTD Stats</div>
         <div class="kpi-grid" id="kpi-grid"></div>
       </div>
 
@@ -2275,7 +2275,6 @@ function setLTSQtr(qCode, btn) {
   document.querySelectorAll('#lts-qtr-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderQ1Tracker();
-  renderKPIs();
 }
 
 function renderQ1Tracker() {
@@ -2532,35 +2531,27 @@ function renderKPIs() {
   const active   = activeData   || [];
   const presales = presalesData || [];
 
-  // ── Quarter bounds — aligned with whichever tab is selected in the LTS Tracker ──
-  const _QBOUNDS = {
-    'Q1-2026': { start: new Date(2026,0,1),  end: new Date(2026,2,31)  },
-    'Q2-2026': { start: new Date(2026,3,1),  end: new Date(2026,5,30)  },
-    'Q3-2026': { start: new Date(2026,6,1),  end: new Date(2026,8,30)  },
-    'Q4-2026': { start: new Date(2026,9,1),  end: new Date(2026,11,31) },
-  };
-  const topQtr  = _ltsQtr || 'Q1-2026';
-  const qBound  = _QBOUNDS[topQtr] || _QBOUNDS['Q1-2026'];
-
-  // ── Live Completed — scoped to the selected quarter by Actual Live Date ─
+  // ── Live Completed — YTD (all of 2026, standalone, not quarter-filtered) ─
+  const ytdStart = new Date(2026, 0, 1);
+  const ytdEnd   = new Date(2026, 11, 31);
   const liveRecs   = active.filter(r => {
     if ((r['Status']||'').trim() !== 'Live Completed') return false;
     const d = parseDate(r['Actual Live Date']);
-    return d && d >= qBound.start && d <= qBound.end;
+    return d && d >= ytdStart && d <= ytdEnd;
   });
   const liveCount  = liveRecs.length;
   const liveFB     = liveRecs.filter(r => isFrontbook(r)).length;
   const liveBB     = liveRecs.filter(r => isBackbook(r)).length;
   const liveNR     = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  // Q rev: quarter-relative multiplier (month % 3 gives position in any quarter)
-  const liveQRev   = liveRecs.reduce((s,r) => {
+  // YTD rev: sum of each record's quarterly revenue contribution when it went live
+  const liveYTDRev = liveRecs.reduce((s,r) => {
     const d = parseDate(r['Actual Live Date']);
     if (!d) return s;
     const posInQtr = d.getMonth() % 3; // 0=1st mo of qtr, 1=2nd, 2=3rd
     const mult = 3 - posInQtr;         // ×3, ×2, ×1
     return s + (parseRev(r['Opportunity Net Revenue (converted)']) * 0.5 / 12 * mult);
   }, 0);
-  const liveQ1Count = liveRecs.filter(r => (r['Committed QTR']||'').trim() === topQtr).length;
+  const liveYTDCommitted = liveRecs.filter(r => (r['Committed QTR']||'').includes('2026')).length;
 
   // ── Active Implementation ────────────────────────────────────────────
   const implRecs   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed');
@@ -2583,14 +2574,14 @@ function renderKPIs() {
   const grid = document.getElementById('kpi-grid');
   grid.innerHTML = `
     <div class="kpi-card green kpi-wide">
-      <div class="kpi-badge" style="background:var(--green-bg);color:var(--green)">✅ Live Completed</div>
+      <div class="kpi-badge" style="background:var(--green-bg);color:var(--green)">✅ Live Completed YTD</div>
       <div class="kpi-big">${liveCount}</div>
       <div class="kpi-line"><span>Frontbook</span><span>${liveFB}</span></div>
       <div class="kpi-line"><span>Backbook</span><span>${liveBB}</span></div>
-      <div class="kpi-line"><span>${topQtr} Committed</span><span>${liveQ1Count}</span></div>
+      <div class="kpi-line"><span>2026 Committed</span><span>${liveYTDCommitted}</span></div>
       <div class="kpi-value-bar">
         <div class="kpi-vl"><div class="kpi-vl-lbl">Total NR</div><div class="kpi-vl-val">${fmtRev(liveNR)}</div></div>
-        <div class="kpi-vl"><div class="kpi-vl-lbl">Q Rev (~50%)</div><div class="kpi-vl-val" style="color:var(--green)">${fmtRev(liveQRev)}</div></div>
+        <div class="kpi-vl"><div class="kpi-vl-lbl">YTD Rev (~50%)</div><div class="kpi-vl-val" style="color:var(--green)">${fmtRev(liveYTDRev)}</div></div>
       </div>
     </div>
 
