@@ -443,7 +443,7 @@
   .pipeline-card .pc-revenue { font-size: 20px; font-weight: 800; color: var(--accent); margin: 10px 0 4px; letter-spacing: -0.5px; }
 
   /* ═══════════════════════════════════════════════
-     HIGHLIGHTS — Trend analysis table
+     HIGHLIGHTS — Weekly Summary (grouped thematic)
   ═══════════════════════════════════════════════ */
   .hl-trend-bar {
     display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
@@ -455,42 +455,54 @@
   .trend-chip.up   { background: var(--green-bg); color: #065f46; border: 1px solid rgba(16,185,129,0.2); }
   .trend-chip.warn { background: var(--amber-bg); color: #92400e; border: 1px solid rgba(245,158,11,0.2); }
   .trend-chip.down { background: var(--red-bg);   color: #991b1b; border: 1px solid rgba(239,68,68,0.2); }
-  .hl-toolbar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
-    padding: 10px 14px; background: var(--card);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-  }
-  .hl-filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: auto; }
-  .hl-filter-row select {
-    padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 12px; background: var(--card2); color: var(--text); cursor: pointer; font-family: inherit;
-  }
-  .hl-filter-row .btn-export {
+  .hl-view { }
+  .btn-export {
     padding: 6px 14px; background: var(--accent); color: #fff; border: none;
     border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s; font-family: inherit;
   }
-  .hl-filter-row .btn-export:hover { background: var(--accent-hover); }
-  .hl-count-label { font-size: 12px; color: var(--sub); margin-bottom: 10px; font-weight: 500; }
-  .hl-table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-  .hl-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  .hl-table thead th {
-    background: #1e293b; padding: 10px 14px; text-align: left;
-    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;
-    color: #94a3b8; border-bottom: 2px solid var(--border); white-space: nowrap;
+  .btn-export:hover { background: var(--accent-hover); }
+  /* Thematic group card */
+  .hl-group {
+    margin-bottom: 14px; border-radius: var(--radius);
+    border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm);
   }
-  .hl-table tbody tr { border-bottom: 1px solid var(--border2); transition: background 0.15s; }
-  .hl-table tbody tr:hover { background: #fafafa; }
-  .hl-table tbody tr.row-up   td:first-child { border-left: 3px solid var(--green); }
-  .hl-table tbody tr.row-down td:first-child { border-left: 3px solid var(--red); }
-  .hl-table tbody tr.row-warn td:first-child { border-left: 3px solid var(--amber); }
-  .hl-table td { padding: 10px 14px; vertical-align: top; }
-  .hl-table .td-name  { font-weight: 600; max-width: 200px; }
-  .hl-table .td-details { max-width: 260px; font-size: 11.5px; color: var(--sub); line-height: 1.5; }
-  .hl-signal-chip { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-  .hl-dur-badge { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .hl-group-hdr {
+    padding: 11px 16px; display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 13.5px; cursor: default;
+  }
+  .hl-group-hdr .hl-grp-count {
+    margin-left: auto; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; background: rgba(0,0,0,0.08);
+  }
+  .hl-group-body { padding: 4px 0 4px; }
+  .hl-group-item {
+    padding: 9px 16px; border-bottom: 1px solid var(--border2);
+    display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px;
+  }
+  .hl-group-item:last-child { border-bottom: none; }
+  .hl-group-name { font-weight: 600; font-size: 13px; flex: 0 0 auto; max-width: 260px; }
+  .hl-group-meta {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    font-size: 11px; color: var(--sub); flex: 1;
+  }
+  .hl-group-meta-tag {
+    background: var(--card2); border: 1px solid var(--border2);
+    border-radius: 4px; padding: 1px 7px; white-space: nowrap;
+  }
+  .hl-group-detail {
+    width: 100%; font-size: 11.5px; color: var(--sub);
+    line-height: 1.5; margin-top: 2px; padding-left: 2px;
+  }
   .hl-empty { text-align: center; padding: 48px; color: var(--sub); font-size: 13px; }
+  /* Weekly Digest preview box */
+  .hl-digest-box {
+    background: #1e293b; color: #e2e8f0;
+    border-radius: var(--radius); padding: 24px 28px;
+    font-family: 'Courier New', monospace; font-size: 12.5px;
+    line-height: 1.75; white-space: pre-wrap; overflow-x: auto;
+    box-shadow: var(--shadow-md); max-height: 640px; overflow-y: auto;
+  }
 
   /* ═══════════════════════════════════════════════
      Q1 TRACKER
@@ -908,13 +920,12 @@
     <a href="#pipeline-table" onclick="showPage('pipeline-table');return false"><span class="nav-icon">📋</span> All Projects</a>
     <a href="#risk-radar" onclick="showPage('risk-radar');return false"><span class="nav-icon">🚨</span> Risk Radar</a>
     <a href="#next-quarter" onclick="showPage('next-quarter');return false"><span class="nav-icon">📅</span> Next Quarter</a>
-    <a href="#weekly-view" onclick="showPage('weekly-view');return false"><span class="nav-icon">🗓️</span> Weekly View</a>
     <div class="section-label">Analytics</div>
     <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false"><span class="nav-icon">📈</span> FB vs BB</a>
     <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false"><span class="nav-icon">👥</span> SE Bandwidth</a>
     <a href="#presales" onclick="showPage('presales');return false"><span class="nav-icon">🔭</span> Presales Pipeline</a>
     <div class="section-label">Reports</div>
-    <a href="#highlights" onclick="showPage('highlights');return false"><span class="nav-icon">✨</span> Highlights</a>
+    <a href="#highlights" onclick="showPage('highlights');return false"><span class="nav-icon">✨</span> Weekly Summary</a>
     <a href="#leadership" onclick="showPage('leadership');return false"><span class="nav-icon">📋</span> Summary</a>
     <a href="#audit-trail" onclick="showPage('audit-trail');return false"><span class="nav-icon">🔍</span> Audit Trail</a>
   </nav>
@@ -1228,80 +1239,79 @@
       </div>
     </div>
 
-    <!-- SECTION: WEEKLY VIEW -->
-    <div id="weekly-view" class="section anchor">
-      <div class="section-title"><span class="icon">🗓️</span> Weekly Pipeline View — Next 14 Days</div>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:12px;color:var(--sub)">Showing projects in-progress with Projected Go-Live Date within 14 days from today (1 Apr – 14 Apr 2026)</span>
-      </div>
-      <!-- Week tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
-        <button id="wv-tab-all"  class="wv-tab wv-tab-active" onclick="wvSetTab('all')">All (14 days)</button>
-        <button id="wv-tab-this" class="wv-tab" onclick="wvSetTab('this')">This Week (1–7 Apr)</button>
-        <button id="wv-tab-next" class="wv-tab" onclick="wvSetTab('next')">Next Week (8–14 Apr)</button>
-        <button id="wv-tab-over" class="wv-tab" onclick="wvSetTab('over')">Overdue</button>
-        <button id="wv-tab-live" class="wv-tab" onclick="wvSetTab('live')" style="border-color:#16a34a;color:#15803d">✅ Recently Live</button>
-      </div>
-      <!-- This Week -->
-      <div id="wv-block-this" class="wv-block">
-        <div class="wv-week-label" style="color:var(--accent)">📅 This Week — 1 Apr to 7 Apr 2026</div>
-        <div id="wv-this-cards" class="wv-cards"></div>
-        <div id="wv-this-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
-      </div>
-      <!-- Next Week -->
-      <div id="wv-block-next" class="wv-block">
-        <div class="wv-week-label" style="color:var(--amber)">📅 Next Week — 8 Apr to 14 Apr 2026</div>
-        <div id="wv-next-cards" class="wv-cards"></div>
-        <div id="wv-next-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
-      </div>
-      <!-- Overdue -->
-      <div id="wv-block-over" class="wv-block" style="display:none">
-        <div class="wv-week-label" style="color:var(--red)">🔴 Overdue — Projected Go-Live passed, still In Progress</div>
-        <div id="wv-over-cards" class="wv-cards"></div>
-        <div id="wv-over-empty" class="wv-empty" style="display:none">No overdue projects found.</div>
-      </div>
-      <!-- Recently Live -->
-      <div id="wv-block-live" class="wv-block" style="display:none">
-        <div class="wv-week-label" style="color:var(--green)">✅ Recently Live — sorted by Actual Live Date (most recent first)</div>
-        <div id="wv-live-cards" class="wv-cards"></div>
-        <div id="wv-live-empty" class="wv-empty" style="display:none">No live completed records found.</div>
-      </div>
-      <!-- Summary strip -->
-      <div id="wv-summary" style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;"></div>
-    </div>
-
-    <!-- SECTION 10: HIGHLIGHTS & LOWLIGHTS -->
+    <!-- SECTION: WEEKLY SUMMARY (Highlights, Lowlights, Pipeline, Digest) -->
     <div id="highlights" class="section anchor">
-      <div class="section-title"><span class="icon">✨</span> Highlights &amp; Lowlights — Trend Analysis</div>
+      <div class="section-title"><span class="icon">✨</span> Weekly Summary — Highlights &amp; Lowlights</div>
+      <!-- Trend chip bar -->
       <div id="hl-trend-bar" class="hl-trend-bar" style="display:none"></div>
-      <!-- Toolbar: tabs + filters + export -->
-      <div class="hl-toolbar">
-        <div class="tab-bar" style="margin:0">
-          <button class="tab-btn active" id="hltab-all"  onclick="hlSetTab('all',this)">All</button>
-          <button class="tab-btn"        id="hltab-up"   onclick="hlSetTab('up',this)">📈 Highlights</button>
-          <button class="tab-btn"        id="hltab-down" onclick="hlSetTab('down',this)">📉 Lowlights</button>
-        </div>
-        <div class="hl-filter-row">
-          <select id="hl-f-signal" onchange="applyHLFilters()"><option value="">All Signals</option></select>
-          <select id="hl-f-se"     onchange="applyHLFilters()"><option value="">All SE Owners</option></select>
-          <select id="hl-f-region" onchange="applyHLFilters()"><option value="">All Regions</option></select>
-          <button class="btn-export" onclick="exportHighlights()">📤 Export Text</button>
-        </div>
+      <!-- Tab navigation -->
+      <div class="tab-bar" style="margin-bottom:20px">
+        <button class="tab-btn active" id="hltab-hi"     onclick="hlSetView('hi',this)">✨ Highlights</button>
+        <button class="tab-btn"        id="hltab-lo"     onclick="hlSetView('lo',this)">⚠️ Lowlights</button>
+        <button class="tab-btn"        id="hltab-pipe"   onclick="hlSetView('pipe',this)">📅 Pipeline This Week</button>
+        <button class="tab-btn"        id="hltab-digest" onclick="hlSetView('digest',this)">📋 Weekly Digest</button>
       </div>
-      <div class="hl-count-label" id="hl-count"></div>
-      <div class="hl-table-wrap">
-        <table class="hl-table">
-          <thead><tr>
-            <th style="width:130px">Signal</th>
-            <th>Project</th>
-            <th>SE Owner</th>
-            <th>Region</th>
-            <th>Revenue</th>
-            <th>Duration</th>
-            <th>Details / Notes</th>
-          </tr></thead>
-          <tbody id="hl-tbody"></tbody>
-        </table>
+
+      <!-- HIGHLIGHTS tab -->
+      <div id="hl-view-hi" class="hl-view">
+        <div id="hl-groups-hi"></div>
+      </div>
+
+      <!-- LOWLIGHTS tab -->
+      <div id="hl-view-lo" class="hl-view" style="display:none">
+        <div id="hl-groups-lo"></div>
+      </div>
+
+      <!-- PIPELINE THIS WEEK tab -->
+      <div id="hl-view-pipe" class="hl-view" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:var(--sub)">Projects in-progress with Projected Go-Live Date within 14 days</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+          <button id="wv-tab-all"  class="wv-tab wv-tab-active" onclick="wvSetTab('all')">All (14 days)</button>
+          <button id="wv-tab-this" class="wv-tab" onclick="wvSetTab('this')">This Week</button>
+          <button id="wv-tab-next" class="wv-tab" onclick="wvSetTab('next')">Next Week</button>
+          <button id="wv-tab-over" class="wv-tab" onclick="wvSetTab('over')">Overdue</button>
+          <button id="wv-tab-live" class="wv-tab" onclick="wvSetTab('live')" style="border-color:#16a34a;color:#15803d">✅ Recently Live</button>
+        </div>
+        <!-- This Week -->
+        <div id="wv-block-this" class="wv-block">
+          <div class="wv-week-label" style="color:var(--accent)">📅 This Week</div>
+          <div id="wv-this-cards" class="wv-cards"></div>
+          <div id="wv-this-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
+        </div>
+        <!-- Next Week -->
+        <div id="wv-block-next" class="wv-block">
+          <div class="wv-week-label" style="color:var(--amber)">📅 Next Week</div>
+          <div id="wv-next-cards" class="wv-cards"></div>
+          <div id="wv-next-empty" class="wv-empty" style="display:none">No projects with go-live dates in this range.</div>
+        </div>
+        <!-- Overdue -->
+        <div id="wv-block-over" class="wv-block" style="display:none">
+          <div class="wv-week-label" style="color:var(--red)">🔴 Overdue — Projected Go-Live passed, still In Progress</div>
+          <div id="wv-over-cards" class="wv-cards"></div>
+          <div id="wv-over-empty" class="wv-empty" style="display:none">No overdue projects found.</div>
+        </div>
+        <!-- Recently Live -->
+        <div id="wv-block-live" class="wv-block" style="display:none">
+          <div class="wv-week-label" style="color:var(--green)">✅ Recently Live — sorted by Actual Live Date (most recent first)</div>
+          <div id="wv-live-cards" class="wv-cards"></div>
+          <div id="wv-live-empty" class="wv-empty" style="display:none">No live completed records found.</div>
+        </div>
+        <!-- Summary strip -->
+        <div id="wv-summary" style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- WEEKLY DIGEST tab -->
+      <div id="hl-view-digest" class="hl-view" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <div style="font-size:13px;color:var(--sub)">Formatted for Slack or Email — copy and paste directly into your update.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-export" id="hl-btn-slack" onclick="copyWeeklyDigest('slack')">📤 Copy for Slack</button>
+            <button class="btn-export" id="hl-btn-email" onclick="copyWeeklyDigest('email')" style="background:#059669">✉️ Copy for Email</button>
+          </div>
+        </div>
+        <div id="hl-digest-preview" class="hl-digest-box">Upload CSV data to generate the weekly digest.</div>
       </div>
     </div>
 
@@ -3279,7 +3289,6 @@ function renderPresales() {
 // =====================================================
 // ── global highlights data store for filtering ──────────────────────────────
 let hlData = [];
-let hlTabState = 'all';
 
 // Leadership tab state
 let ldrYear = null;
@@ -3287,123 +3296,210 @@ let ldrQtr  = null;
 let ldrMo   = null;
 let ldrWk   = 0;
 
-function hlSetTab(tab, btn) {
-  hlTabState = tab;
-  document.querySelectorAll('#hltab-all,#hltab-up,#hltab-down').forEach(b => b.classList.remove('active'));
+function hlSetView(view, btn) {
+  ['hi','lo','pipe','digest'].forEach(v => {
+    const el = document.getElementById('hl-view-' + v);
+    if (el) el.style.display = v === view ? '' : 'none';
+  });
+  document.querySelectorAll('#hltab-hi,#hltab-lo,#hltab-pipe,#hltab-digest').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  applyHLFilters();
 }
 
-function applyHLFilters() {
-  const signal = document.getElementById('hl-f-signal')?.value || '';
-  const se     = document.getElementById('hl-f-se')?.value    || '';
-  const region = document.getElementById('hl-f-region')?.value || '';
-
-  let rows = hlData;
-  if (hlTabState === 'up')   rows = rows.filter(r => r.type === 'up');
-  if (hlTabState === 'down') rows = rows.filter(r => r.type === 'down');
-  if (signal) rows = rows.filter(r => r.signal === signal);
-  if (se)     rows = rows.filter(r => r.se === se);
-  if (region) rows = rows.filter(r => r.region === region);
-
-  renderHLTable(rows);
-}
-
-function renderHLTable(rows) {
-  const tbody = document.getElementById('hl-tbody');
-  const count = document.getElementById('hl-count');
-  if (!tbody) return;
-
-  const signalStyles = {
-    'Went Live':      { bg:'#dcfce7', color:'#15803d' },
-    'CUG In Progress':{ bg:'#dbeafe', color:'#1d4ed8' },
-    'Blocked':        { bg:'#fee2e2', color:'#b91c1c' },
-    'At Risk':        { bg:'#fef3c7', color:'#b45309' },
-    'Overdue':        { bg:'#fef3c7', color:'#b45309' },
-    'Flag':           { bg:'#f1f5f9', color:'#475569' },
-    'Stale':          { bg:'#f1f5f9', color:'#64748b' },
-  };
-
+function renderHLGroups(type, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const rows = hlData.filter(r => r.type === type);
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="hl-empty">No records match the current filters.</td></tr>`;
-    if (count) count.textContent = '';
+    el.innerHTML = `<div class="hl-empty">No ${type === 'up' ? 'highlights' : 'lowlights'} found. Upload CSV data to populate.</div>`;
     return;
   }
+  // Group by signal (preserve order)
+  const groups = {};
+  const order  = [];
+  rows.forEach(r => {
+    if (!groups[r.signal]) { groups[r.signal] = []; order.push(r.signal); }
+    groups[r.signal].push(r);
+  });
 
-  if (count) count.textContent = `Showing ${rows.length} record${rows.length!==1?'s':''}`;
+  const signalStyle = {
+    'Went Live':       { hdrBg:'#dcfce7', hdrColor:'#15803d', border:'#86efac' },
+    'CUG In Progress': { hdrBg:'#dbeafe', hdrColor:'#1e40af', border:'#93c5fd' },
+    'Blocked':         { hdrBg:'#fee2e2', hdrColor:'#b91c1c', border:'#fca5a5' },
+    'At Risk':         { hdrBg:'#fef3c7', hdrColor:'#b45309', border:'#fde68a' },
+    'Overdue':         { hdrBg:'#fff7ed', hdrColor:'#c2410c', border:'#fdba74' },
+    'Flag':            { hdrBg:'#f1f5f9', hdrColor:'#475569', border:'#cbd5e1' },
+    'Stale':           { hdrBg:'#f8fafc', hdrColor:'#64748b', border:'#e2e8f0' },
+  };
 
-  tbody.innerHTML = rows.map(r => {
-    const st  = signalStyles[r.signal] || { bg:'#f1f5f9', color:'#475569' };
-    const rowCls = r.type === 'up' ? 'row-up' : (r.signal === 'At Risk' || r.signal === 'Overdue' || r.signal === 'Stale') ? 'row-warn' : 'row-down';
-    const durColor = r.type === 'up' ? (r.signal === 'CUG In Progress' ? '#2563eb' : '#16a34a') :
-                     (r.signal === 'Blocked' ? '#dc2626' : '#d97706');
-    const durHtml = r.dur !== null
-      ? `<span class="hl-dur-badge" style="background:${durColor}18;color:${durColor};border:1px solid ${durColor}40">${r.dur}d</span>`
-      : '—';
-    return `<tr class="${rowCls}">
-      <td class="td-signal">
-        <span class="hl-signal-chip" style="background:${st.bg};color:${st.color}">${r.icon} ${r.signal}</span>
-      </td>
-      <td class="td-name">${escHtml(r.name)}</td>
-      <td>${escHtml(r.se)}</td>
-      <td>${escHtml(r.region)}</td>
-      <td style="white-space:nowrap">${r.revFmt}</td>
-      <td style="white-space:nowrap">${durHtml}</td>
-      <td class="td-details">${escHtml(r.details)}</td>
-    </tr>`;
+  el.innerHTML = order.map(sig => {
+    const items = groups[sig];
+    const st = signalStyle[sig] || { hdrBg:'#f1f5f9', hdrColor:'#475569', border:'#e2e8f0' };
+    const icon = items[0].icon;
+    const itemsHtml = items.map(r => {
+      const durStr = r.dur ? `${r.dur}d` : '';
+      const durTag = durStr ? `<span class="hl-group-meta-tag">${durStr}</span>` : '';
+      const revTag = r.rev > 0 ? `<span class="hl-group-meta-tag">💰 ${r.revFmt}</span>` : '';
+      return `<div class="hl-group-item">
+        <span class="hl-group-name">${escHtml(r.name)}</span>
+        <span class="hl-group-meta">
+          <span class="hl-group-meta-tag">👤 ${escHtml(r.se)}</span>
+          <span class="hl-group-meta-tag">🌏 ${escHtml(r.region)}</span>
+          ${revTag}${durTag}
+        </span>
+        ${r.details ? `<span class="hl-group-detail">→ ${escHtml(r.details)}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    return `<div class="hl-group" style="border-color:${st.border}">
+      <div class="hl-group-hdr" style="background:${st.hdrBg};color:${st.hdrColor}">
+        <span>${icon} ${sig}</span>
+        <span class="hl-grp-count">${items.length} project${items.length!==1?'s':''}</span>
+      </div>
+      <div class="hl-group-body">${itemsHtml}</div>
+    </div>`;
   }).join('');
 }
 
-function exportHighlights() {
-  const signal = document.getElementById('hl-f-signal')?.value || '';
-  const se     = document.getElementById('hl-f-se')?.value    || '';
-  let rows = hlData;
-  if (hlTabState === 'up')   rows = rows.filter(r => r.type === 'up');
-  if (hlTabState === 'down') rows = rows.filter(r => r.type === 'down');
-  if (signal) rows = rows.filter(r => r.signal === signal);
-  if (se)     rows = rows.filter(r => r.se === se);
+function buildWeeklyDigestText(format) {
+  // format: 'slack' or 'email'
+  const isSlack = format === 'slack';
+  const bold = (s) => isSlack ? `*${s}*` : s.toUpperCase();
+  const line  = isSlack ? '─'.repeat(44) : '─'.repeat(50);
+  const today = TODAY.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
 
-  const lines = [
-    `SE Dashboard — Highlights & Lowlights`,
-    `Generated: ${TODAY.toISOString().slice(0,10)}`,
-    `Filter: ${hlTabState==='up'?'Highlights only':hlTabState==='down'?'Lowlights only':'All'} | Signal: ${signal||'All'} | SE: ${se||'All'}`,
-    `${'─'.repeat(70)}`,
-    '',
-  ];
+  const up   = hlData.filter(r => r.type === 'up');
+  const down = hlData.filter(r => r.type === 'down');
 
-  const ups   = rows.filter(r => r.type === 'up');
-  const downs = rows.filter(r => r.type === 'down');
-
-  if (ups.length) {
-    lines.push('📈 HIGHLIGHTS');
-    ups.forEach(r => {
-      const dur = r.dur !== null ? `${r.dur}d` : '';
-      lines.push(`  ${r.icon} [${r.signal}${dur?' | '+dur:''}]  ${r.name}`);
-      lines.push(`     SE: ${r.se} | ${r.region} | ${r.revFmt}`);
-      if (r.details) lines.push(`     → ${r.details}`);
-      lines.push('');
-    });
+  function groupBySignal(arr) {
+    const g = {}, ord = [];
+    arr.forEach(r => { if (!g[r.signal]) { g[r.signal] = []; ord.push(r.signal); } g[r.signal].push(r); });
+    return { g, ord };
   }
 
-  if (downs.length) {
-    lines.push('📉 LOWLIGHTS');
-    downs.forEach(r => {
-      const dur = r.dur !== null ? `${r.dur}d` : '';
-      lines.push(`  ${r.icon} [${r.signal}${dur?' | '+dur:''}]  ${r.name}`);
-      lines.push(`     SE: ${r.se} | ${r.region} | ${r.revFmt}`);
-      if (r.details) lines.push(`     → ${r.details}`);
+  const lines = [];
+  lines.push(bold(`📊 SE Pipeline Weekly Update — ${today}`));
+  lines.push(line);
+  lines.push('');
+
+  // HIGHLIGHTS
+  if (up.length) {
+    lines.push(bold('✨ HIGHLIGHTS'));
+    lines.push('');
+    const { g, ord } = groupBySignal(up);
+    ord.forEach(sig => {
+      const items = g[sig];
+      lines.push(`${items[0].icon} ${bold(sig)} (${items.length})`);
+      items.forEach(r => {
+        const meta = [r.se, r.region, r.rev > 0 ? r.revFmt : ''].filter(Boolean).join(' | ');
+        const dur  = r.dur ? ` — ${r.dur}d` : '';
+        lines.push(`   → ${r.name}${dur}`);
+        if (meta) lines.push(`      ${meta}`);
+        if (r.details) lines.push(`      ${r.details}`);
+      });
       lines.push('');
     });
+  } else {
+    lines.push(bold('✨ HIGHLIGHTS'));
+    lines.push('');
+    lines.push('   — No highlights this week.');
+    lines.push('');
   }
 
-  const text = lines.join('\n');
+  // LOWLIGHTS
+  if (down.length) {
+    lines.push(bold('⚠️ LOWLIGHTS'));
+    lines.push('');
+    const { g, ord } = groupBySignal(down);
+    ord.forEach(sig => {
+      const items = g[sig];
+      lines.push(`${items[0].icon} ${bold(sig)} (${items.length})`);
+      items.forEach(r => {
+        const meta = [r.se, r.region, r.rev > 0 ? r.revFmt : ''].filter(Boolean).join(' | ');
+        const dur  = r.dur ? ` — ${r.dur}d` : '';
+        lines.push(`   → ${r.name}${dur}`);
+        if (meta) lines.push(`      ${meta}`);
+        if (r.details) lines.push(`      ${r.details}`);
+      });
+      lines.push('');
+    });
+  } else {
+    lines.push(bold('⚠️ LOWLIGHTS'));
+    lines.push('');
+    lines.push('   — No lowlights this week.');
+    lines.push('');
+  }
+
+  // Pipeline summary (from weekly view data)
+  const active = activeData || [];
+  const inProg = active.filter(r => { const s=(r['Status']||'').trim(); return s==='In Progress'||s==='Presales'||s==='Blocked'; });
+  const thisWkProj = [], nextWkProj = [], overdueProj = [];
+  inProg.forEach(r => {
+    const gl = parseDate(r['Projected Go-Live Date']);
+    if (!gl) return;
+    const diff = daysDiff(gl);
+    if (diff < 0) overdueProj.push({ r, diff });
+    else if (gl <= WEEK1_END) thisWkProj.push({ r, diff });
+    else if (gl <= WEEK2_END) nextWkProj.push({ r, diff });
+  });
+
+  lines.push(bold('📅 PIPELINE THIS WEEK'));
+  lines.push('');
+  if (thisWkProj.length) {
+    lines.push('   This week:');
+    thisWkProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
+      const gl = r['Projected Go-Live Date'] || '—';
+      const rag = (r['Projected Go-Live Status']||'').trim();
+      const ragIcon = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
+      lines.push(`   ${ragIcon} ${r['Opportunity Name']||'—'} — ${gl}${diff===0?' (TODAY)':diff===1?' (tomorrow)':''}`);
+    });
+    lines.push('');
+  }
+  if (nextWkProj.length) {
+    lines.push('   Next week:');
+    nextWkProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
+      const gl = r['Projected Go-Live Date'] || '—';
+      const rag = (r['Projected Go-Live Status']||'').trim();
+      const ragIcon = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
+      lines.push(`   ${ragIcon} ${r['Opportunity Name']||'—'} — ${gl}`);
+    });
+    lines.push('');
+  }
+  if (overdueProj.length) {
+    lines.push(`   🔴 Overdue (${overdueProj.length}):`);
+    overdueProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
+      lines.push(`   ⏰ ${r['Opportunity Name']||'—'} — ${Math.abs(diff)}d overdue`);
+    });
+    lines.push('');
+  }
+  if (!thisWkProj.length && !nextWkProj.length && !overdueProj.length) {
+    lines.push('   — No projects with upcoming go-live dates in the next 14 days.');
+    lines.push('');
+  }
+
+  lines.push(line);
+  lines.push(`Generated by SE Dashboard · ${today}`);
+
+  return lines.join('\n');
+}
+
+function copyWeeklyDigest(format) {
+  const text = buildWeeklyDigestText(format);
+  const btnId = format === 'slack' ? 'hl-btn-slack' : 'hl-btn-email';
+  const btn   = document.getElementById(btnId);
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('.btn-export');
-    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📤 Export Text', 2000); }
+    if (btn) { const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); }
   }).catch(() => {
     const ta = document.createElement('textarea');
     ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    if (btn) { const orig = btn.textContent; btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); }
   });
+}
+
+function refreshDigestPreview() {
+  const el = document.getElementById('hl-digest-preview');
+  if (el && hlData.length) {
+    el.textContent = buildWeeklyDigestText('slack');
+  }
 }
 
 function renderHighlights() {
@@ -3559,18 +3655,6 @@ function renderHighlights() {
       dur, details: `${dur}d no activity | Last: ${last||'—'} | Go-Live: ${r['Projected Go-Live Date']||'—'}` });
   });
 
-  // ── Populate filter dropdowns ─────────────────────────────────────────────
-  function populateSelect(id, values) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const cur = el.value;
-    el.innerHTML = `<option value="">All ${id==='hl-f-signal'?'Signals':id==='hl-f-se'?'SE Owners':'Regions'}</option>` +
-      [...new Set(values)].sort().map(v => `<option value="${escHtml(v)}"${v===cur?' selected':''}>${escHtml(v)}</option>`).join('');
-  }
-  populateSelect('hl-f-signal', hlData.map(r => r.signal));
-  populateSelect('hl-f-se',     hlData.map(r => r.se));
-  populateSelect('hl-f-region', hlData.map(r => r.region));
-
   // ── Trend summary bar ─────────────────────────────────────────────────────
   const bar = document.getElementById('hl-trend-bar');
   if (bar) {
@@ -3588,13 +3672,15 @@ function renderHighlights() {
     ].filter(Boolean).join('');
   }
 
-  // Reset tab state and render table
-  hlTabState = 'all';
-  ['hltab-all','hltab-up','hltab-down'].forEach((id,i) => {
-    const b = document.getElementById(id);
-    if (b) b.classList.toggle('active', i===0);
-  });
-  applyHLFilters();
+  // ── Render grouped views ──────────────────────────────────────────────────
+  renderHLGroups('up',   'hl-groups-hi');
+  renderHLGroups('down', 'hl-groups-lo');
+
+  // ── Pre-render digest preview ─────────────────────────────────────────────
+  refreshDigestPreview();
+
+  // ── Reset to Highlights tab ───────────────────────────────────────────────
+  hlSetView('hi', document.getElementById('hltab-hi'));
 }
 
 // =====================================================
