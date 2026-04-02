@@ -3362,13 +3362,11 @@ function renderHLGroups(type, containerId) {
 
 function buildWeeklyDigestText(format) {
   // format: 'slack' or 'email'
+  // One line per signal — project names comma-joined. Stays under ~15 lines total.
   const isSlack = format === 'slack';
-  const bold = (s) => isSlack ? `*${s}*` : s.toUpperCase();
-  const line  = isSlack ? '─'.repeat(44) : '─'.repeat(50);
+  const b  = (s) => isSlack ? `*${s}*` : s;   // bold only for Slack
+  const sep = '─'.repeat(40);
   const today = TODAY.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-
-  const up   = hlData.filter(r => r.type === 'up');
-  const down = hlData.filter(r => r.type === 'down');
 
   function groupBySignal(arr) {
     const g = {}, ord = [];
@@ -3376,108 +3374,72 @@ function buildWeeklyDigestText(format) {
     return { g, ord };
   }
 
+  const up   = hlData.filter(r => r.type === 'up');
+  const down = hlData.filter(r => r.type === 'down');
   const lines = [];
-  lines.push(bold(`📊 SE Pipeline Weekly Update — ${today}`));
-  lines.push(line);
+
+  lines.push(b(`📊 SE Weekly Update — ${today}`));
   lines.push('');
 
-  // HIGHLIGHTS
+  // ── HIGHLIGHTS: one bullet per signal, names comma-joined ─────────────────
+  lines.push(b('✨ Highlights'));
   if (up.length) {
-    lines.push(bold('✨ HIGHLIGHTS'));
-    lines.push('');
     const { g, ord } = groupBySignal(up);
     ord.forEach(sig => {
       const items = g[sig];
-      lines.push(`${items[0].icon} ${bold(sig)} (${items.length})`);
-      items.forEach(r => {
-        const meta = [r.se, r.region, r.rev > 0 ? r.revFmt : ''].filter(Boolean).join(' | ');
-        const dur  = r.dur ? ` — ${r.dur}d` : '';
-        lines.push(`   → ${r.name}${dur}`);
-        if (meta) lines.push(`      ${meta}`);
-        if (r.details) lines.push(`      ${r.details}`);
-      });
-      lines.push('');
+      const names = items.map(r => r.name).join(', ');
+      lines.push(`${items[0].icon} ${b(sig + ' (' + items.length + ')')}: ${names}`);
     });
   } else {
-    lines.push(bold('✨ HIGHLIGHTS'));
-    lines.push('');
     lines.push('   — No highlights this week.');
-    lines.push('');
   }
 
-  // LOWLIGHTS
+  lines.push('');
+
+  // ── LOWLIGHTS: one bullet per signal, names comma-joined ──────────────────
+  lines.push(b('⚠️ Lowlights'));
   if (down.length) {
-    lines.push(bold('⚠️ LOWLIGHTS'));
-    lines.push('');
     const { g, ord } = groupBySignal(down);
     ord.forEach(sig => {
       const items = g[sig];
-      lines.push(`${items[0].icon} ${bold(sig)} (${items.length})`);
-      items.forEach(r => {
-        const meta = [r.se, r.region, r.rev > 0 ? r.revFmt : ''].filter(Boolean).join(' | ');
-        const dur  = r.dur ? ` — ${r.dur}d` : '';
-        lines.push(`   → ${r.name}${dur}`);
-        if (meta) lines.push(`      ${meta}`);
-        if (r.details) lines.push(`      ${r.details}`);
-      });
-      lines.push('');
+      // For Overdue/Stale include the duration inline: "Name (5d)"
+      const showDur = sig === 'Overdue' || sig === 'Stale';
+      const names = items.map(r => showDur && r.dur ? `${r.name} (${r.dur}d)` : r.name).join(', ');
+      lines.push(`${items[0].icon} ${b(sig + ' (' + items.length + ')')}: ${names}`);
     });
   } else {
-    lines.push(bold('⚠️ LOWLIGHTS'));
-    lines.push('');
     lines.push('   — No lowlights this week.');
-    lines.push('');
   }
 
-  // Pipeline summary (from weekly view data)
+  lines.push('');
+
+  // ── PIPELINE: upcoming go-lives this week / next week (compact) ───────────
   const active = activeData || [];
   const inProg = active.filter(r => { const s=(r['Status']||'').trim(); return s==='In Progress'||s==='Presales'||s==='Blocked'; });
-  const thisWkProj = [], nextWkProj = [], overdueProj = [];
+  const thisWk = [], nextWk = [], overdue = [];
   inProg.forEach(r => {
     const gl = parseDate(r['Projected Go-Live Date']);
     if (!gl) return;
     const diff = daysDiff(gl);
-    if (diff < 0) overdueProj.push({ r, diff });
-    else if (gl <= WEEK1_END) thisWkProj.push({ r, diff });
-    else if (gl <= WEEK2_END) nextWkProj.push({ r, diff });
+    const rag  = (r['Projected Go-Live Status']||'').trim();
+    const ri   = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
+    const entry = `${ri} ${r['Opportunity Name']||'—'}`;
+    if (diff < 0)            overdue.push({ entry, days: Math.abs(diff) });
+    else if (gl <= WEEK1_END) thisWk.push(entry);
+    else if (gl <= WEEK2_END) nextWk.push(entry);
   });
 
-  lines.push(bold('📅 PIPELINE THIS WEEK'));
-  lines.push('');
-  if (thisWkProj.length) {
-    lines.push('   This week:');
-    thisWkProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
-      const gl = r['Projected Go-Live Date'] || '—';
-      const rag = (r['Projected Go-Live Status']||'').trim();
-      const ragIcon = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
-      lines.push(`   ${ragIcon} ${r['Opportunity Name']||'—'} — ${gl}${diff===0?' (TODAY)':diff===1?' (tomorrow)':''}`);
-    });
-    lines.push('');
+  lines.push(b('📅 Pipeline'));
+  if (thisWk.length) lines.push(`   This week: ${thisWk.join(' · ')}`);
+  if (nextWk.length) lines.push(`   Next week: ${nextWk.join(' · ')}`);
+  if (overdue.length) {
+    const od = overdue.sort((a,b)=>b.days-a.days).map(x=>`${x.entry} (${x.days}d)`).join(', ');
+    lines.push(`   ⏰ Overdue: ${od}`);
   }
-  if (nextWkProj.length) {
-    lines.push('   Next week:');
-    nextWkProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
-      const gl = r['Projected Go-Live Date'] || '—';
-      const rag = (r['Projected Go-Live Status']||'').trim();
-      const ragIcon = rag==='On Track'?'🟢':rag==='At Risk'?'🟡':rag==='Blocked'?'🔴':'⚪';
-      lines.push(`   ${ragIcon} ${r['Opportunity Name']||'—'} — ${gl}`);
-    });
-    lines.push('');
-  }
-  if (overdueProj.length) {
-    lines.push(`   🔴 Overdue (${overdueProj.length}):`);
-    overdueProj.sort((a,b)=>a.diff-b.diff).forEach(({r, diff}) => {
-      lines.push(`   ⏰ ${r['Opportunity Name']||'—'} — ${Math.abs(diff)}d overdue`);
-    });
-    lines.push('');
-  }
-  if (!thisWkProj.length && !nextWkProj.length && !overdueProj.length) {
-    lines.push('   — No projects with upcoming go-live dates in the next 14 days.');
-    lines.push('');
-  }
+  if (!thisWk.length && !nextWk.length && !overdue.length) lines.push('   — No upcoming go-lives in the next 14 days.');
 
-  lines.push(line);
-  lines.push(`Generated by SE Dashboard · ${today}`);
+  lines.push('');
+  lines.push(sep);
 
   return lines.join('\n');
 }
