@@ -866,7 +866,7 @@
   .ldr-metric .lm-label { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--sub); margin-bottom:6px; }
   .ldr-metric .lm-val { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.8px; line-height:1.1; }
   .ldr-metric .lm-sub { font-size:10.5px; color:var(--sub); margin-top:4px; line-height:1.45; }
-  .ldr-narrative { font-size:12.5px; line-height:1.75; color:var(--text); }
+  .ldr-narrative { font-size:12.5px; line-height:1.75; color:var(--text); word-wrap:break-word; overflow-wrap:break-word; overflow:hidden; }
   .ldr-narrative p { margin-bottom:9px; }
   .ldr-narrative ul { list-style:disc; margin-left:20px; margin-bottom:12px; }
   .ldr-narrative ul li { margin-bottom:3px; }
@@ -4614,142 +4614,128 @@ function ldrRenderMonthSummary() {
   const isDone   = ldrMonthDone(yr, mo);
   const badgeCls = isDone ? 'done' : 'now';
   const badgeTxt = isDone ? 'Completed' : 'In Progress';
+  const pct      = ltsRecs.length ? Math.round(liveQTDAll.length / ltsRecs.length * 100) : 0;
 
-  let h = `<div class="ldr-mo-sum-title">${moName} ${yr} — Monthly Implementation Summary <span class="mo-badge rpt-badge ${badgeCls}">${badgeTxt}</span></div>`;
+  // Helpers for this section
+  function sh(label) {  // section header
+    return `<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sub);border-top:1px solid var(--border);padding-top:12px;margin:16px 0 10px">${label}</div>`;
+  }
+  function projRow(r, highlight) {
+    const nr      = parseRev(r['Opportunity Net Revenue (converted)']);
+    const notes   = (r['Current Status']||r['current_status_notes']||r['Implementation Risk']||r['Implementation Blocker']||'').trim().replace(/\s+/g,' ');
+    const projDt  = r['Projected Go-Live Date']||'';
+    const slipped = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
+    const slipTag = slipped ? ` <span style="color:var(--amber);font-size:10.5px;font-weight:600">slip ~${ldrFmtK(ldrCalcQRev(nr,moPos))}</span>` : '';
+    const statusText = notes || (projDt ? 'Proj: '+projDt : '');
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--border2);font-size:12px;line-height:1.65;word-wrap:break-word;overflow-wrap:break-word;${highlight?'background:rgba(79,70,229,0.03);padding:6px 6px':''}">
+      ${ragEmoji(r)} <strong>${esc(r['Opportunity Name'])}</strong> <span style="color:var(--sub);font-size:10.5px">(${ldrFmtNR(nr)})</span>${slipTag}${statusText ? ` <span style="color:var(--sub)">— ${statusText}</span>` : ''}
+    </div>`;
+  }
 
-  // ── KEY METRICS (5 KPIs) ──────────────────────────────────────────────────
-  h += `<div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin-bottom:8px">Key Metrics</div>`;
+  let h = `<div class="ldr-mo-sum-title">${moName} ${yr} — Implementation Summary <span class="mo-badge rpt-badge ${badgeCls}">${badgeTxt}</span></div>`;
+
+  // ── KPI STRIP ────────────────────────────────────────────────────────────
   h += `<div class="ldr-metrics-strip">`;
-  const pct = ltsRecs.length ? Math.round(liveQTDAll.length/ltsRecs.length*100) : 0;
-  h += `<div class="ldr-metric green"><div class="lm-label">Go-Lives QTD</div><div class="lm-val">${liveQTDAll.length}</div><div class="lm-sub">of ${ltsRecs.length} Forecast (${pct}%)<br>This month: ${liveMoAll.length}</div></div>`;
-  h += `<div class="ldr-metric accent"><div class="lm-label">Revenue Unlocked</div><div class="lm-val">${ldrFmtNR(liveQTDNR)}</div><div class="lm-sub">QTD &nbsp;·&nbsp; ${ldrFmtK(liveQTDQRev)} Q rev<br>This month: ${ldrFmtNR(liveMoNR)}</div></div>`;
-  h += `<div class="ldr-metric red"><div class="lm-label">Revenue at Risk</div><div class="lm-val">${ldrFmtK(fullyAtRiskNR)}</div><div class="lm-sub">${ldrFmtK(recoverableNR)} recoverable<br>${blockedSlipped.length} blocked project${blockedSlipped.length!==1?'s':''}</div></div>`;
-  h += `<div class="ldr-metric amber"><div class="lm-label">Remaining LTS</div><div class="lm-val">${remaining.length}</div><div class="lm-sub">QT: ${remOnTrack.length} &nbsp;AT: ${remAtRisk.length} &nbsp;BL: ${remBlocked.length}</div></div>`;
-  h += `<div class="ldr-metric"><div class="lm-label">Median TTL</div><div class="lm-val">${medTTL?medTTL+' d':'—'}</div><div class="lm-sub">${medTTL?'~'+medTTL+' days (median)':'No data'}</div></div>`;
+  h += `<div class="ldr-metric green"><div class="lm-label">QTD Go-Lives</div><div class="lm-val">${liveQTDAll.length}</div><div class="lm-sub">${pct}% of ${ltsRecs.length} forecast<br>This month: <strong>${liveMoAll.length}</strong></div></div>`;
+  h += `<div class="ldr-metric accent"><div class="lm-label">NR Unlocked (QTD)</div><div class="lm-val">${ldrFmtNR(liveQTDNR)}</div><div class="lm-sub">${ldrFmtK(liveQTDQRev)} Q rev<br>This month: ${ldrFmtNR(liveMoNR)}</div></div>`;
+  h += `<div class="ldr-metric red"><div class="lm-label">Revenue at Risk</div><div class="lm-val">${ldrFmtK(fullyAtRiskNR)}</div><div class="lm-sub">${ldrFmtK(recoverableNR)} recoverable<br>${blockedSlipped.length} blocked</div></div>`;
+  h += `<div class="ldr-metric amber"><div class="lm-label">Remaining LTS</div><div class="lm-val">${remaining.length}</div><div class="lm-sub">🟢${remOnTrack.length} &nbsp;🟡${remAtRisk.length} &nbsp;🔴${remBlocked.length}</div></div>`;
+  h += `<div class="ldr-metric"><div class="lm-label">Median TTL</div><div class="lm-val">${medTTL ? medTTL + ' d' : '—'}</div><div class="lm-sub">${medTTL ? 'working days' : 'No data'}</div></div>`;
   h += `</div>`;
 
   h += `<div class="ldr-narrative">`;
 
-  // ── SUMMARY (matches CLAUDE.md email format) ──────────────────────────────
-  h += `<h4 style="margin-top:0;padding-top:0;border-top:none">Summary</h4>`;
-  h += `<p><strong>${liveMoAll.length} account${liveMoAll.length!==1?'s':''} went live in ${LDR_MONTH_SHORT[mo]} '${String(yr).slice(2)}</strong>, unlocking <strong>${ldrFmtK(liveMoQRev)}</strong> in quarterly revenue.</p>`;
-  if (liveMoFB.length || liveMoBB.length) {
-    h += `<p style="margin-left:12px">`;
-    h += `Frontbook (${liveMoFB.length}): ${liveMoFB.length ? liveMoFB.map(r=>esc(r['Opportunity Name'])).join(', ') : '—'}<br>`;
-    h += `Backbook (${liveMoBB.length}): ${liveMoBB.length ? liveMoBB.map(r=>esc(r['Opportunity Name'])).join(', ') : '—'}`;
-    h += `</p>`;
+  // ── GO-LIVES ─────────────────────────────────────────────────────────────
+  h += sh('Go-Lives');
+  // This month headline
+  h += `<div style="font-size:13px;font-weight:700;margin-bottom:6px">${moName} ${yr}: <span style="color:var(--green)">${liveMoAll.length} project${liveMoAll.length!==1?'s':''} live</span> &nbsp;·&nbsp; ${ldrFmtNR(liveMoNR)} NR &nbsp;·&nbsp; ${ldrFmtK(liveMoQRev)} Q rev</div>`;
+  if (liveMoAll.length) {
+    if (liveMoFB.length) h += `<div style="font-size:12px;margin-bottom:3px"><span style="color:var(--sub);font-weight:600">Frontbook (${liveMoFB.length}):</span> ${liveMoFB.map(r=>esc(r['Opportunity Name'])).join(', ')}</div>`;
+    if (liveMoBB.length) h += `<div style="font-size:12px;margin-bottom:3px"><span style="color:var(--sub);font-weight:600">Backbook (${liveMoBB.length}):</span> ${liveMoBB.map(r=>esc(r['Opportunity Name'])).join(', ')}</div>`;
+    if (!liveMoFB.length && !liveMoBB.length) h += `<div style="font-size:12px;color:var(--sub)">${liveMoAll.map(r=>esc(r['Opportunity Name'])).join(', ')}</div>`;
+  } else {
+    h += `<div style="color:var(--sub);font-size:12px">No go-lives recorded for ${moName}.</div>`;
   }
 
-  // QTD summary line
-  h += `<p>Against a forecast of <strong>${ltsRecs.length} LTS</strong>, <strong>${liveQTDAll.length} project${liveQTDAll.length!==1?'s':''}</strong> have gone live QTD (<strong>${pct}%</strong> of ${qtr.label} target), unlocking <strong>${ldrFmtK(liveQTDQRev)}</strong> in quarterly revenue.</p>`;
-
-  // Month-by-month QTD breakdown
-  if (priorMos.length) {
-    h += `<ul style="margin-bottom:10px">`;
+  // QTD breakdown (only if more than one month in view)
+  if (priorMos.length > 1) {
+    h += `<div style="margin-top:10px;font-size:12px;font-weight:600;color:var(--sub)">${qtr.label} QTD: ${liveQTDAll.length} of ${ltsRecs.length} (${pct}%) &nbsp;·&nbsp; ${ldrFmtNR(liveQTDNR)} NR &nbsp;·&nbsp; ${ldrFmtK(liveQTDQRev)} Q rev${medTTL?' &nbsp;·&nbsp; TTL median '+medTTL+' days':''}</div>`;
+    h += `<div style="margin-top:6px;font-size:11.5px;color:var(--sub)">`;
     priorMos.forEach(m => {
-      const ml   = active.filter(r=>ldrInMonth(r['Actual Live Date'],yr,m)&&!ldrExcludeGoLive(r));
-      if (!ml.length) { h += `<li style="color:var(--sub)">${LDR_MONTH_SHORT[m]} go-lives (0): none</li>`; return; }
-      const fb   = ml.filter(r=> ldrIsFB(r));
-      const bb   = ml.filter(r=>!ldrIsFB(r));
-      const fbStr= fb.length ? fb.map(r=>esc(r['Opportunity Name'])).join(', ')+' [Frontbook]' : '';
-      const bbStr= bb.length ? bb.map(r=>esc(r['Opportunity Name'])).join(', ')+' [Backbook]' : '';
-      const parts= [fbStr,bbStr].filter(Boolean).join('; ');
-      h += `<li>${LDR_MONTH_SHORT[m]} go-lives (${ml.length}): ${parts}</li>`;
+      const ml = active.filter(r => ldrInMonth(r['Actual Live Date'],yr,m) && !ldrExcludeGoLive(r));
+      if (!ml.length) { h += `<div style="padding:2px 0">${LDR_MONTH_SHORT[m]}: <em>none</em></div>`; return; }
+      const fb = ml.filter(r=> ldrIsFB(r)), bb = ml.filter(r=>!ldrIsFB(r));
+      const parts = [
+        fb.length ? fb.map(r=>esc(r['Opportunity Name'])).join(', ')+' <span style="opacity:.6">[FB]</span>' : '',
+        bb.length ? bb.map(r=>esc(r['Opportunity Name'])).join(', ')+' <span style="opacity:.6">[BB]</span>' : ''
+      ].filter(Boolean).join(' · ');
+      h += `<div style="padding:2px 0"><strong>${LDR_MONTH_SHORT[m]} (${ml.length}):</strong> ${parts}</div>`;
     });
-    h += `</ul>`;
+    h += `</div>`;
+  } else if (medTTL) {
+    h += `<div style="margin-top:6px;font-size:12px;color:var(--sub)">TTL median: <strong>${medTTL} working days</strong></div>`;
   }
 
-  if (medTTL) h += `<p>TTL: <strong>~${medTTL} days</strong> (median)</p>`;
-
-  // ── SLIPPAGE SECTION ──────────────────────────────────────────────────────
+  // ── SLIPPAGE ──────────────────────────────────────────────────────────────
   if (slippedMo.length) {
     const slipTotalQRev = slippedMo.reduce((s,r)=>s+ldrCalcQRev(parseRev(r['Opportunity Net Revenue (converted)']),moPos),0);
-    h += `<p><strong>${slippedMo.length} project${slippedMo.length!==1?'s':''} slipped from ${moName} '${String(yr).slice(2)}</strong>, representing <strong>${ldrFmtK(slipTotalQRev)}</strong> in potential ${qtr.label} revenue slippage.</p>`;
-    h += `<ul>`;
-    if (recoverableRecs.length) {
-      h += `<li><strong>${ldrFmtK(recoverableNR)}</strong> is recoverable if <strong>${recoverableRecs.length} project${recoverableRecs.length!==1?'s':''}</strong> deliver in ${LDR_MONTH_SHORT[Math.min(qtr.months[2], mo+1)]} as currently projected</li>`;
-    }
+    h += sh(`Slippage — ${slippedMo.length} project${slippedMo.length!==1?'s':''} · ${ldrFmtK(slipTotalQRev)} ${qtr.label} revenue impact`);
+
+    // Recoverable / at-risk summary line
+    const riskParts = [];
+    if (recoverableRecs.length) riskParts.push(`<span style="color:var(--green);font-weight:600">${ldrFmtK(recoverableNR)} recoverable</span> — ${recoverableRecs.length} projected by ${LDR_MONTH_SHORT[Math.min(qtr.months[2], mo+1)]}`);
     if (fullyAtRiskNR > 0) {
-      const outNames = outOfQtrSlipped.map(r=>esc(r['Opportunity Name'])).join(', ');
-      const blkNames = blockedSlipped.filter(r=>!outOfQtrSlipped.includes(r)).map(r=>esc(r['Opportunity Name'])).join(', ');
-      let riskDesc = '';
-      if (outOfQtrSlipped.length) riskDesc += `${outOfQtrSlipped.length} project${outOfQtrSlipped.length!==1?'s':''} slipping to ${LDR_MONTH_SHORT[qtr.months[2]+1]||'next quarter'} or beyond (${outNames})`;
-      if (blkNames) riskDesc += (riskDesc?' and ':'')+`${blockedSlipped.filter(r=>!outOfQtrSlipped.includes(r)).length} with no confirmed go-live date (${blkNames})`;
-      h += `<li><strong>${ldrFmtK(fullyAtRiskNR)}</strong> is at risk of being lost from ${qtr.label} entirely — ${riskDesc}</li>`;
+      const atRiskProjs = [...new Set([...outOfQtrSlipped, ...blockedSlipped])];
+      riskParts.push(`<span style="color:var(--red);font-weight:600">${ldrFmtK(fullyAtRiskNR)} at risk</span> — ${atRiskProjs.map(r=>esc(r['Opportunity Name'])).join(', ')}`);
     }
-    h += `</ul>`;
+    if (riskParts.length) h += `<div style="font-size:12px;margin-bottom:10px;line-height:1.7">${riskParts.join('<br>')}</div>`;
 
-    // Slipped projects by RAG group
-    const slipOT  = slippedMo.filter(r=>ragLabel(r)==='On Track');
-    const slipAR  = slippedMo.filter(r=>ragLabel(r)==='At Risk');
-    const slipBL  = slippedMo.filter(r=>ragLabel(r)==='Blocked');
-    const slipParts = [];
-    if (slipOT.length) slipParts.push(`${slipOT.map(r=>esc(r['Opportunity Name'])).join(', ')} [On Track]`);
-    if (slipAR.length) slipParts.push(`${slipAR.map(r=>esc(r['Opportunity Name'])).join(', ')} [At Risk]`);
-    if (slipBL.length) slipParts.push(`${slipBL.map(r=>esc(r['Opportunity Name'])).join(', ')} [Blocked]`);
-    h += `<p><strong>Slipped projects:</strong> ${slipParts.join('; ')}</p>`;
+    // Slipped project list by RAG
+    const slipOT = slippedMo.filter(r=>ragLabel(r)==='On Track');
+    const slipAR = slippedMo.filter(r=>ragLabel(r)==='At Risk');
+    const slipBL = slippedMo.filter(r=>ragLabel(r)==='Blocked');
+    [...slipOT, ...slipAR, ...slipBL].forEach(r => { h += projRow(r, false); });
 
-    // Key reasons — categorised into 3 themes
-    h += `<p><strong>Key reasons for slips:</strong></p><ul>`;
-    if (reasonClient.length) h += `<li>Client re-prioritisation &amp; delayed traction: ${reasonClient.map(n=>esc(n)).join(', ')}</li>`;
-    if (reasonReg.length)    h += `<li>Regulatory &amp; compliance dependencies: ${reasonReg.map(n=>esc(n)).join(', ')}</li>`;
-    if (reasonTech.length)   h += `<li>Technical blockers requiring resolution: ${reasonTech.map(n=>esc(n)).join(', ')}</li>`;
-    if (!reasonClient.length && !reasonReg.length && !reasonTech.length) h += `<li style="color:var(--sub)">Review Implementation Blocker / Risk fields for per-project detail.</li>`;
-    h += `</ul>`;
+    // Reasons
+    const reasonParts = [];
+    if (reasonClient.length) reasonParts.push(`<strong>Client traction:</strong> ${reasonClient.map(n=>esc(n)).join(', ')}`);
+    if (reasonReg.length)    reasonParts.push(`<strong>Regulatory:</strong> ${reasonReg.map(n=>esc(n)).join(', ')}`);
+    if (reasonTech.length)   reasonParts.push(`<strong>Technical:</strong> ${reasonTech.map(n=>esc(n)).join(', ')}`);
+    if (reasonParts.length)  h += `<div style="margin-top:10px;font-size:11.5px;color:var(--sub);line-height:1.75">${reasonParts.join('<br>')}</div>`;
   }
 
   // ── MOVED OUT OF QUARTER ──────────────────────────────────────────────────
   if (movedOut.length) {
-    h += `<p><strong>${movedOut.length} project${movedOut.length!==1?'s':''}</strong> (total NR <strong>${ldrFmtNR(movedOutNR)}</strong>) have been moved out of ${qtr.label} LTS pending go-live date reconfirmation (<strong>${ldrFmtK(movedOutQRev)}</strong> ${qtr.label} revenue foregone): `;
-    h += movedOut.map(r=>esc(r['Opportunity Name'])).join(', ');
-    h += `. New timelines are being assessed across three key themes:</p>`;
-    h += `<ul>`;
-    h += `<li>Client re-prioritisation &amp; delayed traction: ${movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='client').map(r=>esc(r['Opportunity Name'])).join(', ')||'—'}</li>`;
-    h += `<li>Regulatory &amp; compliance dependencies: ${movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='regulatory').map(r=>esc(r['Opportunity Name'])).join(', ')||'—'}</li>`;
-    h += `<li>Technical blockers requiring resolution: ${movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='technical').map(r=>esc(r['Opportunity Name'])).join(', ')||'—'}</li>`;
-    h += `</ul>`;
+    h += sh(`Moved Out of ${qtr.label} — ${movedOut.length} project${movedOut.length!==1?'s':''} · ${ldrFmtNR(movedOutNR)} NR · ${ldrFmtK(movedOutQRev)} Q rev foregone`);
+    const moClient = movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='client');
+    const moReg    = movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='regulatory');
+    const moTech   = movedOut.filter(r=>ldrSlipCategory([r['Implementation Blocker'],r['Implementation Risk'],r['Current Status']].join(' '))==='technical');
+    const moParts  = [];
+    if (moClient.length) moParts.push(`<strong>Client traction:</strong> ${moClient.map(r=>esc(r['Opportunity Name'])).join(', ')}`);
+    if (moReg.length)    moParts.push(`<strong>Regulatory:</strong> ${moReg.map(r=>esc(r['Opportunity Name'])).join(', ')}`);
+    if (moTech.length)   moParts.push(`<strong>Technical:</strong> ${moTech.map(r=>esc(r['Opportunity Name'])).join(', ')}`);
+    h += `<div style="font-size:12px;line-height:1.75">${moParts.join('<br>')||movedOut.map(r=>esc(r['Opportunity Name'])).join(', ')}</div>`;
+    h += `<div style="font-size:11px;color:var(--sub);margin-top:4px">New timelines pending reconfirmation — not committed to next quarter.</div>`;
   }
 
-  // ── TOP 5 PROJECTS UPDATE (by NR, any RAG) ───────────────────────────────
+  // ── TOP 5 REMAINING (by NR, any RAG) ────────────────────────────────────
   if (top5.length) {
-    h += `<h4>Top 5 Projects Update (by NR)</h4>`;
-    top5.forEach(r => {
-      const nr       = parseRev(r['Opportunity Net Revenue (converted)']);
-      const status   = (r['Current Status']||r['current_status_notes']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ');
-      const projDt   = r['Projected Go-Live Date']||'TBD';
-      const slipNote = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
-      const slipStr  = slipNote ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))}` : '';
-      h += `<p style="margin-bottom:6px">${ragEmoji(r)} <strong>${esc(r['Opportunity Name'])}</strong> (NR ${ldrFmtNR(nr)})${slipStr}: ${status||`Go-live projected ${projDt}`}</p>`;
-    });
+    h += sh(`Top 5 Remaining LTS by NR`);
+    top5.forEach(r => { h += projRow(r, true); });
   }
 
-  // ── REMAINING LTS RAG SUMMARY ─────────────────────────────────────────────
-  h += `<h4>${qtr.label} Remaining LTS (${remaining.length}) — On Track ${remOnTrack.length} 🟢 | At Risk ${remAtRisk.length} 🟡 | Blocked ${remBlocked.length} 🔴</h4>`;
-  h += `<div class="ldr-rag-summary">`;
+  // ── REMAINING LTS RAG ────────────────────────────────────────────────────
+  h += sh(`${qtr.label} Remaining LTS (${remaining.length})`);
+  h += `<div class="ldr-rag-summary" style="margin-bottom:10px">`;
   h += `<span class="ldr-rag-pill green">🟢 On Track: ${remOnTrack.length}</span>`;
   h += `<span class="ldr-rag-pill amber">🟡 At Risk: ${remAtRisk.length}</span>`;
   h += `<span class="ldr-rag-pill red">🔴 Blocked: ${remBlocked.length}</span>`;
   h += `</div>`;
 
-  // ── TOP 5 AT RISK & TOP 3 BLOCKED (excl. Top 5 above) ───────────────────
   if (topAtRisk.length || topBlocked.length) {
-    h += `<p style="font-size:11.5px;font-weight:700;margin-bottom:6px">Top 5 At Risk &amp; Top 3 Blocked — excluding Top 5 above</p>`;
-    h += `<div style="border-top:1px solid var(--border);padding-top:10px">`;
-    topAtRisk.forEach(r => {
-      const nr     = parseRev(r['Opportunity Net Revenue (converted)']);
-      const notes  = (r['Current Status']||r['Implementation Risk']||'').trim().replace(/\s+/g,' ');
-      const slipAR = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
-      const slipStr= slipAR ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))}` : '';
-      h += `<p style="margin-bottom:5px">🟡 <strong>${esc(r['Opportunity Name'])}</strong> (NR ${ldrFmtNR(nr)})${slipStr}: <span style="color:var(--sub)">${notes||r['Projected Go-Live Date']||'No status available'}</span></p>`;
-    });
-    topBlocked.forEach(r => {
-      const nr      = parseRev(r['Opportunity Net Revenue (converted)']);
-      const blocker = (r['Implementation Blocker']||r['Current Status']||'').trim().replace(/\s+/g,' ');
-      const slipBL  = slippedMo.find(s=>s['Opportunity Name']===r['Opportunity Name']);
-      const slipStr = slipBL ? ` | ${qtr.label} slippage ${ldrFmtK(ldrCalcQRev(nr,moPos))} fully at risk` : '';
-      h += `<p style="margin-bottom:5px">🔴 <strong>${esc(r['Opportunity Name'])}</strong> (NR ${ldrFmtNR(nr)})${slipStr}: <span style="color:var(--red)">${blocker||'No blocker details recorded'}</span></p>`;
-    });
-    h += `</div>`;
+    h += `<div style="font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Watch List — At Risk &amp; Blocked (excl. Top 5)</div>`;
+    topAtRisk.forEach(r => { h += projRow(r, false); });
+    topBlocked.forEach(r => { h += projRow(r, false); });
   }
 
   h += `</div>`;
