@@ -2376,10 +2376,12 @@ function renderQ1Tracker() {
   const movedOutCount = movedOutRecs.length;
 
   // ── QTD: went live in this quarter, after exclusions ─────────────────
+  // Per CLAUDE.md: go-live counts also exclude NR=0 (any sub-status)
   const qtdRecords = active.filter(r =>
     (r['Status'] || '').trim() === 'Live Completed' &&
     inQ1(r['Actual Live Date']) &&
-    !isExcluded(r)
+    !isExcluded(r) &&
+    parseRev(r['Opportunity Net Revenue (converted)']) > 0
   );
   const qtdCount = qtdRecords.length;
   const qtdNR    = qtdRecords.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
@@ -2531,7 +2533,11 @@ function renderKPIs() {
   const presales = presalesData || [];
 
   // ── Live Completed ───────────────────────────────────────────────────
-  const liveRecs   = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
+  // Per CLAUDE.md: go-live counts exclude NR=0 (any sub-status)
+  const liveRecs   = active.filter(r =>
+    (r['Status']||'').trim() === 'Live Completed' &&
+    parseRev(r['Opportunity Net Revenue (converted)']) > 0
+  );
   const liveCount  = liveRecs.length;
   const liveFB     = liveRecs.filter(r => isFrontbook(r)).length;
   const liveBB     = liveRecs.filter(r => isBackbook(r)).length;
