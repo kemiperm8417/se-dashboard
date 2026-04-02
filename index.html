@@ -1427,13 +1427,13 @@
       <div id="hl-trend-bar" class="hl-trend-bar" style="display:none"></div>
       <!-- Tab navigation -->
       <div class="tab-bar" style="margin-bottom:20px">
-        <button class="tab-btn active" id="hltab-hi"   onclick="hlSetView('hi',this)">✨ Highlights</button>
+        <button class="tab-btn active" id="hltab-pipe" onclick="hlSetView('pipe',this)">📅 Pipeline This Week</button>
+        <button class="tab-btn"        id="hltab-hi"   onclick="hlSetView('hi',this)">✨ Highlights</button>
         <button class="tab-btn"        id="hltab-lo"   onclick="hlSetView('lo',this)">⚠️ Lowlights</button>
-        <button class="tab-btn"        id="hltab-pipe" onclick="hlSetView('pipe',this)">📅 Pipeline This Week</button>
       </div>
 
       <!-- HIGHLIGHTS tab -->
-      <div id="hl-view-hi" class="hl-view">
+      <div id="hl-view-hi" class="hl-view" style="display:none">
         <div id="hl-groups-hi"></div>
       </div>
 
@@ -3500,49 +3500,102 @@ function renderHLGroups(type, containerId) {
     el.innerHTML = `<div class="hl-empty">No ${type === 'up' ? 'highlights' : 'lowlights'} found. Upload CSV data to populate.</div>`;
     return;
   }
+
   // Group by signal (preserve order)
-  const groups = {};
-  const order  = [];
+  const groups = {}, order = [];
   rows.forEach(r => {
     if (!groups[r.signal]) { groups[r.signal] = []; order.push(r.signal); }
     groups[r.signal].push(r);
   });
 
-  const signalStyle = {
-    'Went Live':       { hdrBg:'#dcfce7', hdrColor:'#15803d', border:'#86efac' },
-    'CUG In Progress': { hdrBg:'#dbeafe', hdrColor:'#1e40af', border:'#93c5fd' },
-    'Blocked':         { hdrBg:'#fee2e2', hdrColor:'#b91c1c', border:'#fca5a5' },
-    'At Risk':         { hdrBg:'#fef3c7', hdrColor:'#b45309', border:'#fde68a' },
-    'Overdue':         { hdrBg:'#fff7ed', hdrColor:'#c2410c', border:'#fdba74' },
-    'Flag':            { hdrBg:'#f1f5f9', hdrColor:'#475569', border:'#cbd5e1' },
-    'Stale':           { hdrBg:'#f8fafc', hdrColor:'#64748b', border:'#e2e8f0' },
+  const signalMeta = {
+    'Went Live':          { hdrBg:'#dcfce7', hdrColor:'#15803d', border:'#86efac', badgeCls:'badge-green' },
+    'CUG In Progress':    { hdrBg:'#dbeafe', hdrColor:'#1e40af', border:'#93c5fd', badgeCls:'badge-blue' },
+    'Blocked':            { hdrBg:'#fee2e2', hdrColor:'#b91c1c', border:'#fca5a5', badgeCls:'badge-red' },
+    'At Risk':            { hdrBg:'#fef3c7', hdrColor:'#b45309', border:'#fde68a', badgeCls:'badge-amber' },
+    'Overdue / Slipped':  { hdrBg:'#fff7ed', hdrColor:'#c2410c', border:'#fdba74', badgeCls:'badge-red' },
+    'No Recent Activity': { hdrBg:'#f8fafc', hdrColor:'#64748b', border:'#e2e8f0', badgeCls:'badge-grey' },
   };
+
+  // Build lookup from activeData for full row fields
+  const activeMap = {};
+  (activeData||[]).forEach(r => { activeMap[(r['Opportunity Name']||'').trim()] = r; });
 
   el.innerHTML = order.map(sig => {
     const items = groups[sig];
-    const st = signalStyle[sig] || { hdrBg:'#f1f5f9', hdrColor:'#475569', border:'#e2e8f0' };
-    const icon = items[0].icon;
-    const itemsHtml = items.map(r => {
-      const durStr = r.dur ? `${r.dur}d` : '';
-      const durTag = durStr ? `<span class="hl-group-meta-tag">${durStr}</span>` : '';
-      const revTag = r.rev > 0 ? `<span class="hl-group-meta-tag">💰 ${r.revFmt}</span>` : '';
-      return `<div class="hl-group-item">
-        <span class="hl-group-name">${escHtml(r.name)}</span>
-        <span class="hl-group-meta">
-          <span class="hl-group-meta-tag">👤 ${escHtml(r.se)}</span>
-          <span class="hl-group-meta-tag">🌏 ${escHtml(r.region)}</span>
-          ${revTag}${durTag}
-        </span>
-        ${r.details ? `<span class="hl-group-detail">→ ${escHtml(r.details)}</span>` : ''}
+    const sm    = signalMeta[sig] || { hdrBg:'#f1f5f9', hdrColor:'#475569', border:'#e2e8f0', badgeCls:'badge-grey' };
+    const icon  = items[0].icon;
+
+    const cardsHtml = items.map(item => {
+      const row       = activeMap[item.name] || {};
+      const qtr       = row['Committed QTR'] || '—';
+      const subStatus = (row['Sub Status'] || '').trim();
+      const glDate    = row['Projected Go-Live Date'] || '—';
+      const actDate   = row['Actual Live Date'] || '';
+
+      // Badge
+      const badge = sig === 'Went Live'
+        ? `<span class="badge badge-green">Live Completed</span>`
+        : sig === 'CUG In Progress'
+        ? `<span class="badge badge-blue">In CUG</span>`
+        : `<span class="badge ${sm.badgeCls}">${sig}</span>`;
+
+      // Status line
+      const statusLine = sig === 'Went Live'
+        ? `<strong>Actual Live:</strong> ${actDate || '—'}`
+        : `<strong>Status:</strong> ${subStatus || '—'} &nbsp;|&nbsp; <strong>Go-Live:</strong> ${glDate}`;
+
+      // Days label
+      let daysLabel = '', daysClass = '';
+      if (sig === 'Went Live') {
+        daysLabel = `✅ Live ${item.dur !== null && item.dur !== undefined ? item.dur + 'd' : ''} ago`;
+        daysClass = 'ok';
+      } else if (sig === 'CUG In Progress') {
+        const glD = parseDate(row['Projected Go-Live Date']);
+        const diff = glD ? daysDiff(glD) : null;
+        if (diff === null)    { daysLabel = '🔵 In CUG';               daysClass = 'ok'; }
+        else if (diff < 0)   { daysLabel = `🔴 Overdue by ${Math.abs(diff)}d`; daysClass = 'overdue'; }
+        else if (diff === 0) { daysLabel = `🔴 Due TODAY`;              daysClass = 'urgent'; }
+        else if (diff <= 3)  { daysLabel = `🔴 Due in ${diff}d`;       daysClass = 'urgent'; }
+        else if (diff <= 7)  { daysLabel = `🟡 Due in ${diff}d`;       daysClass = 'soon'; }
+        else                 { daysLabel = `🟢 Due in ${diff}d`;       daysClass = 'ok'; }
+      } else {
+        const glD = parseDate(row['Projected Go-Live Date']);
+        const diff = glD ? daysDiff(glD) : null;
+        if (diff !== null) {
+          if (diff < 0)        { daysLabel = `🔴 Overdue by ${Math.abs(diff)}d`; daysClass = 'overdue'; }
+          else if (diff === 0) { daysLabel = `🔴 Due TODAY`;             daysClass = 'urgent'; }
+          else if (diff <= 3)  { daysLabel = `🔴 Due in ${diff}d`;      daysClass = 'urgent'; }
+          else if (diff <= 7)  { daysLabel = `🟡 Due in ${diff}d`;      daysClass = 'soon'; }
+          else                 { daysLabel = `🟢 Due in ${diff}d`;      daysClass = 'ok'; }
+        }
+      }
+
+      // Notes (full text, no truncation)
+      const notesHtml = item.details
+        ? `<div class="wv-risk" style="border-left-color:${sm.border}">📝 ${escHtml(item.details)}</div>`
+        : '';
+
+      return `<div class="wv-card">
+        <div class="wv-name">${escHtml(item.name)}</div>
+        <div class="wv-rag">${badge}</div>
+        <div class="wv-meta">
+          <span>👤 ${escHtml(item.se)}</span>
+          <span>🌏 ${escHtml(item.region)}</span>
+          <span>📅 ${escHtml(qtr)}</span>
+          ${item.rev > 0 ? `<span>💰 ${item.revFmt}</span>` : ''}
+        </div>
+        <div class="wv-status">${statusLine}</div>
+        ${notesHtml}
+        ${daysLabel ? `<div class="wv-days ${daysClass}">${daysLabel}</div>` : ''}
       </div>`;
     }).join('');
 
-    return `<div class="hl-group" style="border-color:${st.border}">
-      <div class="hl-group-hdr" style="background:${st.hdrBg};color:${st.hdrColor}">
-        <span>${icon} ${sig}</span>
-        <span class="hl-grp-count">${items.length} project${items.length!==1?'s':''}</span>
+    return `<div class="wv-block">
+      <div class="wv-week-label" style="background:${sm.hdrBg};color:${sm.hdrColor};padding:8px 14px;border-radius:var(--radius-sm);border:1px solid ${sm.border};margin-bottom:14px;font-size:12px;font-weight:700">
+        ${icon} ${sig} <span style="font-weight:400;opacity:.75">(${items.length} project${items.length!==1?'s':''})</span>
       </div>
-      <div class="hl-group-body">${itemsHtml}</div>
+      <div class="wv-cards">${cardsHtml}</div>
     </div>`;
   }).join('');
 }
@@ -4079,8 +4132,8 @@ function renderHighlights() {
   renderHLGroups('up',   'hl-groups-hi');
   renderHLGroups('down', 'hl-groups-lo');
 
-  // ── Reset to Highlights tab ───────────────────────────────────────────────
-  hlSetView('hi', document.getElementById('hltab-hi'));
+  // ── Reset to Pipeline This Week tab ──────────────────────────────────────
+  hlSetView('pipe', document.getElementById('hltab-pipe'));
 }
 
 // =====================================================
