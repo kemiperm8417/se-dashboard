@@ -150,18 +150,25 @@
     background: #ffffff;
     border-bottom: 1px solid var(--border);
     padding: 0 32px;
-    height: 64px;
+    min-height: 64px;
     position: sticky;
     top: 0;
     z-index: 90;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 12px;
     box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
   }
-  #header .title-block { display: flex; align-items: center; gap: 14px; }
-  #header .title-block h1 { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.2px; }
+  #header .title-block {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 1; min-width: 0; flex-wrap: wrap; padding: 8px 0;
+  }
+  #header .title-block h1 {
+    font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px;
+  }
   #header .title-block .date-badge {
     display: inline-flex;
     align-items: center;
@@ -173,8 +180,10 @@
     font-size: 11.5px;
     font-weight: 600;
     border: 1px solid rgba(79,70,229,0.15);
+    white-space: nowrap;
+    flex-shrink: 0;
   }
-  #header .upload-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #header .upload-area { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; padding: 6px 0; }
   .upload-btn {
     display: flex;
     align-items: center;
@@ -199,7 +208,7 @@
   /* ═══════════════════════════════════════════════
      SECTIONS — Page-based navigation
   ═══════════════════════════════════════════════ */
-  .section { padding: 28px 32px; display: none; min-height: calc(100vh - 64px); animation: fadeIn 0.2s ease; }
+  .section { padding: 28px 32px; display: none; min-height: calc(100vh - 80px); animation: fadeIn 0.2s ease; }
   .section.page-active { display: block; }
   .anchor { scroll-margin-top: 0; }
 
@@ -495,29 +504,6 @@
     line-height: 1.5; margin-top: 2px; padding-left: 2px;
   }
   .hl-empty { text-align: center; padding: 48px; color: var(--sub); font-size: 13px; }
-  /* Weekly Digest editor */
-  .hl-digest-editor {
-    width: 100%; min-height: 360px;
-    background: #1e293b; color: #e2e8f0;
-    border: 2px solid transparent; border-radius: var(--radius);
-    padding: 22px 26px;
-    font-family: 'Courier New', monospace; font-size: 12.5px;
-    line-height: 1.75; resize: vertical;
-    box-shadow: var(--shadow-md); outline: none;
-    transition: border-color 0.15s;
-  }
-  .hl-digest-editor:focus { border-color: #6366f1; }
-  .hl-digest-controls {
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 10px; margin-bottom: 10px;
-  }
-  .hl-week-nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .hl-week-nav label { font-size: 12px; color: var(--sub); font-weight: 600; }
-  .hl-week-nav select {
-    padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    font-size: 12px; background: var(--card2); color: var(--text);
-    cursor: pointer; font-family: inherit; max-width: 280px;
-  }
   .btn-sm {
     padding: 5px 12px; background: var(--card2); border: 1px solid var(--border);
     border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
@@ -528,7 +514,6 @@
     background: #ecfdf5; border-color: #6ee7b7; color: #065f46;
   }
   .btn-sm-green:hover { background: #d1fae5; border-color: #34d399; }
-  .hl-save-status { font-size: 11px; color: var(--sub); min-height: 16px; margin-bottom: 6px; }
 
   /* ═══════════════════════════════════════════════
      Q1 TRACKER
@@ -897,20 +882,132 @@
   .ldr-empty-mo { padding:28px; text-align:center; color:var(--sub); font-size:13px; font-style:italic; }
 
   /* ═══════════════════════════════════════════════
-     RESPONSIVE
+     MOBILE NAVIGATION — hamburger + drawer
+  ═══════════════════════════════════════════════ */
+  #sidebar-toggle {
+    display: none;
+    background: none; border: 1px solid var(--border);
+    cursor: pointer; padding: 6px 10px; border-radius: var(--radius-sm);
+    font-size: 18px; line-height: 1; color: var(--text);
+    transition: background 0.15s; flex-shrink: 0;
+  }
+  #sidebar-toggle:hover { background: var(--hover); }
+  #sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(17,24,39,0.55); z-index: 99;
+    backdrop-filter: blur(1px);
+  }
+  #sidebar-overlay.open { display: block; }
+
+  /* ═══════════════════════════════════════════════
+     ALWAYS-ON FLUID FIXES (all sizes)
+  ═══════════════════════════════════════════════ */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE — 1280px (upload buttons go icon-only)
+  ═══════════════════════════════════════════════ */
+  @media (max-width: 1280px) {
+    .upload-text { display: none; }
+    .upload-btn { padding: 8px 10px; gap: 4px; }
+    #header .title-block h1 { max-width: 260px; }
+  }
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE — 1100px (large tablet / small laptop)
+  ═══════════════════════════════════════════════ */
+  @media (max-width: 1100px) {
+    .chart-grid-3 { grid-template-columns: 1fr 1fr; }
+    #header .title-block h1 { font-size: 14px; max-width: 220px; }
+    #header .date-badge { font-size: 11px; }
+  }
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE — 960px (tablet landscape, small laptop)
   ═══════════════════════════════════════════════ */
   @media (max-width: 960px) {
-    #sidebar { display: none; }
+    /* Sidebar becomes a slide-in drawer */
+    #sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 200;
+    }
+    #sidebar.sidebar-open { transform: translateX(0); }
+    #sidebar-toggle { display: inline-flex; align-items: center; }
     #main { margin-left: 0; }
-    .chart-grid, .risk-grid, .hl-grid, .exec-two-col { grid-template-columns: 1fr; }
+    #header { padding: 0 16px; gap: 10px; }
+    .store-bar { padding: 8px 16px; }
     .section { padding: 20px 18px; }
-    #header { padding: 0 18px; }
-    .store-bar { padding: 8px 18px; }
+    /* Grids collapse */
+    .chart-grid, .risk-grid, .hl-grid, .exec-two-col { grid-template-columns: 1fr; }
+    /* Leadership panel: stack vertically */
+    .ldr-body { flex-direction: column; min-height: auto; }
+    .ldr-qtr-sidebar {
+      width: 100%; flex-direction: row; flex-wrap: wrap;
+      padding: 10px 14px; border-right: none; border-bottom: 1px solid var(--border); gap: 6px;
+    }
+    .ldr-qtr-btn { width: auto; padding: 7px 16px; }
+    .ldr-week-panel { padding: 16px; }
+    .ldr-mo-summary { padding: 16px; }
+    /* Report doc */
+    .report-doc { padding: 24px 22px; }
   }
-  @media (max-width: 640px) {
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE — 768px (tablet portrait)
+  ═══════════════════════════════════════════════ */
+  @media (max-width: 768px) {
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .chart-grid-3 { grid-template-columns: 1fr; }
+    .q1-months { grid-template-columns: 1fr 1fr; }
+    /* Header */
+    #header { padding: 0 14px; }
+    #header .title-block h1 { font-size: 13px; max-width: 180px; }
+    #header .date-badge { font-size: 10.5px; padding: 2px 8px; }
+    /* Week row in Leadership panel */
+    .ldr-week-row { flex-wrap: wrap; padding: 8px 14px; gap: 6px; }
+    .ldr-wk-btn { font-size: 11.5px; padding: 5px 12px; }
+    .ldr-month-row { padding: 8px 14px; gap: 4px; }
+    .ldr-mo-btn { font-size: 11.5px; padding: 4px 11px; }
+    .ldr-metrics-strip { gap: 8px; }
+    .ldr-metric { min-width: 100px; }
+    /* Tab bar */
+    .tab-btn { padding: 6px 12px; font-size: 11.5px; }
+    /* Executive KPIs */
+    .exec-kpi { min-width: 90px; padding: 10px 14px; }
+    .exec-kpi .val { font-size: 24px; }
+    /* Filters */
+    .filters { padding: 10px 12px; }
+    /* wv-cards */
+    .wv-cards { grid-template-columns: 1fr; }
+    /* Pipeline cards */
+    .pipeline-cards { grid-template-columns: 1fr; }
+    /* Report doc */
+    .report-doc { padding: 18px 16px; max-width: 100%; }
+  }
+
+  /* ═══════════════════════════════════════════════
+     RESPONSIVE — 480px (mobile)
+  ═══════════════════════════════════════════════ */
+  @media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; }
     .q1-months { grid-template-columns: 1fr; }
+    .q1-stat-row { gap: 8px; }
+    .section { padding: 14px 12px; }
+    .section-title { font-size: 14px; }
+    #header { padding: 8px 12px; gap: 8px; }
+    .upload-area { gap: 4px; }
+    .upload-btn { padding: 7px 8px; }
+    .tab-bar { gap: 3px; }
+    .tab-btn { padding: 6px 9px; font-size: 11px; }
+    .store-bar { padding: 6px 12px; flex-wrap: wrap; }
+    .report-doc { padding: 14px 12px; font-size: 12px; }
+    .exec-card { padding: 16px 14px; }
+    .ldr-week-panel { padding: 12px; }
+    .ldr-wk-item { padding: 8px 10px; }
+    .filters select, .filters input { font-size: 11.5px; }
+    .kpi-big { font-size: 38px; }
+    .kpi-card .value { font-size: 28px; }
   }
 
   /* ═══════════════════════════════════════════════
@@ -930,6 +1027,9 @@
 </head>
 <body>
 
+<!-- Mobile sidebar overlay -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
 <!-- SIDEBAR -->
 <nav id="sidebar">
   <div class="logo">
@@ -947,7 +1047,8 @@
     <a href="#risk-radar" onclick="showPage('risk-radar');return false"><span class="nav-icon">🚨</span> Risk Radar</a>
     <a href="#next-quarter" onclick="showPage('next-quarter');return false"><span class="nav-icon">📅</span> Next Quarter</a>
     <div class="section-label">Analytics</div>
-    <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false"><span class="nav-icon">📈</span> FB vs BB</a>
+    <a href="#golive-trends" onclick="showPage('golive-trends');return false"><span class="nav-icon">📈</span> Go-Live Trends</a>
+    <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false"><span class="nav-icon">🗂️</span> FB vs BB</a>
     <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false"><span class="nav-icon">👥</span> SE Bandwidth</a>
     <a href="#presales" onclick="showPage('presales');return false"><span class="nav-icon">🔭</span> Presales Pipeline</a>
     <div class="section-label">Reports</div>
@@ -962,6 +1063,7 @@
 
   <!-- HEADER -->
   <div id="header">
+    <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Open navigation">☰</button>
     <div class="title-block">
       <h1>Solution Engineering Health Dashboard</h1>
       <div class="date-badge">📅 As of <span id="date-display">31 March 2026</span></div>
@@ -969,19 +1071,19 @@
     <div class="upload-area">
       <label class="upload-btn" id="btn-active">
         <span>📁</span>
-        <span>Upload Active Records</span>
+        <span class="upload-text">Upload Active Records</span>
         <span class="check">✓</span>
         <input type="file" accept=".csv" onchange="handleFileUpload(event, 'active')">
       </label>
       <label class="upload-btn" id="btn-live">
         <span>📁</span>
-        <span>Upload Live Records</span>
+        <span class="upload-text">Upload Live Records</span>
         <span class="check">✓</span>
         <input type="file" accept=".csv" onchange="handleFileUpload(event, 'live')">
       </label>
       <label class="upload-btn" id="btn-presales">
         <span>📁</span>
-        <span>Upload Presales Records</span>
+        <span class="upload-text">Upload Presales Records</span>
         <span class="check">✓</span>
         <input type="file" accept=".csv" onchange="handleFileUpload(event, 'presales')">
       </label>
@@ -1069,6 +1171,59 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- GO-LIVE TRENDS -->
+    <div id="golive-trends" class="section anchor">
+      <div class="section-title"><span class="icon">📈</span> Go-Live Trends</div>
+
+      <!-- MoM Go-Live Bar Chart -->
+      <div class="chart-card" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <h3 style="margin-bottom:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--sub);font-weight:700">Project Go-Lives — Month on Month</h3>
+          <div class="tab-bar" style="margin-bottom:0" id="mom-tab-bar">
+            <button class="tab-btn active" onclick="setMoMGroup('all',this)">All</button>
+            <button class="tab-btn" onclick="setMoMGroup('fbbb',this)">FB vs BB</button>
+            <button class="tab-btn" onclick="setMoMGroup('region',this)">By Region</button>
+            <button class="tab-btn" onclick="setMoMGroup('platform',this)">By Platform</button>
+          </div>
+        </div>
+        <div style="position:relative;height:300px"><canvas id="momChart"></canvas></div>
+      </div>
+
+      <!-- TTL Analysis -->
+      <div class="section-title" style="margin-top:8px"><span class="icon">⏱️</span> Time-to-Live (TTL) Analysis — Working Days</div>
+      <div class="chart-grid" style="margin-bottom:20px">
+        <div class="chart-card">
+          <h3>Median TTL by Platform Category (working days)</h3>
+          <div style="position:relative;height:280px"><canvas id="ttlPlatformChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Median TTL Trend — Month on Month</h3>
+          <div style="position:relative;height:280px"><canvas id="ttlMomChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TTL Platform Breakdown Table -->
+      <div class="chart-card" id="ttl-table-wrap">
+        <h3>TTL Detail by Platform Category</h3>
+        <div class="table-scroll">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px" id="ttl-table">
+            <thead><tr style="background:#1e293b;color:#94a3b8"><th style="padding:10px 14px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px">Platform Category</th><th style="padding:10px 14px;text-align:right">Go-Lives</th><th style="padding:10px 14px;text-align:right">Median TTL (days)</th><th style="padding:10px 14px;text-align:right">Avg TTL (days)</th><th style="padding:10px 14px;text-align:right">Min</th><th style="padding:10px 14px;text-align:right">Max</th></tr></thead>
+            <tbody id="ttl-tbody"></tbody>
+          </table>
+        </div>
+        <div id="ttl-niumone-wrap" style="margin-top:20px;display:none">
+          <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--sub);font-weight:700;margin-bottom:12px">NiumOne Sub-Category Breakdown</h3>
+          <div class="table-scroll">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px" id="ttl-niumone-table">
+              <thead><tr style="background:#1e293b;color:#94a3b8"><th style="padding:10px 14px;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px">NiumOne Sub-Category</th><th style="padding:10px 14px;text-align:right">Go-Lives</th><th style="padding:10px 14px;text-align:right">Median TTL (days)</th><th style="padding:10px 14px;text-align:right">Avg TTL (days)</th></tr></thead>
+              <tbody id="ttl-niumone-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="ttl-reconciliation" style="font-size:11.5px;color:var(--sub);margin-top:12px;padding:8px 14px;background:var(--card2);border-radius:var(--radius-sm);border:1px solid var(--border)"></div>
+      </div>
     </div>
 
     <!-- SECTION 4: PIPELINE TABLE -->
@@ -1272,10 +1427,9 @@
       <div id="hl-trend-bar" class="hl-trend-bar" style="display:none"></div>
       <!-- Tab navigation -->
       <div class="tab-bar" style="margin-bottom:20px">
-        <button class="tab-btn active" id="hltab-hi"     onclick="hlSetView('hi',this)">✨ Highlights</button>
-        <button class="tab-btn"        id="hltab-lo"     onclick="hlSetView('lo',this)">⚠️ Lowlights</button>
-        <button class="tab-btn"        id="hltab-pipe"   onclick="hlSetView('pipe',this)">📅 Pipeline This Week</button>
-        <button class="tab-btn"        id="hltab-digest" onclick="hlSetView('digest',this)">📋 Weekly Digest</button>
+        <button class="tab-btn active" id="hltab-hi"   onclick="hlSetView('hi',this)">✨ Highlights</button>
+        <button class="tab-btn"        id="hltab-lo"   onclick="hlSetView('lo',this)">⚠️ Lowlights</button>
+        <button class="tab-btn"        id="hltab-pipe" onclick="hlSetView('pipe',this)">📅 Pipeline This Week</button>
       </div>
 
       <!-- HIGHLIGHTS tab -->
@@ -1328,25 +1482,6 @@
         <div id="wv-summary" style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;"></div>
       </div>
 
-      <!-- WEEKLY DIGEST tab -->
-      <div id="hl-view-digest" class="hl-view" style="display:none">
-        <div class="hl-digest-controls">
-          <div class="hl-week-nav">
-            <label>Week:</label>
-            <select id="hl-week-select" onchange="loadWeeklyDigest(this.value)">
-              <option value="__current__">Current Week</option>
-            </select>
-            <button class="btn-sm" onclick="generateDigest()">🔄 Regenerate</button>
-            <button class="btn-sm btn-sm-green" onclick="saveWeeklyDigest()">💾 Save This Week</button>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn-export" id="hl-btn-slack" onclick="copyWeeklyDigest('slack')">📤 Copy for Slack</button>
-            <button class="btn-export" id="hl-btn-email" onclick="copyWeeklyDigest('email')" style="background:#059669">✉️ Copy for Email</button>
-          </div>
-        </div>
-        <div class="hl-save-status" id="hl-save-status"></div>
-        <textarea id="hl-digest-editor" class="hl-digest-editor" spellcheck="false" placeholder="Upload CSV data to generate the weekly digest."></textarea>
-      </div>
     </div>
 
     <!-- SECTION 11: LEADERSHIP SUMMARY -->
@@ -1520,6 +1655,15 @@ function ragClass(status) {
 function ragLabel(status) {
   if (!status || status.trim() === '') return 'Unknown';
   return status.trim();
+}
+
+// Consistent FB/BB classification — used by all chart and KPI functions
+function isFrontbook(r) {
+  return (r['Type of Opportunity']||'').toLowerCase().includes('front');
+}
+function isBackbook(r) {
+  const t = (r['Type of Opportunity']||'').toLowerCase();
+  return t.includes('back') || t.includes('additional');
 }
 
 function destroyChart(id) {
@@ -2114,6 +2258,7 @@ function renderDashboard() {
   renderHighlights();
   renderLeadership();
   renderAuditTrail();
+  renderGoliveTrends();
   showPage(currentPage);
 }
 
@@ -2388,17 +2533,22 @@ function renderKPIs() {
   // ── Live Completed ───────────────────────────────────────────────────
   const liveRecs   = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
   const liveCount  = liveRecs.length;
-  const liveFB     = liveRecs.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
-  const liveBB     = liveCount - liveFB;
+  const liveFB     = liveRecs.filter(r => isFrontbook(r)).length;
+  const liveBB     = liveRecs.filter(r => isBackbook(r)).length;
   const liveNR     = liveRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  // Q rev using same formula (determine month from actual live date)
+  // Q rev: quarter-relative multiplier (month % 3 gives position in any quarter)
   const liveQRev   = liveRecs.reduce((s,r) => {
     const d = parseDate(r['Actual Live Date']);
-    const mo = d ? d.getMonth() : -1;  // 0=Jan,1=Feb,2=Mar
-    const mult = mo === 0 ? 3 : mo === 1 ? 2 : mo === 2 ? 1 : 0;
+    if (!d) return s;
+    const posInQtr = d.getMonth() % 3; // 0=1st mo of qtr, 1=2nd, 2=3rd
+    const mult = 3 - posInQtr;         // ×3, ×2, ×1
     return s + (parseRev(r['Opportunity Net Revenue (converted)']) * 0.5 / 12 * mult);
   }, 0);
-  const liveQ1Count = liveRecs.filter(r => (r['Committed QTR']||'').trim() === 'Q1-2026').length;
+  // Most represented committed quarter among live records
+  const qtrCounts = {};
+  liveRecs.forEach(r => { const q=(r['Committed QTR']||'').trim(); if(q) qtrCounts[q]=(qtrCounts[q]||0)+1; });
+  const topQtr = Object.entries(qtrCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'Q1-2026';
+  const liveQ1Count = liveRecs.filter(r => (r['Committed QTR']||'').trim() === topQtr).length;
 
   // ── Active Implementation ────────────────────────────────────────────
   const implRecs   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed');
@@ -2407,14 +2557,14 @@ function renderKPIs() {
   const implAtRisk = implRecs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
   const implBlocked= implRecs.filter(r =>
     (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked').length;
-  const implFB     = implRecs.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
-  const implBB     = implCount - implFB;
+  const implFB     = implRecs.filter(r => isFrontbook(r)).length;
+  const implBB     = implRecs.filter(r => isBackbook(r)).length;
   const implNR     = implRecs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
 
   // ── Presales ─────────────────────────────────────────────────────────
   const presalesCount = presales.length;
-  const presalesFB    = presales.filter(r => (r['Type of Opportunity']||'').toLowerCase().includes('front')).length;
-  const presalesBB    = presalesCount - presalesFB;
+  const presalesFB    = presales.filter(r => isFrontbook(r)).length;
+  const presalesBB    = presales.filter(r => isBackbook(r)).length;
   const presalesNR    = presales.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
   const presalesHigh  = presales.filter(r => parseFloat(r['Opportunity: Probability (%)']||'0') >= 70).length;
 
@@ -2425,7 +2575,7 @@ function renderKPIs() {
       <div class="kpi-big">${liveCount}</div>
       <div class="kpi-line"><span>Frontbook</span><span>${liveFB}</span></div>
       <div class="kpi-line"><span>Backbook</span><span>${liveBB}</span></div>
-      <div class="kpi-line"><span>Q1-2026 Committed</span><span>${liveQ1Count}</span></div>
+      <div class="kpi-line"><span>${topQtr} Committed</span><span>${liveQ1Count}</span></div>
       <div class="kpi-value-bar">
         <div class="kpi-vl"><div class="kpi-vl-lbl">Total NR</div><div class="kpi-vl-val">${fmtRev(liveNR)}</div></div>
         <div class="kpi-vl"><div class="kpi-vl-lbl">Q Rev (~50%)</div><div class="kpi-vl-val" style="color:var(--green)">${fmtRev(liveQRev)}</div></div>
@@ -2468,9 +2618,10 @@ function renderKPIs() {
 function renderPipelineHealth() {
   const active = activeData || [];
 
-  // RAG counts
+  // RAG counts — exclude Live Completed (they are no longer in active pipeline)
   const ragCounts = { 'On Track': 0, 'At Risk': 0, 'Blocked': 0, 'Unknown': 0 };
-  active.forEach(r => {
+  const pipelineOnly = active.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+  pipelineOnly.forEach(r => {
     const s = (r['Projected Go-Live Status'] || '').trim();
     if (r['Status'] && r['Status'].trim() === 'Blocked') {
       ragCounts['Blocked']++;
@@ -2506,7 +2657,7 @@ function renderPipelineHealth() {
     }
   });
 
-  // Stage distribution
+  // Stage distribution (all records including Live Completed for full picture)
   const stageCounts = {};
   active.forEach(r => {
     const sub = (r['Sub Status'] || r['Status'] || 'Unknown').trim();
@@ -3004,10 +3155,9 @@ function renderFBBB() {
     const reg = extractRegion(row['Global Region']);
     const mapped = regions.find(r => r === reg) || null;
     if (!mapped) return;
-    const type = (row['Type of Opportunity'] || '').trim();
     const rev = parseRev(row['Opportunity Net Revenue (converted)']);
-    if (type === 'Frontbook') { fbCount[mapped]++; fbVal[mapped] += rev; }
-    else if (type === 'Backbook') { bbCount[mapped]++; bbVal[mapped] += rev; }
+    if (isFrontbook(row)) { fbCount[mapped]++; fbVal[mapped] += rev; }
+    else if (isBackbook(row)) { bbCount[mapped]++; bbVal[mapped] += rev; }
   });
 
   const chartDefaults = {
@@ -3331,11 +3481,11 @@ let ldrMo   = null;
 let ldrWk   = 0;
 
 function hlSetView(view, btn) {
-  ['hi','lo','pipe','digest'].forEach(v => {
+  ['hi','lo','pipe'].forEach(v => {
     const el = document.getElementById('hl-view-' + v);
     if (el) el.style.display = v === view ? '' : 'none';
   });
-  document.querySelectorAll('#hltab-hi,#hltab-lo,#hltab-pipe,#hltab-digest').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#hltab-hi,#hltab-lo,#hltab-pipe').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 }
 
@@ -3421,63 +3571,7 @@ function listSavedWeeks() {
   catch { return []; }
 }
 
-function refreshWeekSelector() {
-  const sel = document.getElementById('hl-week-select');
-  if (!sel) return;
-  const currentKey = getWeekKey(TODAY);
-  let store = {};
-  try { store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}'); } catch {}
-  const past = Object.keys(store).sort().reverse().filter(k => k !== currentKey);
-  sel.innerHTML = `<option value="__current__">Current — ${getWeekLabel(currentKey)}</option>` +
-    past.map(k => `<option value="${escHtml(k)}">${escHtml(store[k]?.weekLabel || getWeekLabel(k))}</option>`).join('');
-}
-
-function saveWeeklyDigest() {
-  const editor = document.getElementById('hl-digest-editor');
-  if (!editor || !editor.value.trim()) return;
-  const weekKey = getWeekKey(TODAY);
-  try {
-    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
-    store[weekKey] = { text: editor.value, savedAt: new Date().toISOString(), weekLabel: getWeekLabel(weekKey) };
-    localStorage.setItem(DIGEST_STORE_KEY, JSON.stringify(store));
-    const st = document.getElementById('hl-save-status');
-    if (st) { st.textContent = `✅ Saved at ${new Date().toLocaleTimeString()}`; setTimeout(() => st.textContent = '', 3000); }
-    refreshWeekSelector();
-  } catch(e) { alert('Save failed: ' + e.message); }
-}
-
-function loadWeeklyDigest(weekKey) {
-  const editor = document.getElementById('hl-digest-editor');
-  if (!editor) return;
-  if (weekKey === '__current__') { editor.value = buildWeeklyDigestText(); editor.readOnly = false; return; }
-  try {
-    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
-    if (store[weekKey]) { editor.value = store[weekKey].text; editor.readOnly = false; }
-  } catch {}
-}
-
-function generateDigest() {
-  const editor = document.getElementById('hl-digest-editor');
-  if (!editor) return;
-  editor.value = buildWeeklyDigestText();
-  editor.readOnly = false;
-  const sel = document.getElementById('hl-week-select');
-  if (sel) sel.value = '__current__';
-}
-
-function refreshDigestEditor() {
-  const editor = document.getElementById('hl-digest-editor');
-  if (editor && hlData.length) editor.value = buildWeeklyDigestText();
-  refreshWeekSelector();
-  // Auto-load saved digest for current week if one exists
-  const weekKey = getWeekKey(TODAY);
-  try {
-    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
-    if (store[weekKey] && editor) editor.value = store[weekKey].text;
-  } catch {}
-}
-
-// ── Build digest text (Slack format with *bold*) ──────────────────────────────
+// ── Build digest text (Slack format with *bold*) — used by ldrBuildWeekText ──
 function buildWeeklyDigestText() {
   const b   = s => `*${s}*`;
   const sep = '─'.repeat(40);
@@ -3551,21 +3645,298 @@ function buildWeeklyDigestText() {
   return lines.join('\n');
 }
 
-function copyWeeklyDigest(format) {
-  const editor = document.getElementById('hl-digest-editor');
-  let text = editor ? editor.value : buildWeeklyDigestText();
-  // Email: strip Slack *bold* markers
-  if (format === 'email') text = text.replace(/\*([^*]+)\*/g, '$1');
-  const btnId = format === 'slack' ? 'hl-btn-slack' : 'hl-btn-email';
-  const btn = document.getElementById(btnId);
-  const flash = orig => { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = orig, 2000); };
-  navigator.clipboard.writeText(text)
-    .then(() => btn && flash(btn.textContent))
-    .catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      btn && flash(btn.textContent);
+// ─── TTL helpers ─────────────────────────────────────────────────────────────
+function workingDaysBetween(d1, d2) {
+  if (!d1 || !d2) return null;
+  if (d1 > d2) return null;
+  if (d1.getTime() === d2.getTime()) return 0;
+  let days = 0;
+  const cur = new Date(d1);
+  while (cur < d2) {
+    const dow = cur.getDay();
+    if (dow !== 0 && dow !== 6) days++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+}
+
+function median(arr) {
+  if (!arr.length) return null;
+  const s = [...arr].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? Math.round((s[m-1] + s[m]) / 2) : s[m];
+}
+
+function getPlatformCategory(r) {
+  const feat = (r['Product Features'] || '').toLowerCase();
+  if (feat.includes('swift connector')) return 'Swift Connector';
+  const seg = (r['Platform Segment'] || '').trim();
+  if (seg === 'Verify Stand Alone') return 'Verify Standalone';
+  return seg || 'Unknown';
+}
+
+function getNiumOneSubcategory(r) {
+  const feat = (r['Product Features'] || '').toLowerCase();
+  if (feat.includes('niumone portal only')) return 'Payout via Portal';
+  if (feat.includes('corporate onboarding')) return 'Payout API + Platform Use Case';
+  return 'Payout API Integration';
+}
+
+function moKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function moLabel(key) {
+  const [y, m] = key.split('-');
+  return new Date(+y, +m-1, 1).toLocaleDateString('en-GB', { month:'short', year:'2-digit' });
+}
+
+// ─── MoM Go-Live Chart ───────────────────────────────────────────────────────
+let _momGroup = 'all';
+
+function setMoMGroup(group, btn) {
+  _momGroup = group;
+  document.querySelectorAll('#mom-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderMoMChart();
+}
+
+function renderMoMChart() {
+  const liveRecs = (activeData || []).filter(r => {
+    return (r['Status']||'').trim() === 'Live Completed' && parseDate(r['Actual Live Date']);
+  });
+  const ctx = document.getElementById('momChart');
+  if (!ctx) return;
+  if (!liveRecs.length) {
+    destroyChart('momChart');
+    ctx.getContext('2d').clearRect(0,0,ctx.width,ctx.height);
+    return;
+  }
+
+  const monthSet = new Set();
+  liveRecs.forEach(r => { const d = parseDate(r['Actual Live Date']); if(d) monthSet.add(moKey(d)); });
+  const months = [...monthSet].sort();
+  const labels = months.map(moLabel);
+
+  function countBy(mo, filter) {
+    return liveRecs.filter(r => {
+      const d = parseDate(r['Actual Live Date']);
+      return d && moKey(d) === mo && (!filter || filter(r));
+    }).length;
+  }
+
+  let datasets;
+  const REGION_COLORS = { APAC:'rgba(59,130,246,0.82)', MEA:'rgba(249,115,22,0.82)', Americas:'rgba(34,197,94,0.82)', Europe:'rgba(236,72,153,0.82)' };
+  const PLAT_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#06b6d4','#84cc16','#f97316'];
+
+  if (_momGroup === 'all') {
+    datasets = [{ label:'Go-Lives', data: months.map(mo => countBy(mo)), backgroundColor:'rgba(99,102,241,0.8)', borderRadius:5, borderColor:'#4f46e5', borderWidth:1 }];
+  } else if (_momGroup === 'fbbb') {
+    datasets = [
+      { label:'Frontbook', data: months.map(mo => countBy(mo, r => isFrontbook(r))),  backgroundColor:'rgba(139,92,246,0.8)', borderRadius:4 },
+      { label:'Backbook',  data: months.map(mo => countBy(mo, r => isBackbook(r))),   backgroundColor:'rgba(20,184,166,0.8)',  borderRadius:4 },
+    ];
+  } else if (_momGroup === 'region') {
+    datasets = ['APAC','MEA','Americas','Europe'].map(reg => ({
+      label: reg,
+      data: months.map(mo => countBy(mo, r => extractRegion(r['Global Region']) === reg)),
+      backgroundColor: REGION_COLORS[reg], borderRadius:3,
+    }));
+  } else { // platform
+    const plats = [...new Set(liveRecs.map(r => getPlatformCategory(r)))].sort();
+    datasets = plats.map((p, i) => ({
+      label: p || 'Unknown',
+      data: months.map(mo => countBy(mo, r => getPlatformCategory(r) === p)),
+      backgroundColor: PLAT_COLORS[i % PLAT_COLORS.length], borderRadius:3,
+    }));
+  }
+
+  const stacked = _momGroup === 'region' || _momGroup === 'platform';
+
+  destroyChart('momChart');
+  charts['momChart'] = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: _momGroup !== 'all', position:'bottom', labels:{ color:'#374151', padding:12, font:{size:11} } },
+        tooltip: { callbacks: { label: t => ` ${t.dataset.label}: ${t.parsed.y} project${t.parsed.y!==1?'s':''}` } }
+      },
+      scales: {
+        x: { stacked, grid:{ display:false }, ticks:{ color:'#6b7280', font:{size:11} } },
+        y: { stacked, beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, stepSize:1, callback: v => Number.isInteger(v)?v:'' }, grid:{ color:'#f3f4f6' } }
+      }
+    }
+  });
+}
+
+// ─── TTL Analysis ────────────────────────────────────────────────────────────
+function renderTTLAnalysis() {
+  const all = activeData || [];
+  const valid = all.filter(r => {
+    if ((r['Status']||'').trim() !== 'Live Completed') return false;
+    const live  = parseDate(r['Actual Live Date']);
+    const start = parseDate(r['Implementation Start Date']);
+    if (!live || !start) return false;
+    if (start > live) return false;
+    return true;
+  });
+
+  if (!valid.length) return;
+
+  // ── Platform grouping ────────────────────────────────────────────────────
+  const byPlat = {};
+  valid.forEach(r => {
+    const plat = getPlatformCategory(r);
+    const d1   = parseDate(r['Implementation Start Date']);
+    const d2   = parseDate(r['Actual Live Date']);
+    const ttl  = workingDaysBetween(d1, d2);
+    if (ttl === null) return;
+    (byPlat[plat] = byPlat[plat] || []).push(ttl);
+  });
+
+  // Sort platforms by median TTL desc
+  const platRows = Object.entries(byPlat).map(([plat, arr]) => ({
+    plat,
+    count: arr.length,
+    med:   median(arr),
+    avg:   Math.round(arr.reduce((s,v)=>s+v,0)/arr.length),
+    min:   Math.min(...arr),
+    max:   Math.max(...arr),
+  })).sort((a,b) => b.med - a.med);
+
+  // Table
+  const tbody = document.getElementById('ttl-tbody');
+  if (tbody) {
+    const totalRecs = platRows.reduce((s,r)=>s+r.count,0);
+    tbody.innerHTML = platRows.map(row => `
+      <tr style="border-top:1px solid var(--border2)">
+        <td style="padding:9px 14px;font-weight:600">${escHtml(row.plat)}</td>
+        <td style="padding:9px 14px;text-align:right">${row.count}</td>
+        <td style="padding:9px 14px;text-align:right;font-weight:700;color:var(--accent)">${row.med}</td>
+        <td style="padding:9px 14px;text-align:right">${row.avg}</td>
+        <td style="padding:9px 14px;text-align:right;color:var(--sub)">${row.min}</td>
+        <td style="padding:9px 14px;text-align:right;color:var(--sub)">${row.max}</td>
+      </tr>`).join('');
+    const rec = document.getElementById('ttl-reconciliation');
+    if (rec) rec.innerHTML = `✅ Total records used in TTL calculation: <strong>${totalRecs}</strong> &nbsp;|&nbsp; Platform totals sum check: <strong>${platRows.reduce((s,r)=>s+r.count,0) === totalRecs ? 'PASS ✓' : 'MISMATCH ✗'}</strong>`;
+  }
+
+  // ── Platform bar chart ───────────────────────────────────────────────────
+  destroyChart('ttlPlatformChart');
+  const ctxP = document.getElementById('ttlPlatformChart');
+  if (ctxP) {
+    const barColors = platRows.map((_,i) => ['#6366f1','#8b5cf6','#f59e0b','#10b981','#3b82f6','#ef4444','#ec4899','#06b6d4'][i%8]);
+    charts['ttlPlatformChart'] = new Chart(ctxP.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: platRows.map(r => r.plat),
+        datasets: [
+          { label:'Median TTL', data: platRows.map(r => r.med), backgroundColor: barColors, borderRadius:5 },
+          { label:'Avg TTL',    data: platRows.map(r => r.avg), backgroundColor: barColors.map(c=>c+'55'), borderRadius:3, type:'line', borderColor: barColors, fill:false, pointRadius:4 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } } },
+        scales:{
+          x:{ ticks:{ color:'#6b7280', font:{size:10}, maxRotation:35 }, grid:{ display:false } },
+          y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
+        }
+      }
     });
+  }
+
+  // ── MoM TTL trend chart ──────────────────────────────────────────────────
+  const moMap = {};
+  valid.forEach(r => {
+    const d2  = parseDate(r['Actual Live Date']);
+    const d1  = parseDate(r['Implementation Start Date']);
+    const ttl = workingDaysBetween(d1, d2);
+    if (ttl === null || !d2) return;
+    const k = moKey(d2);
+    (moMap[k] = moMap[k] || []).push(ttl);
+  });
+  const mos = Object.keys(moMap).sort();
+
+  destroyChart('ttlMomChart');
+  const ctxM = document.getElementById('ttlMomChart');
+  if (ctxM && mos.length) {
+    charts['ttlMomChart'] = new Chart(ctxM.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: mos.map(moLabel),
+        datasets: [
+          { label:'Median TTL (working days)', data: mos.map(k => median(moMap[k])), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.08)', fill:true, tension:0.35, pointRadius:5, pointBackgroundColor:'#6366f1', borderWidth:2 },
+          { label:'Avg TTL',                   data: mos.map(k => Math.round(moMap[k].reduce((s,v)=>s+v,0)/moMap[k].length)), borderColor:'#f59e0b', backgroundColor:'transparent', tension:0.35, pointRadius:4, borderDash:[5,4], borderWidth:2 }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } } },
+        scales:{
+          x:{ ticks:{ color:'#6b7280', font:{size:11} }, grid:{ color:'#f3f4f6' } },
+          y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
+        }
+      }
+    });
+  }
+
+  // ── NiumOne sub-category breakdown ───────────────────────────────────────
+  const niumoneRecs = valid.filter(r => getPlatformCategory(r) === 'NiumOne');
+  const niumoneWrap = document.getElementById('ttl-niumone-wrap');
+  if (niumoneRecs.length && niumoneWrap) {
+    niumoneWrap.style.display = '';
+    const bySubcat = {};
+    niumoneRecs.forEach(r => {
+      const sub = getNiumOneSubcategory(r);
+      const d1  = parseDate(r['Implementation Start Date']);
+      const d2  = parseDate(r['Actual Live Date']);
+      const ttl = workingDaysBetween(d1, d2);
+      if (ttl === null) return;
+      (bySubcat[sub] = bySubcat[sub] || []).push(ttl);
+    });
+    const nTbody = document.getElementById('ttl-niumone-tbody');
+    if (nTbody) {
+      nTbody.innerHTML = Object.entries(bySubcat).sort((a,b) => b[1].length - a[1].length).map(([sub, arr]) => `
+        <tr style="border-top:1px solid var(--border2)">
+          <td style="padding:9px 14px;font-weight:600">${escHtml(sub)}</td>
+          <td style="padding:9px 14px;text-align:right">${arr.length}</td>
+          <td style="padding:9px 14px;text-align:right;font-weight:700;color:var(--accent)">${median(arr)}</td>
+          <td style="padding:9px 14px;text-align:right">${Math.round(arr.reduce((s,v)=>s+v,0)/arr.length)}</td>
+        </tr>`).join('');
+    }
+  }
+}
+
+// ─── Main render for Go-Live Trends page ─────────────────────────────────────
+function renderGoliveTrends() {
+  renderMoMChart();
+  renderTTLAnalysis();
+}
+
+// ── deriveTheme: classify a project's risk reason from text fields only ──────
+// Used by both the Highlights section and the Leadership weekly panel.
+// Returns { theme, icon } or null if no specific issue can be identified.
+function deriveTheme(notes, blocker, risk) {
+  const txt = [notes, blocker, risk].filter(Boolean).join(' ').toLowerCase();
+  if (!txt.trim()) return null;
+  if (/on hold|put on hold|parked|paused|deprioritis|deprioritiz|deferred|pushed.{0,5}back|not.{0,10}priorit|currently.{0,10}hold|currently on hold/.test(txt))
+    return { theme:'On Hold / Parked', icon:'⏸️' };
+  if (/waiting.{0,20}client|pending.{0,10}client|client.{0,15}not.{0,10}respond|client.{0,15}slow|no response from|client unresponsive|awaiting.{0,15}client|client.{0,20}delay|chasing.{0,15}client|client.{0,20}yet to|follow.{0,5}up with client|client.{0,20}not provid/.test(txt))
+    return { theme:'Client Unresponsive', icon:'🟡' };
+  if (/uat|user acceptance|sign.{0,5}off|awaiting.{0,15}approv|pending.{0,15}approv|pending.{0,15}sign|awaiting.{0,15}sign|go.live approv|pending testing|testing.{0,15}complet|cert.{0,15}pending|final.{0,10}testing/.test(txt))
+    return { theme:'Awaiting UAT / Sign-off', icon:'🟡' };
+  if (/compliance|regulatory|regulation|legal.{0,15}review|kyc|aml|licens|legal hold|legal clearance|legal.{0,10}approv|legal.{0,10}sign|legal.{0,10}check/.test(txt))
+    return { theme:'Compliance / Regulatory Hold', icon:'🟠' };
+  if (/technical.{0,15}block|technical.{0,15}issue|api.{0,20}issue|api.{0,20}error|integration.{0,20}issue|integration.{0,20}error|system.{0,15}issue|dev.{0,10}block|vendor.{0,15}depend|infrastructure.{0,15}issue|code.{0,10}fix|bug.{0,10}fix|technical.{0,15}depend/.test(txt))
+    return { theme:'Technical / Integration Blocker', icon:'🔴' };
+  if (/resource.{0,15}constraint|bandwidth.{0,15}issue|team.{0,15}capacit|staffing|team.{0,15}not available|under.{0,10}resourc|resource.{0,15}unavailable/.test(txt))
+    return { theme:'Resource Constraint', icon:'🟡' };
+  if (/escalat/.test(txt))
+    return { theme:'Escalated', icon:'🔺' };
+  return null;
 }
 
 function renderHighlights() {
@@ -3628,27 +3999,6 @@ function renderHighlights() {
       dur, details: `Prod Env: ${r['Production Environment Created']||'—'} | Go-Live: ${r['Projected Go-Live Date']||'—'} | ${rag||'—'}`
     });
   });
-
-  // ── deriveTheme: classify lowlight reason from text fields (NOT RAG status) ──
-  function deriveTheme(notes, blocker, risk) {
-    const txt = [notes, blocker, risk].filter(Boolean).join(' ').toLowerCase();
-    if (!txt.trim()) return null;
-    if (/on hold|put on hold|parked|paused|deprioritis|deprioritiz|deferred|pushed.{0,5}back|not.{0,10}priorit|currently.{0,10}hold|currently on hold/.test(txt))
-      return { theme:'On Hold / Parked', icon:'⏸️' };
-    if (/waiting.{0,20}client|pending.{0,10}client|client.{0,15}not.{0,10}respond|client.{0,15}slow|no response from|client unresponsive|awaiting.{0,15}client|client.{0,20}delay|chasing.{0,15}client|client.{0,20}yet to|follow.{0,5}up with client|client.{0,20}not provid/.test(txt))
-      return { theme:'Client Unresponsive', icon:'🟡' };
-    if (/uat|user acceptance|sign.{0,5}off|awaiting.{0,15}approv|pending.{0,15}approv|pending.{0,15}sign|awaiting.{0,15}sign|go.live approv|pending testing|testing.{0,15}complet|cert.{0,15}pending|final.{0,10}testing/.test(txt))
-      return { theme:'Awaiting UAT / Sign-off', icon:'🟡' };
-    if (/compliance|regulatory|regulation|legal.{0,15}review|kyc|aml|licens|legal hold|legal clearance|legal.{0,10}approv|legal.{0,10}sign|legal.{0,10}check/.test(txt))
-      return { theme:'Compliance / Regulatory Hold', icon:'🟠' };
-    if (/technical.{0,15}block|technical.{0,15}issue|api.{0,20}issue|api.{0,20}error|integration.{0,20}issue|integration.{0,20}error|system.{0,15}issue|dev.{0,10}block|vendor.{0,15}depend|infrastructure.{0,15}issue|code.{0,10}fix|bug.{0,10}fix|technical.{0,15}depend/.test(txt))
-      return { theme:'Technical / Integration Blocker', icon:'🔴' };
-    if (/resource.{0,15}constraint|bandwidth.{0,15}issue|team.{0,15}capacit|staffing|team.{0,15}not available|under.{0,10}resourc|resource.{0,15}unavailable/.test(txt))
-      return { theme:'Resource Constraint', icon:'🟡' };
-    if (/escalat/.test(txt))
-      return { theme:'Escalated', icon:'🔺' };
-    return null;
-  }
 
   // ── LOWLIGHTS — text-first classification, RAG is not the grouping key ──────
   const loIds = new Set();
@@ -3725,9 +4075,6 @@ function renderHighlights() {
   // ── Render grouped views ──────────────────────────────────────────────────
   renderHLGroups('up',   'hl-groups-hi');
   renderHLGroups('down', 'hl-groups-lo');
-
-  // ── Populate digest editor ────────────────────────────────────────────────
-  refreshDigestEditor();
 
   // ── Reset to Highlights tab ───────────────────────────────────────────────
   hlSetView('hi', document.getElementById('hltab-hi'));
@@ -3812,58 +4159,107 @@ function ldrRenderMonthRow() {
   }).join('');
 }
 
+// ── Calendar-week helper: Mon–Sun weeks that overlap with the month ───────────
+function ldrGetCalWeeks(yr, mo) {
+  const lastDay = ldrLastDay(yr, mo);
+  const firstDow = new Date(yr, mo, 1).getDay(); // 0=Sun
+  // Days back from the 1st to reach the preceding Monday
+  const daysBack = firstDow === 0 ? 6 : firstDow - 1;
+  let monOffset = 1 - daysBack; // day-of-month of first Monday (can be ≤0 = prev month)
+  const weeks = [];
+  while (monOffset <= lastDay) {
+    const sunOffset = monOffset + 6;
+    const s = Math.max(monOffset, 1);
+    const e = Math.min(sunOffset, lastDay);
+    if (s <= e) weeks.push({ s, e });
+    monOffset += 7;
+  }
+  return weeks;
+}
+
+// Shared week-range state (rebuilt when month changes)
+let _ldrCalWeeks = [];
+
 function ldrRenderWeekRow() {
   const el = document.getElementById('ldr-week-row');
   if (!el) return;
-  const lastDay = ldrLastDay(ldrYear, ldrMo);
-  const weeks = [
-    { label:'Week 1', s:1,  e:7 },
-    { label:'Week 2', s:8,  e:14 },
-    { label:'Week 3', s:15, e:21 },
-    { label:'Week 4', s:22, e:lastDay },
-  ];
-  el.innerHTML = weeks.map((w,i) =>
-    `<button class="ldr-wk-btn${ldrWk===i?' active':''}" onclick="ldrSetWk(${i})">${w.label}</button>`
-  ).join('');
+  _ldrCalWeeks = ldrGetCalWeeks(ldrYear, ldrMo);
+  // Clamp ldrWk to valid index
+  if (ldrWk >= _ldrCalWeeks.length) ldrWk = _ldrCalWeeks.length - 1;
+  el.innerHTML = _ldrCalWeeks.map(({ s, e }, i) => {
+    const dateRange = s === e
+      ? `${s} ${LDR_MONTH_SHORT[ldrMo]}`
+      : `${s}–${e} ${LDR_MONTH_SHORT[ldrMo]}`;
+    return `<button class="ldr-wk-btn${ldrWk===i?' active':''}" onclick="ldrSetWk(${i})">Week ${i+1} <span style="font-weight:400;opacity:0.75;font-size:11px">${dateRange}</span></button>`;
+  }).join('');
 }
 
 function ldrRenderWeekPanel() {
   const el = document.getElementById('ldr-week-panel');
   if (!el) return;
-  const active = activeData || [];
-  const lastDay = ldrLastDay(ldrYear, ldrMo);
-  const weekRanges = [
-    { s:1,  e:7 },
-    { s:8,  e:14 },
-    { s:15, e:21 },
-    { s:22, e:lastDay },
-  ];
-  const { s, e } = weekRanges[ldrWk];
-  const moName  = LDR_MONTH_NAMES[ldrMo];
-  const yr = ldrYear, mo = ldrMo;
+  if (!_ldrCalWeeks.length) _ldrCalWeeks = ldrGetCalWeeks(ldrYear, ldrMo);
 
+  const active  = activeData || [];
+  const mo      = ldrMo, yr = ldrYear;
+  const moName  = LDR_MONTH_NAMES[mo];
+  const { s, e } = _ldrCalWeeks[Math.min(ldrWk, _ldrCalWeeks.length - 1)];
+  const esc     = escHtml;
+  const rv      = v => fmtRev(parseRev(v));
+  const typeTag = r => { const t=(r['Type of Opportunity']||'').trim(); return t?` <span style="font-size:10px;opacity:.65">[${t}]</span>`:''; };
+
+  // ── Date sections ─────────────────────────────────────────────────────────
   const wLive = active.filter(r =>
     (r['Status']||'').trim() === 'Live Completed' &&
     ldrInWeek(r['Actual Live Date'], yr, mo, s, e));
-  const wCug  = active.filter(r => ldrInWeek(r['Production Environment Created'], yr, mo, s, e) && !r['Actual Live Date']);
-  const wKick = active.filter(r => ldrInWeek(r['Kick-Off Meeting'], yr, mo, s, e));
-  // At-risk and blocked records with activity in this week
-  const wRisk = active.filter(r => {
-    const rag    = (r['Projected Go-Live Status']||'').trim();
-    const status = (r['Status']||'').trim();
-    return (rag==='Blocked'||rag==='At Risk'||status==='Blocked') &&
-           ldrInWeek(r['Install Record: Last Activity Date']||r['Last Activity Date']||'', yr, mo, s, e);
+
+  const wCug = active.filter(r =>
+    ldrInWeek(r['Production Environment Created'], yr, mo, s, e) && !r['Actual Live Date']);
+
+  const wKick = active.filter(r =>
+    ldrInWeek(r['Kick-Off Meeting'], yr, mo, s, e));
+
+  // ── Lowlights: text-analysis based, grouped by theme ─────────────────────
+  // Filter: projects with last activity in this week that have an identified issue
+  const wRiskRaw = active.filter(r => {
+    const lastAct = r['Install Record: Last Activity Date'] || r['Last Activity Date'] || '';
+    // Include if activity in this week OR if blocked/overdue and has live date in this week
+    const actInWeek = ldrInWeek(lastAct, yr, mo, s, e);
+    const glInWeek  = ldrInWeek(r['Projected Go-Live Date'], yr, mo, s, e);
+    const isBlocked = (r['Status']||'').trim()==='Blocked' || (r['Projected Go-Live Status']||'').trim()==='Blocked';
+    return actInWeek || (isBlocked && glInWeek);
   });
 
-  const esc = escHtml;
-  const rv  = v => fmtRev(parseRev(v));
-  const typeTag = r => { const t=(r['Type of Opportunity']||'').trim(); return t?` <span style="font-size:10px;opacity:.65">[${t}]</span>`:''; };
+  // Group by theme
+  const themeGroups = {};
+  const themeOrder  = [];
+  wRiskRaw.forEach(r => {
+    const status  = (r['Status']||'').trim();
+    const rag     = (r['Projected Go-Live Status']||'').trim();
+    const blocker = (r['Implementation Blocker']||'').trim();
+    const risk    = (r['Implementation Risk']||'').trim();
+    const notes   = (r['Current Status']||'').trim();
+    let signal, icon;
 
+    if (status === 'Blocked' || rag === 'Blocked') {
+      signal = 'Blocked'; icon = '🔴';
+    } else {
+      const d = deriveTheme(notes, blocker, risk);
+      if (d) { signal = d.theme; icon = d.icon; }
+      else return; // skip — no identifiable issue, don't lump into generic bucket
+    }
+
+    if (!themeGroups[signal]) { themeGroups[signal] = []; themeOrder.push(signal); }
+    const fullNotes = (notes||blocker||risk||'');
+    themeGroups[signal].push({ r, icon, notes: fullNotes.slice(0, 110), notesFull: fullNotes });
+  });
+
+  // ── Build HTML ────────────────────────────────────────────────────────────
+  const totalLo = Object.values(themeGroups).reduce((n, a) => n + a.length, 0);
   let h = `<div class="ldr-week-heading">${moName} ${yr}</div>`;
-  h += `<div class="ldr-wk-lbl">Week ${ldrWk+1} &nbsp;<span style="font-size:11px;color:var(--sub);font-weight:400">${s}–${e} ${LDR_MONTH_SHORT[mo]} ${yr}</span></div>`;
+  h += `<div class="ldr-wk-lbl">Week ${ldrWk + 1} &nbsp;<span style="font-size:11px;color:var(--sub);font-weight:400">${s}–${e} ${LDR_MONTH_SHORT[mo]} ${yr}</span></div>`;
 
-  if (!wLive.length && !wCug.length && !wKick.length && !wRisk.length) {
-    h += `<div class="ldr-wk-empty">No activity recorded for Week ${ldrWk+1}.</div>`;
+  if (!wLive.length && !wCug.length && !wKick.length && !totalLo) {
+    h += `<div class="ldr-wk-empty">No activity recorded for this week.</div>`;
     el.innerHTML = h; return;
   }
 
@@ -3885,21 +4281,105 @@ function ldrRenderWeekPanel() {
       <div class="wk-names">${wKick.map(r=>`<strong>${esc(r['Opportunity Name'])}</strong> <span style="font-size:11px;color:var(--sub)">(SE: ${esc(r['Implementation Owner']||'—')})</span>`).join(' &nbsp;·&nbsp; ')}</div>
     </div>`;
   }
-  if (wRisk.length) {
+  if (totalLo) {
     h += `<div class="ldr-wk-item risk">
-      <div class="wk-label">⚠️ Lowlights / Risk / Challenges (${wRisk.length})</div>
+      <div class="wk-label">⚠️ Lowlights / Risk / Challenges (${totalLo})</div>
       <div class="wk-names">`;
-    wRisk.forEach(r => {
-      const rag = (r['Projected Go-Live Status']||'').trim()||'Blocked';
-      const blocker = (r['Implementation Blocker']||r['Implementation Risk']||'').trim();
-      h += `<div style="margin-bottom:5px">• <strong>${esc(r['Opportunity Name'])}</strong> [${rag}]`;
-      if (blocker) h += ` — <span style="color:var(--sub)">${esc(blocker.slice(0,120))}</span>`;
+    themeOrder.forEach(sig => {
+      const items = themeGroups[sig];
+      const icon  = items[0].icon;
+      // Theme headline: "🟡 Client Unresponsive: Project A, Project B"
+      h += `<div style="margin-bottom:7px">`;
+      h += `<span style="font-weight:700">${icon} ${esc(sig)}:</span> `;
+      h += items.map(({ r, notes }) => {
+        let line = `<strong>${esc(r['Opportunity Name']||'')}</strong>`;
+        if (notes) line += ` <span style="font-size:11.5px;color:var(--sub)">— ${esc(notes)}</span>`;
+        return line;
+      }).join(' &nbsp;·&nbsp; ');
       h += `</div>`;
     });
     h += `</div></div>`;
   }
 
+  // ── Copy weekly update button ─────────────────────────────────────────────
+  const weekLabel = `${s}–${e} ${LDR_MONTH_SHORT[mo]} ${yr}`;
+  h += `<div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button class="btn-sm" onclick="ldrCopyWeekUpdate()" title="Copy as weekly update text">📤 Copy Week ${ldrWk+1} Update</button>
+    <button class="btn-sm btn-sm-green" onclick="ldrSaveWeekDigest('${weekLabel}')" title="Save this week's digest to history">💾 Save</button>
+    <span id="ldr-wk-save-status" style="font-size:11px;color:var(--sub)"></span>
+  </div>`;
+
   el.innerHTML = h;
+  // Store data for copy/save after innerHTML is set (avoids circular ref on DOM node)
+  el._wkData = { wLive, wCug, wKick, themeGroups, themeOrder, weekLabel, mo, yr, s, e };
+}
+
+// ── Build plain-text weekly update from week panel data ───────────────────────
+function ldrBuildWeekText(data) {
+  const { wLive, wCug, wKick, themeGroups, themeOrder, weekLabel } = data;
+  const b = s => `*${s}*`;
+  const lines = [];
+  lines.push(b(`📊 SE Weekly Update — ${weekLabel}`));
+  lines.push('');
+
+  if (wLive.length) {
+    lines.push(`✅ ${b('Go-Live (' + wLive.length + ')')}: ${wLive.map(r => r['Opportunity Name']||'').join(', ')}`);
+  }
+  if (wCug.length) {
+    lines.push(`🔵 ${b('CUG / Production Deployment (' + wCug.length + ')')}: ${wCug.map(r => r['Opportunity Name']||'').join(', ')}`);
+  }
+  if (wKick.length) {
+    lines.push(`🚀 ${b('New Kick-off (' + wKick.length + ')')}: ${wKick.map(r => `${r['Opportunity Name']||''} (SE: ${r['Implementation Owner']||'—'})`).join(', ')}`);
+  }
+
+  const totalLo = Object.values(themeGroups).reduce((n, a) => n + a.length, 0);
+  if (totalLo) {
+    lines.push('');
+    lines.push(b('⚠️ Lowlights / Risk / Challenges'));
+    themeOrder.forEach(sig => {
+      const items = themeGroups[sig];
+      const icon  = items[0].icon;
+      lines.push(`${icon} ${b(sig + ' (' + items.length + ')')}:`);
+      items.forEach(({ r, notesFull }) => {
+        const name = r['Opportunity Name'] || '';
+        lines.push(notesFull ? `  • ${name} — ${notesFull}` : `  • ${name}`);
+      });
+    });
+  }
+
+  if (!wLive.length && !wCug.length && !wKick.length && !totalLo) {
+    lines.push('— No activity recorded for this week.');
+  }
+
+  lines.push('');
+  lines.push('─'.repeat(40));
+  return lines.join('\n');
+}
+
+function ldrCopyWeekUpdate() {
+  const el = document.getElementById('ldr-week-panel');
+  const data = el && el._wkData;
+  if (!data) return;
+  const text = ldrBuildWeekText(data);
+  const btn  = el.querySelector('button[onclick="ldrCopyWeekUpdate()"]');
+  navigator.clipboard.writeText(text)
+    .then(() => { if (btn) { const o=btn.textContent; btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent=o,2000); } })
+    .catch(() => { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); });
+}
+
+function ldrSaveWeekDigest(weekLabel) {
+  const el = document.getElementById('ldr-week-panel');
+  const data = el && el._wkData;
+  if (!data) return;
+  const text = ldrBuildWeekText(data);
+  const weekKey = `ldr_${data.yr}_${String(data.mo+1).padStart(2,'0')}_w${data.s}`;
+  try {
+    const store = JSON.parse(localStorage.getItem(DIGEST_STORE_KEY) || '{}');
+    store[weekKey] = { text, savedAt: new Date().toISOString(), weekLabel };
+    localStorage.setItem(DIGEST_STORE_KEY, JSON.stringify(store));
+    const st = document.getElementById('ldr-wk-save-status');
+    if (st) { st.textContent = `✅ Saved`; setTimeout(() => st.textContent = '', 3000); }
+  } catch(e) { alert('Save failed: ' + e.message); }
 }
 
 // ── Revenue & classification helpers ─────────────────────────────────────────
@@ -4447,16 +4927,31 @@ function showPage(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.add('page-active');
-    // scroll page to top on navigation
     document.getElementById('main').scrollTop = 0;
   }
   document.querySelectorAll('#sidebar nav a').forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === '#' + id);
   });
+  // Close mobile drawer when a page is selected
+  closeSidebar();
   // Resize charts after display change
   setTimeout(() => {
     Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
   }, 60);
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen  = sidebar.classList.toggle('sidebar-open');
+  overlay.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('sidebar-open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow = '';
 }
 </script>
 </body>
