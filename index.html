@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solution Engineering Health Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1684,6 +1685,10 @@
 </div><!-- /main -->
 
 <script>
+// Register datalabels plugin globally; disable by default, opt-in per chart
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display = false;
+
 // =====================================================
 // DATA STORE
 // =====================================================
@@ -2827,6 +2832,14 @@ function renderPipelineHealth() {
         legend: {
           position: 'bottom',
           labels: { color: '#f8fafc', padding: 14, font: { size: 12 } }
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#fff',
+          anchor: 'center',
+          align: 'center',
+          font: { weight: '700', size: 12 },
+          formatter: v => v
         }
       },
       cutout: '65%'
@@ -2877,7 +2890,15 @@ function renderPipelineHealth() {
       responsive: true,
       maintainAspectRatio: true,
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end',
+          align: 'end',
+          color: '#94a3b8',
+          font: { weight: '600', size: 11 },
+          formatter: v => v
+        }
       },
       scales: {
         x: {
@@ -3732,7 +3753,15 @@ function renderFBBB() {
       responsive: true, maintainAspectRatio: true, cutout: '62%',
       plugins: {
         legend: legendOpts,
-        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${pct(ctx.parsed, total)}%)` } }
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${pct(ctx.parsed, total)}%)` } },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#fff',
+          anchor: 'center',
+          align: 'center',
+          font: { weight: '700', size: 13 },
+          formatter: (v) => `${v}\n${pct(v, total)}%`
+        }
       }
     }
   });
@@ -3749,7 +3778,15 @@ function renderFBBB() {
       responsive: true, maintainAspectRatio: true, cutout: '62%',
       plugins: {
         legend: legendOpts,
-        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed.toFixed(2)}M (${pct(ctx.raw, +(totalRev/1e6).toFixed(2))}%)` } }
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed.toFixed(2)}M (${pct(ctx.raw, +(totalRev/1e6).toFixed(2))}%)` } },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          color: '#fff',
+          anchor: 'center',
+          align: 'center',
+          font: { weight: '700', size: 13 },
+          formatter: (v) => `$${v}M\n${pct(v, +(totalRev/1e6).toFixed(2))}%`
+        }
       }
     }
   });
@@ -3767,7 +3804,15 @@ function renderFBBB() {
     },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: legendOpts },
+      plugins: {
+        legend: legendOpts,
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end', align: 'top',
+          color: '#94a3b8', font: { weight: '600', size: 11 },
+          formatter: v => v
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
@@ -3788,7 +3833,15 @@ function renderFBBB() {
     },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: legendOpts },
+      plugins: {
+        legend: legendOpts,
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end', align: 'top',
+          color: '#94a3b8', font: { weight: '600', size: 11 },
+          formatter: v => `$${v}M`
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: gridColor }, beginAtZero: true }
@@ -3809,7 +3862,15 @@ function renderFBBB() {
     },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: legendOpts },
+      plugins: {
+        legend: legendOpts,
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end', align: 'top',
+          color: '#94a3b8', font: { weight: '600', size: 11 },
+          formatter: v => v
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
@@ -3831,7 +3892,15 @@ function renderFBBB() {
     },
     options: {
       responsive: true, maintainAspectRatio: true,
-      plugins: { legend: legendOpts },
+      plugins: {
+        legend: legendOpts,
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'center', align: 'center',
+          color: '#fff', font: { weight: '700', size: 12 },
+          formatter: v => v
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor }, stacked: true },
         y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, stacked: true, beginAtZero: true }
@@ -3944,6 +4013,14 @@ function renderSEBandwidth() {
               return `Capacity: ${seData[se].presalesCount}/${PRESALES_MAX}`;
             }
           }
+        },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end',
+          align: 'top',
+          color: '#94a3b8',
+          font: { weight: '600', size: 11 },
+          formatter: v => v
         }
       },
       scales: {
@@ -3968,7 +4045,17 @@ function renderSEBandwidth() {
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: 'end',
+          align: 'top',
+          color: '#94a3b8',
+          font: { weight: '600', size: 11 },
+          formatter: v => `$${v}M`
+        }
+      },
       scales: {
         x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
         y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } }
@@ -4383,7 +4470,15 @@ function renderMoMChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: _momGroup !== 'all', position:'bottom', labels:{ color:'#374151', padding:12, font:{size:11} } },
-        tooltip: { callbacks: { label: t => ` ${t.dataset.label}: ${t.parsed.y} project${t.parsed.y!==1?'s':''}` } }
+        tooltip: { callbacks: { label: t => ` ${t.dataset.label}: ${t.parsed.y} project${t.parsed.y!==1?'s':''}` } },
+        datalabels: {
+          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+          anchor: stacked ? 'center' : 'end',
+          align: stacked ? 'center' : 'top',
+          color: stacked ? '#fff' : '#6b7280',
+          font: { weight: '600', size: 11 },
+          formatter: v => v
+        }
       },
       scales: {
         x: { stacked, grid:{ display:false }, ticks:{ color:'#6b7280', font:{size:11} } },
@@ -4461,7 +4556,17 @@ function renderTTLAnalysis() {
       },
       options: {
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } } },
+        plugins:{
+          legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } },
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] != null && ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor: 'end',
+            align: 'top',
+            color: '#6b7280',
+            font: { weight: '600', size: 10 },
+            formatter: v => `${v}d`
+          }
+        },
         scales:{
           x:{ ticks:{ color:'#6b7280', font:{size:10}, maxRotation:35 }, grid:{ display:false } },
           y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
@@ -4496,7 +4601,17 @@ function renderTTLAnalysis() {
       },
       options: {
         responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } } },
+        plugins:{
+          legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } },
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
+            anchor: 'top',
+            align: 'top',
+            color: ctx => ctx.dataset.borderColor,
+            font: { weight: '600', size: 10 },
+            formatter: v => v != null ? `${v}d` : ''
+          }
+        },
         scales:{
           x:{ ticks:{ color:'#6b7280', font:{size:11} }, grid:{ color:'#f3f4f6' } },
           y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
