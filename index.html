@@ -1815,16 +1815,17 @@ function handleFileUpload(event, hint) {
 }
 
 function applyImport(type, rawData) {
+  const clean = rawData.filter(r => (r['Opportunity Name'] || '').trim());
   if (type === 'active') {
-    _rawActiveData = rawData;
+    _rawActiveData = clean;
     rebuildActiveData();
     document.getElementById('btn-active').classList.add('loaded');
   } else if (type === 'live') {
-    _rawLiveData = rawData;
+    _rawLiveData = clean;
     rebuildActiveData();
     document.getElementById('btn-live').classList.add('loaded');
   } else {
-    presalesData = rawData;
+    presalesData = clean;
     document.getElementById('btn-presales').classList.add('loaded');
   }
   if (activeData || presalesData) {
@@ -1875,7 +1876,7 @@ function handleStoreUpload(event) {
 // Convert store records back to the flat CSV-row format the render functions expect
 function storeRecordsToCSVRows(records, type) {
   if (type === 'active') {
-    return records.map(r => ({
+    return records.filter(r => (r.opportunity_name || '').trim()).map(r => ({
       'Opportunity Name':                          r.opportunity_name || '',
       'Install Record: Implementation Name':       r.implementation_name || '',
       'Implementation Owner':                      r.se_owner || '',
@@ -1910,7 +1911,7 @@ function storeRecordsToCSVRows(records, type) {
       'Number of Days Open':                       r.days_open || '',
     }));
   } else {
-    return records.map(r => ({
+    return records.filter(r => (r.opportunity_name || '').trim()).map(r => ({
       'Opportunity Name':                          r.opportunity_name || '',
       'Install Record: Implementation Name':       r.implementation_name || '',
       'Presales Engineer':                         r.se_owner || '',
@@ -2004,7 +2005,8 @@ function closeMergeModal(cancel) {
 function confirmImport(mode) {
   closeMergeModal(false);
   if (!pendingImport) return;
-  const { type, rawData, fileName } = pendingImport;
+  const { type, fileName } = pendingImport;
+  const rawData = pendingImport.rawData.filter(r => (r['Opportunity Name'] || '').trim());
   pendingImport = null;
 
   const now = new Date().toISOString().slice(0,10);
