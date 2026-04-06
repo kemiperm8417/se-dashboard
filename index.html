@@ -1755,6 +1755,13 @@ function ragLabel(status) {
   return status.trim();
 }
 
+// Returns display value for Committed QTR — presales records have no committed quarter
+function qtrDisplay(r) {
+  const isPresales = (r._src === 'presales') || (r._cat === 'presales') || (r.record_type === 'presales');
+  if (isPresales) return 'Not Committed QTR';
+  return (r['Committed QTR'] || '—');
+}
+
 // Consistent FB/BB classification — used by all chart and KPI functions
 function isFrontbook(r) {
   return (r['Type of Opportunity']||'').toLowerCase().includes('front');
@@ -1825,7 +1832,8 @@ function applyImport(type, rawData) {
     rebuildActiveData();
     document.getElementById('btn-live').classList.add('loaded');
   } else {
-    presalesData = clean;
+    // Strip Committed QTR from presales — it has no meaning for presales records
+    presalesData = clean.map(r => ({ ...r, 'Committed QTR': '' }));
     document.getElementById('btn-presales').classList.add('loaded');
   }
   if (activeData || presalesData) {
@@ -2860,7 +2868,7 @@ function getCROAllRows() {
   const pRows = presales.map(r => ({...r,
     _src: 'presales',
     'Implementation Owner': r['Implementation Owner'] || r['Presales Engineer'] || '',
-    'Committed QTR': r['Committed QTR'] || '',
+    'Committed QTR': '',   // presales records have no committed quarter
     'Projected Go-Live Date': r['Projected Go-Live Date'] || '',
     'Projected Go-Live Status': r['Projected Go-Live Status'] || r['rag_status'] || '',
   }));
@@ -3095,7 +3103,7 @@ function applyTableFilters() {
         const seVal  = r._cat === 'presales' ? (r['Presales Engineer']||'') : (r['Implementation Owner']||'');
         const subSt  = (r['Sub Status'] || r['Status'] || '').trim();
         const notes  = (r['Current Status'] || r['current_status_notes'] || '').trim();
-        const qtrVal = r['Committed QTR'] || '—';
+        const qtrVal = qtrDisplay(r);
 
         // Go-Live Date: actual for live, projected for active, blank for presales
         let glDate = '', glStyle = '';
@@ -3170,7 +3178,7 @@ function applyTableFilters() {
           <td>${regionPill(reg)}</td>
           <td>${escHtml(truncate(subSt||'—',28))}</td>
           <td${isOverdue?' class="cro-go-live-red"':''}>${escHtml(glDate || '—')}</td>
-          <td>${escHtml(r['Committed QTR'] || '—')}</td>
+          <td>${escHtml(qtrDisplay(r))}</td>
           <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
           <td><span class="badge badge-${rc}">${escHtml(effectiveRag)}</span></td>
           <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
@@ -3205,7 +3213,7 @@ function applyTableFilters() {
           <td>${ownerLink(r['Opportunity Owner Name'], 'filter-opp-owner')}</td>
           <td>${regionPill(reg)}</td>
           <td style="font-weight:600;color:var(--green)">${escHtml(actDate || '—')}</td>
-          <td>${escHtml(r['Committed QTR'] || '—')}</td>
+          <td>${escHtml(qtrDisplay(r))}</td>
           <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
           <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
           <td style="text-align:right">${days ? `${days}d` : '—'}</td>
@@ -3288,7 +3296,7 @@ function renderRiskRadar() {
       const text = truncate(blocker, 200);
       return `<div class="risk-item">
         <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
-        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(qtrDisplay(r))}</div>
         ${text ? `<div class="ri-text">${escHtml(text)}</div>` : ''}
       </div>`;
     }).join('');
@@ -3309,7 +3317,7 @@ function renderRiskRadar() {
         : truncate(r['Current Status'] || '', 150);
       return `<div class="risk-item amber">
         <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
-        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(qtrDisplay(r))}</div>
         ${risk ? `<div class="ri-text">${escHtml(truncate(risk, 200))}</div>` : ''}
       </div>`;
     }).join('');
@@ -3394,7 +3402,7 @@ function wvCard(row, daysLabel, daysClass) {
   const se    = row['Implementation Owner'] || '—';
   const oppOwner = row['Opportunity Owner Name'] || '—';
   const region = (row['Global Region'] || '').split('|')[0].trim() || '—';
-  const qtr   = row['Committed QTR'] || '—';
+  const qtr   = qtrDisplay(row);
   const rev   = parseRev(row['Opportunity Net Revenue (converted)']);
   const rag   = (row['Projected Go-Live Status'] || '').trim();
   const substatus = (row['Sub Status'] || '').trim();
@@ -3513,7 +3521,7 @@ function renderWeeklyView() {
       const name    = row['Opportunity Name'] || '—';
       const se      = row['Implementation Owner'] || '—';
       const region  = (row['Global Region'] || '').split('|')[0].trim() || '—';
-      const qtr     = row['Committed QTR'] || '—';
+      const qtr     = qtrDisplay(row);
       const rev     = parseRev(row['Opportunity Net Revenue (converted)']);
       const actDate = row['Actual Live Date'] || '—';
       const glDate  = row['Projected Go-Live Date'] || '—';
@@ -3848,7 +3856,7 @@ function renderHLGroups(type, containerId) {
 
     const cardsHtml = items.map(item => {
       const row       = activeMap[item.name] || {};
-      const qtr       = row['Committed QTR'] || '—';
+      const qtr       = qtrDisplay(row);
       const subStatus = (row['Sub Status'] || '').trim();
       const glDate    = row['Projected Go-Live Date'] || '—';
       const actDate   = row['Actual Live Date'] || '';
