@@ -1313,9 +1313,10 @@
 
       <!-- Tab bar -->
       <div class="pl-tab-bar">
-        <button id="tab-btn-active"   class="pl-tab active" onclick="setPipelineTab('active')">⚙️ Active Implementation</button>
-        <button id="tab-btn-live"     class="pl-tab"        onclick="setPipelineTab('live')">✅ Live Completed</button>
-        <button id="tab-btn-presales" class="pl-tab"        onclick="setPipelineTab('presales')">🔭 Presales Pipeline</button>
+        <button id="tab-btn-all"      class="pl-tab active" onclick="setPipelineTab('all')">📋 All Projects</button>
+        <button id="tab-btn-active"   class="pl-tab"        onclick="setPipelineTab('active')">⚙️ Active</button>
+        <button id="tab-btn-live"     class="pl-tab"        onclick="setPipelineTab('live')">✅ Live</button>
+        <button id="tab-btn-presales" class="pl-tab"        onclick="setPipelineTab('presales')">🔭 Presales</button>
         <div id="pl-tab-counts" style="margin-left:auto;font-size:12px;color:var(--sub);align-self:center"></div>
       </div>
 
@@ -1327,6 +1328,12 @@
       <!-- Shared filters -->
       <div class="filters" id="table-filters">
         <span class="filter-label">Filter:</span>
+        <select id="filter-category" onchange="applyTableFilters()" style="display:none">
+          <option value="">All Categories</option>
+          <option value="active">⚙️ Active</option>
+          <option value="live">✅ Live</option>
+          <option value="presales">🔭 Presales</option>
+        </select>
         <select id="filter-se" onchange="applyTableFilters()"><option value="">All SEs</option></select>
         <select id="filter-opp-owner" onchange="applyTableFilters()"><option value="">All Opp Owners</option></select>
         <select id="filter-rag" onchange="applyTableFilters()">
@@ -1346,8 +1353,29 @@
         <input type="text" id="filter-search" placeholder="Search..." oninput="applyTableFilters()" style="min-width:150px">
       </div>
 
+      <!-- All Projects table -->
+      <div id="pl-all-wrap" class="cro-table-scroll">
+        <table id="all-tbl" class="cro-tbl">
+          <thead><tr>
+            <th onclick="sortTable('all-tbl',0)">Opportunity Name <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',1)">SE <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',2)">Opp Owner <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',3)">Region <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',4)">Category <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',5)">Sub Status <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',6)">Go-Live Date <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',7)">QTR <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',8)">Revenue <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',9)">RAG / Stage <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',10)">Type <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('all-tbl',11)">Current Status <span class="sort-arrow">↕</span></th>
+          </tr></thead>
+          <tbody id="all-tbody"></tbody>
+        </table>
+      </div>
+
       <!-- Active Implementation table -->
-      <div id="pl-active-wrap" class="cro-table-scroll">
+      <div id="pl-active-wrap" class="cro-table-scroll" style="display:none">
         <table id="pipeline-tbl" class="cro-tbl">
           <thead><tr>
             <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name <span class="sort-arrow">↕</span></th>
@@ -2805,7 +2833,7 @@ function renderPipelineHealth() {
 // SECTION 4: PIPELINE TABLE
 // =====================================================
 let allPipelineRows    = [];
-let currentPipelineTab = 'active'; // 'active' | 'live' | 'presales'
+let currentPipelineTab = 'all'; // 'all' | 'active' | 'live' | 'presales'
 let currentGeoFilter   = '';       // '' = All, or region string
 
 // Region color palette
@@ -2891,17 +2919,18 @@ function renderRegionCards(all, regions) {
 
 function setPipelineTab(tab) {
   currentPipelineTab = tab;
+  document.getElementById('tab-btn-all').classList.toggle('active',      tab === 'all');
   document.getElementById('tab-btn-active').classList.toggle('active',   tab === 'active');
   document.getElementById('tab-btn-live').classList.toggle('active',     tab === 'live');
   document.getElementById('tab-btn-presales').classList.toggle('active', tab === 'presales');
+  document.getElementById('pl-all-wrap').style.display       = tab === 'all'      ? '' : 'none';
   document.getElementById('pl-active-wrap').style.display    = tab === 'active'   ? '' : 'none';
   document.getElementById('pl-live-wrap').style.display      = tab === 'live'     ? '' : 'none';
   document.getElementById('pl-presales-wrap').style.display  = tab === 'presales' ? '' : 'none';
-  // RAG filter only applies to active tab; QTR filter hides for presales
-  document.getElementById('filter-rag').style.display = tab === 'active' ? '' : 'none';
-  document.getElementById('filter-qtr').style.display = tab === 'presales' ? 'none' : '';
-  // SE label/options differ for presales (Presales Engineer vs Implementation Owner)
-  document.getElementById('filter-se').previousSibling; // no-op, handled in applyTableFilters
+  // Show Category filter only on All tab; RAG filter hides for presales; QTR hides for presales
+  document.getElementById('filter-category').style.display = tab === 'all'      ? '' : 'none';
+  document.getElementById('filter-rag').style.display       = tab === 'presales' ? 'none' : '';
+  document.getElementById('filter-qtr').style.display       = tab === 'presales' ? 'none' : '';
   applyTableFilters();
 }
 
@@ -2963,7 +2992,8 @@ function renderPipelineTable() {
   const activeCount   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed').length;
   const liveCount     = active.filter(r => (r['Status']||'').trim() === 'Live Completed').length;
   const presalesCount = presales.length;
-  document.getElementById('pl-tab-counts').textContent = `${activeCount} active · ${liveCount} live · ${presalesCount} presales`;
+  const totalCount    = activeCount + liveCount + presalesCount;
+  document.getElementById('pl-tab-counts').textContent = `${totalCount} total · ${activeCount} active · ${liveCount} live · ${presalesCount} presales`;
   setPipelineTab(currentPipelineTab);
 }
 
@@ -3004,7 +3034,104 @@ function applyTableFilters() {
     : '—';
   const today  = new Date();
 
-  if (currentPipelineTab === 'active') {
+  const category = document.getElementById('filter-category').value;
+
+  if (currentPipelineTab === 'all') {
+    // Combine all three sources, tagging each with its category
+    const active   = allPipelineRows || [];
+    const presales = presalesData || [];
+    const activeRows   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed')
+      .map(r => ({ ...r, _cat: 'active' }));
+    const liveRows     = active.filter(r => (r['Status']||'').trim() === 'Live Completed')
+      .map(r => ({ ...r, _cat: 'live' }));
+    const presalesRows = presales.map(r => ({ ...r, _cat: 'presales' }));
+
+    let rows = [...activeRows, ...liveRows, ...presalesRows].filter(r => {
+      if (category && r._cat !== category) return false;
+      // SE field differs by category
+      const seVal = r._cat === 'presales' ? (r['Presales Engineer']||'') : (r['Implementation Owner']||'');
+      if (se && seVal !== se) return false;
+      if (owner && (r['Opportunity Owner Name']||'') !== owner) return false;
+      if (region && extractRegion(r['Global Region']) !== region) return false;
+      if (qtr && r._cat !== 'presales' && (r['Committed QTR']||'') !== qtr) return false;
+      if (type && (r['Type of Opportunity']||'') !== type) return false;
+      if (rag && r._cat !== 'presales') {
+        const rs = (r['Projected Go-Live Status']||'').trim() || 'Unknown';
+        const eff = (r['Status']||'').trim() === 'Blocked' ? 'Blocked' : rs;
+        if (eff !== rag) return false;
+      }
+      if (search) {
+        const seV = r._cat === 'presales' ? r['Presales Engineer'] : r['Implementation Owner'];
+        const hay = [r['Opportunity Name'], seV, r['Opportunity Owner Name'],
+                     r['Global Region'], r['Sub Status'], r['Status']].join(' ').toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    const CAT_BADGE = {
+      active:   '<span class="badge badge-blue" style="font-size:10px">Active</span>',
+      live:     '<span class="badge badge-green" style="font-size:10px">Live</span>',
+      presales: '<span class="badge" style="background:rgba(147,51,234,.1);color:#7c3aed;font-size:10px">Presales</span>',
+    };
+
+    const tbody = document.getElementById('all-tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12" class="cro-empty">No records match the current filters</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const reg    = extractRegion(r['Global Region']);
+        const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
+        const opType = r['Type of Opportunity'] || '';
+        const seVal  = r._cat === 'presales' ? (r['Presales Engineer']||'') : (r['Implementation Owner']||'');
+        const subSt  = (r['Sub Status'] || r['Status'] || '').trim();
+        const notes  = (r['Current Status'] || r['current_status_notes'] || '').trim();
+        const qtrVal = r['Committed QTR'] || '—';
+
+        // Go-Live Date: actual for live, projected for active, blank for presales
+        let glDate = '', glStyle = '';
+        if (r._cat === 'live') {
+          glDate = (r['Actual Live Date'] || '').trim();
+          glStyle = 'font-weight:600;color:var(--green)';
+        } else if (r._cat === 'active') {
+          glDate = (r['Projected Go-Live Date'] || '').trim();
+          const glObj = glDate ? parseDate(glDate) : null;
+          if (glObj && glObj < today) glStyle = 'color:var(--red);font-weight:600';
+        }
+
+        // RAG / Stage cell
+        let ragCell = '—';
+        if (r._cat === 'presales') {
+          const stage = (r['Opportunity: Stage'] || '').trim();
+          const prob  = parseFloat(r['Opportunity: Probability (%)']) || 0;
+          const sc = stage === 'Negotiation' || stage === 'Contracting' || stage === 'Won' ? 'badge-green'
+                   : stage === 'Proposal' ? 'badge-amber' : 'badge-grey';
+          ragCell = stage ? `<span class="badge ${sc}" style="font-size:10px">${escHtml(stage)}</span>` : '—';
+        } else {
+          const rs  = (r['Projected Go-Live Status']||'').trim() || 'Unknown';
+          const eff = (r['Status']||'').trim() === 'Blocked' ? 'Blocked' : rs;
+          ragCell = `<span class="badge badge-${ragClass(eff)}">${escHtml(eff)}</span>`;
+        }
+
+        return `<tr>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:190px">${escHtml(truncate(r['Opportunity Name'],38))}</span></td>
+          <td>${seCell(seVal, 'filter-se')}</td>
+          <td>${ownerLink(r['Opportunity Owner Name'], 'filter-opp-owner')}</td>
+          <td>${regionPill(reg)}</td>
+          <td>${CAT_BADGE[r._cat]}</td>
+          <td>${escHtml(truncate(subSt||'—',28))}</td>
+          <td style="${glStyle}">${escHtml(glDate || '—')}</td>
+          <td>${escHtml(qtrVal)}</td>
+          <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+          <td>${ragCell}</td>
+          <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+          <td><span class="cro-status-cell">${escHtml(notes||'—')}</span></td>
+        </tr>`;
+      }).join('');
+    }
+    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} records`;
+
+  } else if (currentPipelineTab === 'active') {
     let rows = allPipelineRows.filter(r => (r['Status']||'').trim() !== 'Live Completed' && baseFilter(r));
     if (rag) rows = rows.filter(r => {
       const ragStat = ragLabel((r['Projected Go-Live Status']||'').trim() || 'Unknown');
