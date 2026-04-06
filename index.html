@@ -5358,27 +5358,52 @@ function showUploadPrompt(msg) {
   document.getElementById('placeholder-upload').style.display = '';
 }
 
-// Candidate filenames to try, in order
+// Try loading a file via XHR — works on both http:// and file:// in most browsers
+function xhrLoad(filename) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', filename, true);
+    xhr.onload  = () => xhr.status === 200 || xhr.status === 0 ? resolve(xhr.responseText) : reject(new Error('HTTP ' + xhr.status));
+    xhr.onerror = () => reject(new Error('XHR error'));
+    xhr.send();
+  });
+}
+
 const AUTO_LOAD_CANDIDATES = [
   'SE_Pipeline_Data.json',
   'se_pipeline_data.json',
 ];
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Try candidates sequentially; stop at first success
   (async function tryAutoLoad() {
     for (const filename of AUTO_LOAD_CANDIDATES) {
+      // Try fetch first, then XHR as fallback (XHR works on file:// in Firefox/Safari)
+      let text = null;
       try {
         const resp = await fetch(filename, { cache: 'no-cache' });
-        if (resp.ok) {
-          const text = await resp.text();
-          autoLoadStore(text);
-          return;
-        }
-      } catch(_) { /* file not found or blocked by browser */ }
+        if (resp.ok) text = await resp.text();
+      } catch(_) {}
+
+      if (!text) {
+        try { text = await xhrLoad(filename); } catch(_) {}
+      }
+
+      if (text) {
+        autoLoadStore(text);
+        return;
+      }
     }
-    // All candidates failed — show upload prompt
-    showUploadPrompt('SE_Pipeline_Data.json not found in the same folder. Upload it manually to load the dashboard.');
+
+    // All attempts failed
+    const isFileProtocol = location.protocol === 'file:';
+    if (isFileProtocol) {
+      showUploadPrompt(
+        'Auto-load is blocked when opening the file directly in the browser. ' +
+        'Upload SE_Pipeline_Data.json using the button below, or serve the dashboard via a local web server (e.g. VS Code Live Server).'
+      );
+    } else {
+      showUploadPrompt('SE_Pipeline_Data.json not found. Upload it manually to load the dashboard.');
+    }
   })();
 });
 </script>
