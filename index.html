@@ -2869,16 +2869,29 @@ function renderRegionCards(all, regions) {
   const container = document.getElementById('region-cards-bar');
   if (!container || !regions || !regions.length) { if (container) container.innerHTML = ''; return; }
 
+  function catCounts(recs) {
+    return {
+      live:     recs.filter(r => (r['Status']||'').trim() === 'Live Completed' || r._src === 'live').length,
+      active:   recs.filter(r => r._src === 'active' || ((r['Status']||'').trim() !== 'Live Completed' && r._src !== 'presales')).length,
+      presales: recs.filter(r => r._src === 'presales').length,
+    };
+  }
+  function catRow(c) {
+    return `<div class="rc-rag-row">
+      <span style="color:var(--green)">✅ ${c.live} Live</span>
+      <span style="color:var(--accent)">⚙️ ${c.active} Active</span>
+      <span style="color:#9333ea">🔭 ${c.presales} Presales</span>
+    </div>`;
+  }
+
   // "All Regions" summary card
-  const totalNRAll  = all.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const fbAll       = all.filter(r => r['Type of Opportunity'] === 'Frontbook');
-  const bbAll       = all.filter(r => r['Type of Opportunity'] === 'Backbook');
-  const fbNRAll     = fbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const bbNRAll     = bbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-  const liveAll     = all.filter(r => (r['Status']||'').trim() === 'Live Completed' || r._src === 'live').length;
-  const atRiskAll   = all.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
-  const blockedAll  = all.filter(r => (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked').length;
-  const allActive   = currentGeoFilter === '';
+  const totalNRAll = all.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const fbAll      = all.filter(r => r['Type of Opportunity'] === 'Frontbook');
+  const bbAll      = all.filter(r => r['Type of Opportunity'] === 'Backbook');
+  const fbNRAll    = fbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const bbNRAll    = bbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const cAll       = catCounts(all);
+  const allActive  = currentGeoFilter === '';
   const allCard = `<div class="region-card${allActive?' rc-active':''}" data-region=""
        style="border-left-color:#6366f1;color:#6366f1" onclick="setGeoFilter('')">
     <div class="rc-head">
@@ -2890,11 +2903,7 @@ function renderRegionCards(all, regions) {
       <span class="rc-fb-chip">FB ${fbAll.length} · ${fbNRAll > 0 ? fmtRev(fbNRAll) : '$0'}</span>
       <span class="rc-bb-chip">BB ${bbAll.length} · ${bbNRAll > 0 ? fmtRev(bbNRAll) : '$0'}</span>
     </div>
-    <div class="rc-rag-row">
-      <span style="color:var(--green)">✓ ${liveAll} Live</span>
-      <span style="color:var(--amber)">△ ${atRiskAll} At Risk</span>
-      <span style="color:var(--red)">🔴 ${blockedAll} Blocked</span>
-    </div>
+    ${catRow(cAll)}
   </div>`;
 
   container.innerHTML = allCard + regions.map(reg => {
@@ -2904,9 +2913,7 @@ function renderRegionCards(all, regions) {
     const bb      = recs.filter(r => r['Type of Opportunity'] === 'Backbook');
     const fbNR    = fb.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
     const bbNR    = bb.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
-    const live    = recs.filter(r => (r['Status']||'').trim() === 'Live Completed' || r._src === 'live').length;
-    const atRisk  = recs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
-    const blocked = recs.filter(r => (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked').length;
+    const c       = catCounts(recs);
     const col     = regionColor(reg);
     const isActive = currentGeoFilter === reg;
     return `<div class="region-card${isActive?' rc-active':''}" data-region="${escHtml(reg)}"
@@ -2921,11 +2928,7 @@ function renderRegionCards(all, regions) {
         <span class="rc-fb-chip">FB ${fb.length} · ${fbNR > 0 ? fmtRev(fbNR) : '$0'}</span>
         <span class="rc-bb-chip">BB ${bb.length} · ${bbNR > 0 ? fmtRev(bbNR) : '$0'}</span>
       </div>
-      <div class="rc-rag-row">
-        <span style="color:var(--green)">✓ ${live} Live</span>
-        <span style="color:var(--amber)">△ ${atRisk} At Risk</span>
-        <span style="color:var(--red)">🔴 ${blocked} Blocked</span>
-      </div>
+      ${catRow(c)}
     </div>`;
   }).join('');
 }
