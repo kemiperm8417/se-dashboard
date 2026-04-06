@@ -1783,6 +1783,17 @@ function ragLabel(status) {
   return status.trim();
 }
 
+// Normalize a presales CSV row to handle both old and new Salesforce export column names
+// Old: 'Opportunity Name', 'Opportunity Net Revenue (converted)'
+// New: only 'Install Record: Implementation Name', 'Opportunity Net Revenue'
+function normalizePresalesRow(r) {
+  if (!r['Opportunity Name']) r['Opportunity Name'] = r['Install Record: Implementation Name'] || '';
+  if (!r['Opportunity Net Revenue (converted)']) r['Opportunity Net Revenue (converted)'] = r['Opportunity Net Revenue'] || '';
+  if (!r['Opportunity Net Revenue (converted) Currency']) r['Opportunity Net Revenue (converted) Currency'] = r['Opportunity Net Revenue Currency'] || '';
+  if (!r['Opportunity: Legal NDA Signed Date']) r['Opportunity: Legal NDA Signed Date'] = r['Opportunity: NDA Date Signed'] || '';
+  return r;
+}
+
 // Returns display value for Committed QTR — presales records have no committed quarter
 function qtrDisplay(r) {
   const isPresales = (r._src === 'presales') || (r._cat === 'presales') || (r.record_type === 'presales');
@@ -4742,6 +4753,7 @@ function renderHighlights() {
 
   pipeline.forEach(r => {
     const status  = (r['Status']||'').trim();
+    if (status === 'Live Completed') return;   // live projects are successes, not lowlights
     const rag     = (r['Projected Go-Live Status']||'').trim();
     const name    = (r['Opportunity Name']||'').trim();
     if (!name || loIds.has(name)) return;
@@ -4958,6 +4970,7 @@ function ldrRenderWeekPanel() {
   // ── Lowlights: text-analysis based, grouped by theme ─────────────────────
   // Filter: projects with last activity in this week that have an identified issue
   const wRiskRaw = active.filter(r => {
+    if ((r['Status']||'').trim() === 'Live Completed') return false;  // exclude completed projects from lowlights
     const lastAct = r['Install Record: Last Activity Date'] || r['Last Activity Date'] || '';
     // Include if activity in this week OR if blocked/overdue and has live date in this week
     const actInWeek = ldrInWeek(lastAct, yr, mo, s, e);
