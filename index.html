@@ -2891,9 +2891,9 @@ function renderRegionCards(all, regions) {
       <span class="rc-bb-chip">BB ${bbAll.length} · ${bbNRAll > 0 ? fmtRev(bbNRAll) : '$0'}</span>
     </div>
     <div class="rc-rag-row">
-      <span style="color:var(--green)">✓ ${liveAll} live</span>
-      <span style="color:var(--amber)">△ ${atRiskAll}</span>
-      <span style="color:var(--red)">🔴 ${blockedAll}</span>
+      <span style="color:var(--green)">✓ ${liveAll} Live</span>
+      <span style="color:var(--amber)">△ ${atRiskAll} At Risk</span>
+      <span style="color:var(--red)">🔴 ${blockedAll} Blocked</span>
     </div>
   </div>`;
 
@@ -2922,9 +2922,9 @@ function renderRegionCards(all, regions) {
         <span class="rc-bb-chip">BB ${bb.length} · ${bbNR > 0 ? fmtRev(bbNR) : '$0'}</span>
       </div>
       <div class="rc-rag-row">
-        <span style="color:var(--green)">✓ ${live} live</span>
-        <span style="color:var(--amber)">△ ${atRisk}</span>
-        <span style="color:var(--red)">🔴 ${blocked}</span>
+        <span style="color:var(--green)">✓ ${live} Live</span>
+        <span style="color:var(--amber)">△ ${atRisk} At Risk</span>
+        <span style="color:var(--red)">🔴 ${blocked} Blocked</span>
       </div>
     </div>`;
   }).join('');
