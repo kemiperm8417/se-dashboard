@@ -2028,57 +2028,96 @@ function confirmImport(mode) {
 
   if (mode === 'overwrite') {
     // Overwrite store records but PRESERVE existing go-live history where name matches
+    // and PRESERVE records of the other type (active vs live stay separate)
     const existing = {};
     for (const r of (pipelineStore[storeKey]||[])) {
       existing[normName(r.opportunity_name)] = r;
     }
     const newRecords = rawData.map(row => buildStoreRecord(row, type, existing, now, 'overwrite', fileName));
-    pipelineStore[storeKey] = newRecords;
+    if (type === 'active') {
+      const existingLive = (pipelineStore.active_records || []).filter(r => r.record_type === 'live');
+      pipelineStore.active_records = [...newRecords, ...existingLive];
+    } else if (type === 'live') {
+      const existingActive = (pipelineStore.active_records || []).filter(r => r.record_type !== 'live');
+      pipelineStore.active_records = [...existingActive, ...newRecords];
+    } else {
+      pipelineStore[storeKey] = newRecords;
+    }
     pipelineStore.change_log.push({ timestamp: nowISO, action: 'overwrite', description: `Overwrite of ${type} records from ${fileName} (${newRecords.length} records)`, uploaded_by: 'user' });
 
   } else { // merge
-    const existingArr = pipelineStore[storeKey] || [];
-    const existingMap = {};
-    for (const r of existingArr) existingMap[normName(r.opportunity_name)] = r;
+    if (type === 'active' || type === 'live') {
+      // Scope merge to only the matching record_type; preserve the other type wholesale
+      const isLive = type === 'live';
+      const allExisting = pipelineStore.active_records || [];
+      const targetExisting = allExisting.filter(r => isLive ? r.record_type === 'live' : r.record_type !== 'live');
+      const otherExisting  = allExisting.filter(r => isLive ? r.record_type !== 'live' : r.record_type === 'live');
 
-    let updated = 0, added = 0, dateChanges = 0;
-    const newRecords = rawData.map(row => {
-      const name = (row['Opportunity Name']||'').trim();
-      const stored = existingMap[normName(name)];
-      if (stored) {
-        updated++;
-        const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
-        if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
-        return newRec;
-      } else {
-        added++;
-        return buildStoreRecord(row, type, {}, now, 'merge', fileName);
-      }
-    });
-    // Keep store records not present in new CSV (preserve records from other type)
-    const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
-    const kept = existingArr.filter(r => !newNames.has(normName(r.opportunity_name)));
-    pipelineStore[storeKey] = [...newRecords, ...kept];
-    pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
+      const existingMap = {};
+      for (const r of targetExisting) existingMap[normName(r.opportunity_name)] = r;
+
+      let updated = 0, added = 0, dateChanges = 0;
+      const newRecords = rawData.map(row => {
+        const name = (row['Opportunity Name']||'').trim();
+        const stored = existingMap[normName(name)];
+        if (stored) {
+          updated++;
+          const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
+          if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
+          return newRec;
+        } else {
+          added++;
+          return buildStoreRecord(row, type, {}, now, 'merge', fileName);
+        }
+      });
+      const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
+      const kept = targetExisting.filter(r => !newNames.has(normName(r.opportunity_name)));
+      pipelineStore.active_records = [...otherExisting, ...newRecords, ...kept];
+      pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
+    } else {
+      const existingArr = pipelineStore.presales_records || [];
+      const existingMap = {};
+      for (const r of existingArr) existingMap[normName(r.opportunity_name)] = r;
+
+      let updated = 0, added = 0, dateChanges = 0;
+      const newRecords = rawData.map(row => {
+        const name = (row['Opportunity Name']||'').trim();
+        const stored = existingMap[normName(name)];
+        if (stored) {
+          updated++;
+          const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
+          if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
+          return newRec;
+        } else {
+          added++;
+          return buildStoreRecord(row, type, {}, now, 'merge', fileName);
+        }
+      });
+      const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
+      const kept = existingArr.filter(r => !newNames.has(normName(r.opportunity_name)));
+      pipelineStore.presales_records = [...newRecords, ...kept];
+      pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
+    }
   }
 
   pipelineStore._meta.last_updated_on = now;
   pipelineStore._meta[storeKey === 'active_records' ? 'total_active' : 'total_presales'] =
     pipelineStore[storeKey].length;
 
-  // Update display data from merged store
-  if (type === 'active' || type === 'live') {
+  // Update display data from merged store — only refresh the type that was uploaded
+  if (type === 'active') {
     _rawActiveData = storeRecordsToCSVRows(
       pipelineStore.active_records.filter(r => r.record_type !== 'live'), 'active');
-    _rawLiveData   = storeRecordsToCSVRows(
-      pipelineStore.active_records.filter(r => r.record_type === 'live'), 'active');
-    rebuildActiveData();
     document.getElementById('btn-active').classList.add('loaded');
+  } else if (type === 'live') {
+    _rawLiveData = storeRecordsToCSVRows(
+      pipelineStore.active_records.filter(r => r.record_type === 'live'), 'active');
     document.getElementById('btn-live').classList.add('loaded');
   } else {
     presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
     document.getElementById('btn-presales').classList.add('loaded');
   }
+  rebuildActiveData();
   updateStoreStatusBar();
   document.getElementById('placeholder').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
