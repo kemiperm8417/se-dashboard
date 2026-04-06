@@ -46,7 +46,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: auto; }
+  html { scroll-behavior: auto; overflow-x: hidden; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -56,6 +56,7 @@
     display: flex;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   /* ═══════════════════════════════════════════════
@@ -142,7 +143,7 @@
   /* ═══════════════════════════════════════════════
      MAIN
   ═══════════════════════════════════════════════ */
-  #main { margin-left: var(--sidebar-w); flex: 1; padding: 0 0 80px 0; min-height: 100vh; }
+  #main { margin-left: var(--sidebar-w); flex: 1; padding: 0 0 80px 0; min-height: 100vh; max-width: calc(100vw - var(--sidebar-w)); overflow-x: hidden; }
 
   /* ═══════════════════════════════════════════════
      HEADER — Clean, white, minimal
@@ -209,7 +210,7 @@
   /* ═══════════════════════════════════════════════
      SECTIONS — Page-based navigation
   ═══════════════════════════════════════════════ */
-  .section { padding: 28px 32px; display: none; min-height: calc(100vh - 80px); animation: fadeIn 0.2s ease; }
+  .section { padding: 28px 32px; display: none; min-height: calc(100vh - 80px); animation: fadeIn 0.2s ease; overflow-x: hidden; }
   .section.page-active { display: block; }
   .anchor { scroll-margin-top: 0; }
 
@@ -258,7 +259,7 @@
   ═══════════════════════════════════════════════ */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-bottom: 4px;
   }
@@ -269,6 +270,7 @@
     padding: 18px 20px;
     transition: all 0.2s ease;
     box-shadow: var(--shadow-sm);
+    min-width: 0;
     position: relative;
     overflow: hidden;
   }
@@ -315,14 +317,15 @@
   /* ═══════════════════════════════════════════════
      CHARTS
   ═══════════════════════════════════════════════ */
-  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; }
+  .chart-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
   .chart-card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px 22px;
     box-shadow: var(--shadow-sm);
+    min-width: 0;
   }
   .chart-card h3 {
     font-size: 11px; font-weight: 700; margin-bottom: 16px;
@@ -1470,7 +1473,7 @@
       <div class="section-title"><span class="icon">📈</span> Frontbook vs Backbook Analysis</div>
 
       <!-- KPI strip -->
-      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="fbbb-kpi-grid"></div>
+      <div class="kpi-grid" style="margin-bottom:20px" id="fbbb-kpi-grid"></div>
 
       <!-- Row 1: Overall split donuts -->
       <div class="chart-grid" style="margin-bottom:20px">
