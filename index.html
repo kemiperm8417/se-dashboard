@@ -1320,11 +1320,6 @@
         <div id="pl-tab-counts" style="margin-left:auto;font-size:12px;color:var(--sub);align-self:center"></div>
       </div>
 
-      <!-- Geo/Region chip filter bar -->
-      <div class="geo-chips" id="geo-chips-bar">
-        <button class="geo-chip active" onclick="setGeoFilter('',this)"><span class="geo-chip-dot" style="background:#6366f1"></span>All Regions</button>
-      </div>
-
       <!-- Shared filters -->
       <div class="filters" id="table-filters">
         <span class="filter-label">Filter:</span>
@@ -2842,11 +2837,8 @@ function regionColor(r) {
   return _regionColorMap[r];
 }
 
-function setGeoFilter(geo, btn) {
+function setGeoFilter(geo) {
   currentGeoFilter = geo;
-  document.querySelectorAll('#geo-chips-bar .geo-chip').forEach(c => c.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  // Sync region card highlight
   document.querySelectorAll('.region-card').forEach(c => {
     c.classList.toggle('rc-active', c.dataset.region === geo);
   });
@@ -2854,9 +2846,7 @@ function setGeoFilter(geo, btn) {
 }
 
 function setGeoFilterByName(geo) {
-  const btn = [...document.querySelectorAll('#geo-chips-bar .geo-chip')]
-    .find(b => (b.dataset.region || '') === geo) || null;
-  setGeoFilter(geo, btn);
+  setGeoFilter(geo);
 }
 
 // ── Build CRO unified data pool ────────────────────────────────────────────
@@ -2879,7 +2869,35 @@ function renderRegionCards(all, regions) {
   const container = document.getElementById('region-cards-bar');
   if (!container || !regions || !regions.length) { if (container) container.innerHTML = ''; return; }
 
-  container.innerHTML = regions.map(reg => {
+  // "All Regions" summary card
+  const totalNRAll  = all.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const fbAll       = all.filter(r => r['Type of Opportunity'] === 'Frontbook');
+  const bbAll       = all.filter(r => r['Type of Opportunity'] === 'Backbook');
+  const fbNRAll     = fbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const bbNRAll     = bbAll.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const liveAll     = all.filter(r => (r['Status']||'').trim() === 'Live Completed' || r._src === 'live').length;
+  const atRiskAll   = all.filter(r => (r['Projected Go-Live Status']||'').trim() === 'At Risk').length;
+  const blockedAll  = all.filter(r => (r['Projected Go-Live Status']||'').trim() === 'Blocked' || (r['Status']||'').trim() === 'Blocked').length;
+  const allActive   = currentGeoFilter === '';
+  const allCard = `<div class="region-card${allActive?' rc-active':''}" data-region=""
+       style="border-left-color:#6366f1;color:#6366f1" onclick="setGeoFilter('')">
+    <div class="rc-head">
+      <span class="rc-label" style="color:#6366f1">All Regions</span>
+      <span class="rc-count" style="color:var(--text)">${all.length}</span>
+    </div>
+    <div class="rc-nr" style="color:#6366f1">${totalNRAll > 0 ? fmtRev(totalNRAll) : '—'}</div>
+    <div class="rc-split">
+      <span class="rc-fb-chip">FB ${fbAll.length} · ${fbNRAll > 0 ? fmtRev(fbNRAll) : '$0'}</span>
+      <span class="rc-bb-chip">BB ${bbAll.length} · ${bbNRAll > 0 ? fmtRev(bbNRAll) : '$0'}</span>
+    </div>
+    <div class="rc-rag-row">
+      <span style="color:var(--green)">✓ ${liveAll} live</span>
+      <span style="color:var(--amber)">△ ${atRiskAll}</span>
+      <span style="color:var(--red)">🔴 ${blockedAll}</span>
+    </div>
+  </div>`;
+
+  container.innerHTML = allCard + regions.map(reg => {
     const recs    = all.filter(r => extractRegion(r['Global Region']) === reg);
     const totalNR = recs.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
     const fb      = recs.filter(r => r['Type of Opportunity'] === 'Frontbook');
@@ -2969,15 +2987,6 @@ function renderPipelineTable() {
   const curQtr = qtrSel.value;
   qtrSel.innerHTML = '<option value="">All Quarters</option>' + qtrs.map(q => `<option value="${escHtml(q)}">${escHtml(q)}</option>`).join('');
   qtrSel.value = curQtr;
-
-  // Build geo-chip bar with colored dots
-  const chipsBar = document.getElementById('geo-chips-bar');
-  const curGeo   = currentGeoFilter;
-  chipsBar.innerHTML = regions.reduce((html, r) => {
-    const cls = r === curGeo ? ' active' : '';
-    const col = regionColor(r);
-    return html + `<button class="geo-chip${cls}" data-region="${escHtml(r)}" onclick="setGeoFilter('${r.replace(/'/g,"\\'")}',this)"><span class="geo-chip-dot" style="background:${col}"></span>${escHtml(r)}</button>`;
-  }, `<button class="geo-chip${curGeo === '' ? ' active' : ''}" data-region="" onclick="setGeoFilter('',this)"><span class="geo-chip-dot" style="background:#6366f1"></span>All Regions</button>`);
 
   // Build region summary cards (uses getCROAllRows for full picture incl. presales)
   const allForCards = getCROAllRows();
