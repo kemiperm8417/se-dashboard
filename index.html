@@ -1466,15 +1466,38 @@
 
     <!-- SECTION 7: FRONTBOOK vs BACKBOOK -->
     <div id="frontbook-backbook" class="section anchor">
-      <div class="section-title"><span class="icon">📈</span> Frontbook vs Backbook by Region</div>
+      <div class="section-title"><span class="icon">📈</span> Frontbook vs Backbook Analysis</div>
+
+      <!-- KPI strip -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="fbbb-kpi-grid"></div>
+
+      <!-- Row 1: Overall split donuts -->
+      <div class="chart-grid" style="margin-bottom:20px">
+        <div class="chart-card"><h3>Overall Count Split</h3><canvas id="fbbbSplitCountChart"></canvas></div>
+        <div class="chart-card"><h3>Overall Revenue Split</h3><canvas id="fbbbSplitRevChart"></canvas></div>
+      </div>
+
+      <!-- Row 2: By region -->
+      <div class="chart-grid" style="margin-bottom:20px">
+        <div class="chart-card"><h3>Count by Region</h3><canvas id="fbbbCountChart"></canvas></div>
+        <div class="chart-card"><h3>Revenue by Region ($M)</h3><canvas id="fbbbValueChart"></canvas></div>
+      </div>
+
+      <!-- Row 3: By category + RAG breakdown -->
+      <div class="chart-grid" style="margin-bottom:20px">
+        <div class="chart-card"><h3>FB vs BB by Category</h3><canvas id="fbbbCatChart"></canvas></div>
+        <div class="chart-card"><h3>RAG Status — Active Pipeline (FB vs BB)</h3><canvas id="fbbbRagChart"></canvas></div>
+      </div>
+
+      <!-- Row 4: Top projects -->
       <div class="chart-grid">
         <div class="chart-card">
-          <h3>Count by Region</h3>
-          <canvas id="fbbbCountChart"></canvas>
+          <h3>Top 5 Frontbook by NR</h3>
+          <div class="table-scroll"><table class="cro-tbl"><thead><tr><th>#</th><th>Opportunity</th><th>Region</th><th>NR</th><th>Status / Stage</th></tr></thead><tbody id="fbbb-top-fb"></tbody></table></div>
         </div>
         <div class="chart-card">
-          <h3>Revenue Value by Region ($M)</h3>
-          <canvas id="fbbbValueChart"></canvas>
+          <h3>Top 5 Backbook by NR</h3>
+          <div class="table-scroll"><table class="cro-tbl"><thead><tr><th>#</th><th>Opportunity</th><th>Region</th><th>NR</th><th>Status / Stage</th></tr></thead><tbody id="fbbb-top-bb"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -3607,63 +3630,234 @@ function renderWeeklyView() {
 }
 
 // =====================================================
-// SECTION 7: FRONTBOOK vs BACKBOOK BY REGION
+// SECTION 7: FRONTBOOK vs BACKBOOK ANALYSIS
 // =====================================================
 function renderFBBB() {
-  const active = activeData || [];
+  const active   = activeData   || [];
   const presales = presalesData || [];
-  const all = [...active, ...presales];
+  const all      = [...active, ...presales];
 
-  const regions = ['APAC', 'MEA', 'Europe', 'Americas'];
-  const fbCount = {}, bbCount = {}, fbVal = {}, bbVal = {};
-  regions.forEach(r => { fbCount[r] = 0; bbCount[r] = 0; fbVal[r] = 0; bbVal[r] = 0; });
+  const regions   = ['APAC', 'MEA', 'Europe', 'Americas'];
+  const FB_COLOR  = 'rgba(139,92,246,0.8)';
+  const BB_COLOR  = 'rgba(20,184,166,0.8)';
+  const legendOpts = { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 }, padding: 14 } };
+  const gridColor  = 'rgba(255,255,255,0.06)';
 
+  // Classify all records
+  const fb = all.filter(r => isFrontbook(r));
+  const bb = all.filter(r => isBackbook(r));
+  const activeOnly = active.filter(r => (r['Status']||'').trim() !== 'Live Completed');
+  const liveOnly   = active.filter(r => (r['Status']||'').trim() === 'Live Completed');
+
+  // Overall totals
+  const fbCount  = fb.length;
+  const bbCount  = bb.length;
+  const total    = all.length;
+  const fbRev    = fb.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const bbRev    = bb.reduce((s,r) => s + parseRev(r['Opportunity Net Revenue (converted)']), 0);
+  const totalRev = fbRev + bbRev;
+
+  const fmtRev = v => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : `$${Math.round(v/1e3)}K`;
+  const pct    = (n, d) => d ? Math.round(n / d * 100) : 0;
+
+  // By region
+  const fbCnt_r = {}, bbCnt_r = {}, fbRev_r = {}, bbRev_r = {};
+  regions.forEach(r => { fbCnt_r[r]=0; bbCnt_r[r]=0; fbRev_r[r]=0; bbRev_r[r]=0; });
   all.forEach(row => {
-    const reg = extractRegion(row['Global Region']);
-    const mapped = regions.find(r => r === reg) || null;
-    if (!mapped) return;
+    const reg = regions.find(r => r === extractRegion(row['Global Region']));
+    if (!reg) return;
     const rev = parseRev(row['Opportunity Net Revenue (converted)']);
-    if (isFrontbook(row)) { fbCount[mapped]++; fbVal[mapped] += rev; }
-    else if (isBackbook(row)) { bbCount[mapped]++; bbVal[mapped] += rev; }
+    if (isFrontbook(row)) { fbCnt_r[reg]++; fbRev_r[reg] += rev; }
+    else if (isBackbook(row)) { bbCnt_r[reg]++; bbRev_r[reg] += rev; }
   });
 
-  const chartDefaults = {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: { position: 'bottom', labels: { color: '#f8fafc', font: { size: 12 } } }
-    },
-    scales: {
-      x: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } },
-      y: { ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' } }
-    }
-  };
+  // By category (Active / Live / Presales)
+  const cats = [
+    { label: 'Active',   rows: activeOnly },
+    { label: 'Live',     rows: liveOnly   },
+    { label: 'Presales', rows: presales   }
+  ];
 
+  // RAG breakdown for active+live by FB/BB
+  const ragLabels = ['On Track', 'At Risk', 'Blocked'];
+  const ragColors = ['#22c55e', '#f59e0b', '#ef4444'];
+  const fbRag = { 'On Track': 0, 'At Risk': 0, 'Blocked': 0 };
+  const bbRag = { 'On Track': 0, 'At Risk': 0, 'Blocked': 0 };
+  [...activeOnly, ...liveOnly].forEach(r => {
+    const rag = (r['Projected Go-Live Status'] || '').trim();
+    if (!(rag in fbRag)) return;
+    if (isFrontbook(r)) fbRag[rag]++;
+    else if (isBackbook(r)) bbRag[rag]++;
+  });
+
+  // ── KPI strip ──────────────────────────────────────────────────────────
+  document.getElementById('fbbb-kpi-grid').innerHTML = `
+    <div class="kpi-card blue">
+      <div class="kpi-badge" style="background:rgba(139,92,246,0.12);color:#8b5cf6;display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px">📘 FRONTBOOK</div>
+      <div class="kpi-big">${fbCount}</div>
+      <div class="kpi-line"><span>Total NR</span><span style="color:#8b5cf6;font-weight:600">${fmtRev(fbRev)}</span></div>
+      <div class="kpi-line"><span>Avg NR / deal</span><span>${fmtRev(fbCount ? fbRev / fbCount : 0)}</span></div>
+      <div class="kpi-line"><span>Share of pipeline</span><span>${pct(fbCount, total)}%</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-badge" style="background:rgba(20,184,166,0.12);color:#14b8a6;display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px">📗 BACKBOOK</div>
+      <div class="kpi-big">${bbCount}</div>
+      <div class="kpi-line"><span>Total NR</span><span style="color:#14b8a6;font-weight:600">${fmtRev(bbRev)}</span></div>
+      <div class="kpi-line"><span>Avg NR / deal</span><span>${fmtRev(bbCount ? bbRev / bbCount : 0)}</span></div>
+      <div class="kpi-line"><span>Share of pipeline</span><span>${pct(bbCount, total)}%</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-badge" style="background:rgba(139,92,246,0.12);color:#8b5cf6;display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px">💜 FB REVENUE SHARE</div>
+      <div class="kpi-big">${pct(fbRev, totalRev)}%</div>
+      <div class="kpi-line"><span>FB NR</span><span style="color:#8b5cf6;font-weight:600">${fmtRev(fbRev)}</span></div>
+      <div class="kpi-line"><span>Total NR</span><span>${fmtRev(totalRev)}</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-badge" style="background:rgba(20,184,166,0.12);color:#14b8a6;display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:10px">💚 BB REVENUE SHARE</div>
+      <div class="kpi-big">${pct(bbRev, totalRev)}%</div>
+      <div class="kpi-line"><span>BB NR</span><span style="color:#14b8a6;font-weight:600">${fmtRev(bbRev)}</span></div>
+      <div class="kpi-line"><span>Total NR</span><span>${fmtRev(totalRev)}</span></div>
+    </div>
+  `;
+
+  // ── 1. Count split donut ──────────────────────────────────────────────
+  destroyChart('fbbbSplitCountChart');
+  charts['fbbbSplitCountChart'] = new Chart(document.getElementById('fbbbSplitCountChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Frontbook', 'Backbook'],
+      datasets: [{ data: [fbCount, bbCount], backgroundColor: [FB_COLOR, BB_COLOR], borderColor: 'transparent', borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: {
+        legend: legendOpts,
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${pct(ctx.parsed, total)}%)` } }
+      }
+    }
+  });
+
+  // ── 2. Revenue split donut ────────────────────────────────────────────
+  destroyChart('fbbbSplitRevChart');
+  charts['fbbbSplitRevChart'] = new Chart(document.getElementById('fbbbSplitRevChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Frontbook', 'Backbook'],
+      datasets: [{ data: [+(fbRev/1e6).toFixed(2), +(bbRev/1e6).toFixed(2)], backgroundColor: [FB_COLOR, BB_COLOR], borderColor: 'transparent', borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: {
+        legend: legendOpts,
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: $${ctx.parsed.toFixed(2)}M (${pct(ctx.raw, +(totalRev/1e6).toFixed(2))}%)` } }
+      }
+    }
+  });
+
+  // ── 3. Count by region grouped bar ────────────────────────────────────
   destroyChart('fbbbCountChart');
   charts['fbbbCountChart'] = new Chart(document.getElementById('fbbbCountChart').getContext('2d'), {
     type: 'bar',
     data: {
       labels: regions,
       datasets: [
-        { label: 'Frontbook', data: regions.map(r => fbCount[r]), backgroundColor: 'rgba(139,92,246,0.7)', borderRadius: 4 },
-        { label: 'Backbook', data: regions.map(r => bbCount[r]), backgroundColor: 'rgba(20,184,166,0.7)', borderRadius: 4 }
+        { label: 'Frontbook', data: regions.map(r => fbCnt_r[r]), backgroundColor: FB_COLOR, borderRadius: 4 },
+        { label: 'Backbook',  data: regions.map(r => bbCnt_r[r]), backgroundColor: BB_COLOR, borderRadius: 4 }
       ]
     },
-    options: chartDefaults
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
+        y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
   });
 
+  // ── 4. Revenue by region grouped bar ─────────────────────────────────
   destroyChart('fbbbValueChart');
   charts['fbbbValueChart'] = new Chart(document.getElementById('fbbbValueChart').getContext('2d'), {
     type: 'bar',
     data: {
       labels: regions,
       datasets: [
-        { label: 'Frontbook ($M)', data: regions.map(r => +(fbVal[r]/1e6).toFixed(2)), backgroundColor: 'rgba(139,92,246,0.7)', borderRadius: 4 },
-        { label: 'Backbook ($M)', data: regions.map(r => +(bbVal[r]/1e6).toFixed(2)), backgroundColor: 'rgba(20,184,166,0.7)', borderRadius: 4 }
+        { label: 'Frontbook ($M)', data: regions.map(r => +(fbRev_r[r]/1e6).toFixed(2)), backgroundColor: FB_COLOR, borderRadius: 4 },
+        { label: 'Backbook ($M)',  data: regions.map(r => +(bbRev_r[r]/1e6).toFixed(2)), backgroundColor: BB_COLOR, borderRadius: 4 }
       ]
     },
-    options: { ...chartDefaults, scales: { ...chartDefaults.scales, y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } } } }
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
+        y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
   });
+
+  // ── 5. FB vs BB by category grouped bar ──────────────────────────────
+  destroyChart('fbbbCatChart');
+  charts['fbbbCatChart'] = new Chart(document.getElementById('fbbbCatChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: cats.map(c => c.label),
+      datasets: [
+        { label: 'Frontbook', data: cats.map(c => c.rows.filter(r => isFrontbook(r)).length), backgroundColor: FB_COLOR, borderRadius: 4 },
+        { label: 'Backbook',  data: cats.map(c => c.rows.filter(r => isBackbook(r)).length),  backgroundColor: BB_COLOR, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
+        y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
+      }
+    }
+  });
+
+  // ── 6. RAG stacked bar — active + live, FB vs BB ──────────────────────
+  destroyChart('fbbbRagChart');
+  charts['fbbbRagChart'] = new Chart(document.getElementById('fbbbRagChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['Frontbook', 'Backbook'],
+      datasets: ragLabels.map((rag, i) => ({
+        label: rag,
+        data: [fbRag[rag], bbRag[rag]],
+        backgroundColor: ragColors[i]
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { ticks: { color: '#64748b' }, grid: { color: gridColor }, stacked: true },
+        y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, stacked: true, beginAtZero: true }
+      }
+    }
+  });
+
+  // ── Top 5 tables ──────────────────────────────────────────────────────
+  const topRows = (recs, color) => [...recs]
+    .sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']))
+    .slice(0, 5)
+    .map((r, i) => {
+      const nr     = parseRev(r['Opportunity Net Revenue (converted)']);
+      const status = escHtml((r['Status'] || r['Opportunity: Stage'] || '—').trim());
+      const region = escHtml(extractRegion(r['Global Region'] || ''));
+      return `<tr>
+        <td style="color:var(--sub);width:24px">${i + 1}</td>
+        <td>${escHtml((r['Opportunity Name'] || '—').trim())}</td>
+        <td><span class="region-pill">${region}</span></td>
+        <td style="color:${color};font-weight:600;white-space:nowrap">${fmtRev(nr)}</td>
+        <td style="color:var(--sub)">${status}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:16px">No records</td></tr>`;
+
+  document.getElementById('fbbb-top-fb').innerHTML = topRows(fb, '#8b5cf6');
+  document.getElementById('fbbb-top-bb').innerHTML = topRows(bb, '#14b8a6');
 }
 
 // =====================================================
