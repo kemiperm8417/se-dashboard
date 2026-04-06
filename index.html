@@ -701,12 +701,84 @@
   .wv-card .wv-days.overdue { color: var(--red); }
   .wv-card .wv-risk { font-size: 11.5px; color: var(--amber); margin-top: 7px; border-left: 3px solid var(--amber); padding-left: 7px; }
   .wv-empty { color: var(--sub); font-size: 13px; padding: 14px 0; font-style: italic; }
+  /* Geo/Region chip filter bar */
+  .geo-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px 0; }
+  .geo-chip {
+    padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--border); background: var(--card); color: var(--sub);
+    transition: all 0.15s ease; user-select: none;
+  }
+  .geo-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .geo-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   .wv-summary-chip {
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 9px 16px; font-size: 12px; display: flex; align-items: center; gap: 6px;
     box-shadow: var(--shadow-sm);
   }
   .wv-summary-chip strong { font-size: 17px; font-weight: 800; }
+
+  /* ── CRO View ──────────────────────────────────────────────────────────── */
+  .view-toggle-bar { display:flex; gap:6px; margin-bottom:14px; }
+  .view-toggle-btn {
+    padding:6px 16px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;
+    border:1.5px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s;
+  }
+  .view-toggle-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .view-toggle-btn.vt-active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .view-toggle-btn.vt-cro.vt-active { background:#7c3aed; border-color:#7c3aed; }
+  /* Region chip dots */
+  .geo-chip-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+  .geo-chip.vt-active-chip { border-color:currentColor; border-bottom-width:3px; background:transparent; }
+  /* Region summary cards */
+  .region-cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin:14px 0 16px; }
+  .region-card {
+    border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;
+    background:var(--card); cursor:pointer; transition:all .15s; position:relative;
+    border-left-width:4px;
+  }
+  .region-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+  .region-card.rc-active { box-shadow:0 0 0 2px currentColor; }
+  .rc-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .rc-label { font-size:10.5px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+  .rc-count { font-size:26px; font-weight:800; color:var(--text); line-height:1; }
+  .rc-nr { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .rc-split { display:flex; gap:6px; margin-bottom:8px; }
+  .rc-split span { flex:1; font-size:10.5px; font-weight:600; padding:2px 6px; border-radius:4px; text-align:center; white-space:nowrap; }
+  .rc-fb-chip { background:rgba(99,102,241,.1); color:#4f46e5; }
+  .rc-bb-chip { background:rgba(20,184,166,.1); color:#0d9488; }
+  .rc-rag-row { display:flex; gap:10px; font-size:11px; }
+  /* CRO description bar */
+  .cro-desc { font-size:11.5px; color:var(--sub); margin:0 0 10px; line-height:1.5; }
+  /* CRO table */
+  .cro-table-scroll { overflow-x:auto; border-radius:var(--radius); border:1px solid var(--border); }
+  .cro-tbl { width:100%; border-collapse:collapse; min-width:800px; }
+  .cro-tbl thead tr { background:#1e293b; }
+  .cro-tbl th {
+    color:#94a3b8; font-size:10.5px; font-weight:700; padding:10px 11px;
+    text-align:left; white-space:nowrap; cursor:pointer; user-select:none; letter-spacing:.3px;
+  }
+  .cro-tbl th:hover { color:#e2e8f0; }
+  .cro-tbl th .sort-arrow { font-size:9px; opacity:.5; margin-left:3px; }
+  .cro-tbl td { padding:8px 11px; font-size:12px; border-bottom:1px solid var(--border2); vertical-align:middle; }
+  .cro-tbl tr:last-child td { border-bottom:none; }
+  .cro-tbl tr:hover td { background:rgba(79,70,229,.03); }
+  .cro-owner-link { color:var(--accent); font-weight:600; cursor:pointer; }
+  .cro-owner-link:hover { text-decoration:underline; }
+  .cro-se-cell { font-size:11.5px; color:var(--sub); }
+  .cro-region-pill { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:4px; color:#fff; }
+  .cro-status-cell { font-size:11px; color:var(--sub); max-width:240px; line-height:1.5; word-wrap:break-word; }
+  .cro-go-live-red { color:var(--red); font-weight:600; }
+  .cro-empty { padding:32px; text-align:center; color:var(--sub); font-size:13px; }
+  /* CRO group header rows */
+  .cro-grp-hdr td { padding:10px 14px; cursor:pointer; user-select:none; border-top:2px solid var(--border); }
+  .cro-grp-hdr:hover td { filter:brightness(.97); }
+  .cro-grp-inner { display:flex; align-items:center; gap:10px; }
+  .cro-grp-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; }
+  .cro-grp-count { font-size:10px; font-weight:700; padding:2px 9px; border-radius:12px; color:#fff; }
+  .cro-grp-nr { font-size:12px; font-weight:700; margin-left:4px; }
+  .cro-grp-fb-bb { font-size:10.5px; color:var(--sub); margin-left:4px; }
+  .cro-grp-toggle { margin-left:auto; font-size:11px; color:var(--sub); transition:transform .2s; }
+  .cro-grp-hdr.collapsed .cro-grp-toggle { transform:rotate(-90deg); }
 
   /* ═══════════════════════════════════════════════
      STORE CONTROLS
@@ -1050,7 +1122,6 @@
     <a href="#golive-trends" onclick="showPage('golive-trends');return false"><span class="nav-icon">📈</span> Go-Live Trends</a>
     <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false"><span class="nav-icon">🗂️</span> FB vs BB</a>
     <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false"><span class="nav-icon">👥</span> SE Bandwidth</a>
-    <a href="#presales" onclick="showPage('presales');return false"><span class="nav-icon">🔭</span> Presales Pipeline</a>
     <div class="section-label">Reports</div>
     <a href="#highlights" onclick="showPage('highlights');return false"><span class="nav-icon">✨</span> Weekly Summary</a>
     <a href="#leadership" onclick="showPage('leadership');return false"><span class="nav-icon">📋</span> Summary</a>
@@ -1230,18 +1301,28 @@
     <div id="pipeline-table" class="section anchor">
       <div class="section-title"><span class="icon">📋</span> All Projects</div>
 
+      <!-- Region summary cards (always visible) -->
+      <div class="region-cards" id="region-cards-bar" style="margin-bottom:4px"></div>
+
       <!-- Tab bar -->
       <div class="pl-tab-bar">
-        <button id="tab-btn-active" class="pl-tab active" onclick="setPipelineTab('active')">⚙️ Active Implementation</button>
-        <button id="tab-btn-live"   class="pl-tab"        onclick="setPipelineTab('live')">✅ Live Completed</button>
+        <button id="tab-btn-active"   class="pl-tab active" onclick="setPipelineTab('active')">⚙️ Active Implementation</button>
+        <button id="tab-btn-live"     class="pl-tab"        onclick="setPipelineTab('live')">✅ Live Completed</button>
+        <button id="tab-btn-presales" class="pl-tab"        onclick="setPipelineTab('presales')">🔭 Presales Pipeline</button>
         <div id="pl-tab-counts" style="margin-left:auto;font-size:12px;color:var(--sub);align-self:center"></div>
+      </div>
+
+      <!-- Geo/Region chip filter bar -->
+      <div class="geo-chips" id="geo-chips-bar">
+        <button class="geo-chip active" onclick="setGeoFilter('',this)"><span class="geo-chip-dot" style="background:#6366f1"></span>All Regions</button>
       </div>
 
       <!-- Shared filters -->
       <div class="filters" id="table-filters">
         <span class="filter-label">Filter:</span>
         <select id="filter-se" onchange="applyTableFilters()"><option value="">All SEs</option></select>
-        <select id="filter-rag" onchange="applyTableFilters()" id="filter-rag-wrap">
+        <select id="filter-opp-owner" onchange="applyTableFilters()"><option value="">All Opp Owners</option></select>
+        <select id="filter-rag" onchange="applyTableFilters()">
           <option value="">All RAG</option>
           <option value="On Track">On Track</option>
           <option value="At Risk">At Risk</option>
@@ -1259,45 +1340,70 @@
       </div>
 
       <!-- Active Implementation table -->
-      <div id="pl-active-wrap" class="table-scroll">
-        <div class="table-wrap">
-          <table id="pipeline-tbl">
-            <thead><tr>
-              <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name</th>
-              <th onclick="sortTable('pipeline-tbl',1)">SE</th>
-              <th onclick="sortTable('pipeline-tbl',2)">Region</th>
-              <th onclick="sortTable('pipeline-tbl',3)">Sub Status</th>
-              <th onclick="sortTable('pipeline-tbl',4)">Committed QTR</th>
-              <th onclick="sortTable('pipeline-tbl',5)">Revenue (USD)</th>
-              <th onclick="sortTable('pipeline-tbl',6)">RAG</th>
-              <th onclick="sortTable('pipeline-tbl',7)">Type</th>
-            </tr></thead>
-            <tbody id="pipeline-tbody"></tbody>
-          </table>
-        </div>
+      <div id="pl-active-wrap" class="cro-table-scroll">
+        <table id="pipeline-tbl" class="cro-tbl">
+          <thead><tr>
+            <th onclick="sortTable('pipeline-tbl',0)">Opportunity Name <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',1)">SE <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',2)">Opp Owner <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',3)">Region <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',4)">Sub Status <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',5)">Go-Live Date <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',6)">QTR <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',7)">Revenue <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',8)">RAG <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',9)">Type <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('pipeline-tbl',10)">Current Status <span class="sort-arrow">↕</span></th>
+          </tr></thead>
+          <tbody id="pipeline-tbody"></tbody>
+        </table>
       </div>
 
       <!-- Live Completed table -->
-      <div id="pl-live-wrap" class="table-scroll" style="display:none">
-        <div class="table-wrap">
-          <table id="live-tbl">
+      <div id="pl-live-wrap" class="cro-table-scroll" style="display:none">
+        <table id="live-tbl" class="cro-tbl">
+          <thead><tr>
+            <th onclick="sortTable('live-tbl',0)">Opportunity Name <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',1)">SE <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',2)">Opp Owner <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',3)">Region <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',4)">Actual Live Date <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',5)">QTR <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',6)">Revenue <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',7)">Type <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',8)">Days to Live <span class="sort-arrow">↕</span></th>
+            <th onclick="sortTable('live-tbl',9)">Current Status <span class="sort-arrow">↕</span></th>
+          </tr></thead>
+          <tbody id="live-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Presales Pipeline panel -->
+      <div id="pl-presales-wrap" style="display:none">
+        <div class="chart-grid" style="margin-bottom:16px">
+          <div class="chart-card"><h3>Stage Funnel</h3><canvas id="presalesFunnelChart"></canvas></div>
+          <div class="chart-card"><h3>Weighted Pipeline Value per SE ($K)</h3><canvas id="weightedValueChart"></canvas></div>
+        </div>
+        <div class="cro-table-scroll">
+          <table id="presales-tbl" class="cro-tbl">
             <thead><tr>
-              <th onclick="sortTable('live-tbl',0)">Opportunity Name</th>
-              <th onclick="sortTable('live-tbl',1)">SE</th>
-              <th onclick="sortTable('live-tbl',2)">Region</th>
-              <th onclick="sortTable('live-tbl',3)">Actual Live Date</th>
-              <th onclick="sortTable('live-tbl',4)">Committed QTR</th>
-              <th onclick="sortTable('live-tbl',5)">Revenue (USD)</th>
-              <th onclick="sortTable('live-tbl',6)">Type</th>
-              <th onclick="sortTable('live-tbl',7)">Days to Live</th>
+              <th onclick="sortTable('presales-tbl',0)">Opportunity Name <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',1)">SE <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',2)">Opp Owner <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',3)">Stage <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',4)">Probability <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',5)">Revenue (USD) <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',6)">Region <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',7)">Type <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('presales-tbl',8)">Sub Status <span class="sort-arrow">↕</span></th>
             </tr></thead>
-            <tbody id="live-tbody"></tbody>
+            <tbody id="presales-tbody"></tbody>
           </table>
         </div>
       </div>
 
       <div id="pipeline-count" style="margin-top:8px;font-size:12px;color:var(--sub)"></div>
-    </div>
+    </div><!-- /pipeline-table section -->
 
     <!-- SECTION 5: RISK RADAR -->
     <div id="risk-radar" class="section anchor">
@@ -1386,39 +1492,6 @@
       </div>
     </div>
 
-    <!-- SECTION 9: PRESALES PIPELINE -->
-    <div id="presales" class="section anchor">
-      <div class="section-title"><span class="icon">🔭</span> Presales Pipeline</div>
-      <div class="chart-grid">
-        <div class="chart-card">
-          <h3>Stage Funnel</h3>
-          <canvas id="presalesFunnelChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Weighted Pipeline Value per SE ($K)</h3>
-          <canvas id="weightedValueChart"></canvas>
-        </div>
-      </div>
-      <div style="margin-top:16px" class="table-scroll">
-        <div class="table-wrap">
-          <table id="presales-tbl">
-            <thead>
-              <tr>
-                <th onclick="sortTable('presales-tbl',0)">Opportunity Name</th>
-                <th onclick="sortTable('presales-tbl',1)">SE</th>
-                <th onclick="sortTable('presales-tbl',2)">Stage</th>
-                <th onclick="sortTable('presales-tbl',3)">Probability</th>
-                <th onclick="sortTable('presales-tbl',4)">Revenue (USD)</th>
-                <th onclick="sortTable('presales-tbl',5)">Region</th>
-                <th onclick="sortTable('presales-tbl',6)">Type</th>
-                <th onclick="sortTable('presales-tbl',7)">Sub Status</th>
-              </tr>
-            </thead>
-            <tbody id="presales-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <!-- SECTION: WEEKLY SUMMARY (Highlights, Lowlights, Pipeline, Digest) -->
     <div id="highlights" class="section anchor">
@@ -2721,34 +2794,103 @@ function renderPipelineHealth() {
 }
 
 // =====================================================
+// =====================================================
 // SECTION 4: PIPELINE TABLE
 // =====================================================
 let allPipelineRows    = [];
-let currentPipelineTab = 'active'; // 'active' | 'live'
+let currentPipelineTab = 'active'; // 'active' | 'live' | 'presales'
+let currentGeoFilter   = '';       // '' = All, or region string
+
+// Region color palette
+const REGION_COLORS = ['#9333ea','#f59e0b','#16a34a','#3b82f6','#06b6d4','#ef4444','#f97316','#8b5cf6'];
+let _regionColorMap = {};
+function regionColor(r) {
+  if (!r) return '#6366f1';
+  if (!_regionColorMap[r]) {
+    _regionColorMap[r] = REGION_COLORS[Object.keys(_regionColorMap).length % REGION_COLORS.length];
+  }
+  return _regionColorMap[r];
+}
+
+function setGeoFilter(geo, btn) {
+  currentGeoFilter = geo;
+  document.querySelectorAll('#geo-chips-bar .geo-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Sync region card highlight
+  document.querySelectorAll('.region-card').forEach(c => {
+    c.classList.toggle('rc-active', c.dataset.region === geo);
+  });
+  applyTableFilters();
+}
+
+function setGeoFilterByName(geo) {
+  const btn = [...document.querySelectorAll('#geo-chips-bar .geo-chip')]
+    .find(b => (b.dataset.region || '') === geo) || null;
+  setGeoFilter(geo, btn);
+}
+
+// ── Build CRO unified data pool ────────────────────────────────────────────
+function getCROAllRows() {
+  const active   = activeData   || [];
+  const presales = presalesData || [];
+  // Merge: tag each record with a simplified record type
+  const aRows = active.map(r => ({...r, _src: (r['Status']||'').trim() === 'Live Completed' ? 'live' : 'active'}));
+  const pRows = presales.map(r => ({...r,
+    _src: 'presales',
+    'Implementation Owner': r['Implementation Owner'] || r['Presales Engineer'] || '',
+    'Committed QTR': r['Committed QTR'] || '',
+    'Projected Go-Live Date': r['Projected Go-Live Date'] || '',
+    'Projected Go-Live Status': r['Projected Go-Live Status'] || r['rag_status'] || '',
+  }));
+  return [...aRows, ...pRows];
+}
 
 function setPipelineTab(tab) {
   currentPipelineTab = tab;
-  document.getElementById('tab-btn-active').classList.toggle('active', tab === 'active');
-  document.getElementById('tab-btn-live').classList.toggle('active',  tab === 'live');
-  document.getElementById('pl-active-wrap').style.display = tab === 'active' ? '' : 'none';
-  document.getElementById('pl-live-wrap').style.display   = tab === 'live'   ? '' : 'none';
-  // RAG filter only applies to active tab
+  document.getElementById('tab-btn-active').classList.toggle('active',   tab === 'active');
+  document.getElementById('tab-btn-live').classList.toggle('active',     tab === 'live');
+  document.getElementById('tab-btn-presales').classList.toggle('active', tab === 'presales');
+  document.getElementById('pl-active-wrap').style.display    = tab === 'active'   ? '' : 'none';
+  document.getElementById('pl-live-wrap').style.display      = tab === 'live'     ? '' : 'none';
+  document.getElementById('pl-presales-wrap').style.display  = tab === 'presales' ? '' : 'none';
+  // RAG filter only applies to active tab; QTR filter hides for presales
   document.getElementById('filter-rag').style.display = tab === 'active' ? '' : 'none';
+  document.getElementById('filter-qtr').style.display = tab === 'presales' ? 'none' : '';
+  // SE label/options differ for presales (Presales Engineer vs Implementation Owner)
+  document.getElementById('filter-se').previousSibling; // no-op, handled in applyTableFilters
   applyTableFilters();
 }
 
 function renderPipelineTable() {
-  const active = activeData || [];
+  const active   = activeData   || [];
+  const presales = presalesData || [];
 
-  // Populate filter dropdowns from all records
-  const ses     = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))].sort();
-  const regions = [...new Set(active.map(r => extractRegion(r['Global Region'])).filter(r => r !== 'Unknown'))].sort();
-  const qtrs    = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
+  // --- Populate filter dropdowns (union of active + presales for shared filters) ---
+  const ses = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))].sort();
+  const pSes = [...new Set(presales.map(r => r['Presales Engineer'] || '').filter(Boolean))].sort();
+  const allSes = [...new Set([...ses, ...pSes])].sort();
+
+  const oppOwners = [...new Set([
+    ...active.map(r => r['Opportunity Owner Name'] || ''),
+    ...presales.map(r => r['Opportunity Owner Name'] || '')
+  ].filter(Boolean))].sort();
+
+  const regions = [...new Set([
+    ...active.map(r => extractRegion(r['Global Region'])),
+    ...presales.map(r => extractRegion(r['Global Region']))
+  ].filter(r => r && r !== 'Unknown'))].sort();
+
+  const qtrs = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
 
   const seSel = document.getElementById('filter-se');
   const curSE = seSel.value;
-  seSel.innerHTML = '<option value="">All SEs</option>' + ses.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+  seSel.innerHTML = '<option value="">All SEs</option>' + allSes.map(s => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
   seSel.value = curSE;
+
+  const ownerSel = document.getElementById('filter-opp-owner');
+  const curOwner = ownerSel.value;
+  ownerSel.innerHTML = '<option value="">All Opp Owners</option>' + oppOwners.map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
+  ownerSel.value = curOwner;
 
   const regSel = document.getElementById('filter-region');
   const curReg = regSel.value;
@@ -2760,38 +2902,65 @@ function renderPipelineTable() {
   qtrSel.innerHTML = '<option value="">All Quarters</option>' + qtrs.map(q => `<option value="${escHtml(q)}">${escHtml(q)}</option>`).join('');
   qtrSel.value = curQtr;
 
+  // Build geo-chip bar with colored dots
+  const chipsBar = document.getElementById('geo-chips-bar');
+  const curGeo   = currentGeoFilter;
+  chipsBar.innerHTML = regions.reduce((html, r) => {
+    const cls = r === curGeo ? ' active' : '';
+    const col = regionColor(r);
+    return html + `<button class="geo-chip${cls}" data-region="${escHtml(r)}" onclick="setGeoFilter('${r.replace(/'/g,"\\'")}',this)"><span class="geo-chip-dot" style="background:${col}"></span>${escHtml(r)}</button>`;
+  }, `<button class="geo-chip${curGeo === '' ? ' active' : ''}" data-region="" onclick="setGeoFilter('',this)"><span class="geo-chip-dot" style="background:#6366f1"></span>All Regions</button>`);
+
+  // Build region summary cards (uses getCROAllRows for full picture incl. presales)
+  const allForCards = getCROAllRows();
+  renderRegionCards(allForCards, regions);
+
   allPipelineRows = active;
-  // Update tab counts
-  const activeCount = active.filter(r => (r['Status']||'').trim() !== 'Live Completed').length;
-  const liveCount   = active.filter(r => (r['Status']||'').trim() === 'Live Completed').length;
-  document.getElementById('pl-tab-counts').textContent = `${activeCount} active · ${liveCount} live`;
+  const activeCount   = active.filter(r => (r['Status']||'').trim() !== 'Live Completed').length;
+  const liveCount     = active.filter(r => (r['Status']||'').trim() === 'Live Completed').length;
+  const presalesCount = presales.length;
+  document.getElementById('pl-tab-counts').textContent = `${activeCount} active · ${liveCount} live · ${presalesCount} presales`;
   setPipelineTab(currentPipelineTab);
 }
 
 function applyTableFilters() {
-  const se     = document.getElementById('filter-se').value;
-  const rag    = document.getElementById('filter-rag').value;
-  const region = document.getElementById('filter-region').value;
-  const qtr    = document.getElementById('filter-qtr').value;
-  const type   = document.getElementById('filter-type').value;
-  const search = (document.getElementById('filter-search').value || '').toLowerCase();
+  const se       = document.getElementById('filter-se').value;
+  const owner    = document.getElementById('filter-opp-owner').value;
+  const rag      = document.getElementById('filter-rag').value;
+  const region   = document.getElementById('filter-region').value || currentGeoFilter;
+  const qtr      = document.getElementById('filter-qtr').value;
+  const type     = document.getElementById('filter-type').value;
+  const search   = (document.getElementById('filter-search').value || '').toLowerCase();
 
-  // Common filter predicate (excluding RAG which is Active-only)
+  // Filter for active/live records
   function baseFilter(r) {
     if (se && (r['Implementation Owner'] || '') !== se) return false;
+    if (owner && (r['Opportunity Owner Name'] || '') !== owner) return false;
     if (region && extractRegion(r['Global Region']) !== region) return false;
     if (qtr && (r['Committed QTR'] || '') !== qtr) return false;
     if (type && (r['Type of Opportunity'] || '') !== type) return false;
     if (search) {
-      const hay = [r['Opportunity Name'], r['Implementation Owner'],
+      const hay = [r['Opportunity Name'], r['Implementation Owner'], r['Opportunity Owner Name'],
                    r['Global Region'], r['Sub Status'], r['Status']].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
   }
 
+  // Shared cell helpers (CRO visual style)
+  const regionPill = reg => {
+    const col = regionColor(reg);
+    return `<span class="cro-region-pill" style="background:${col}">${escHtml(reg)}</span>`;
+  };
+  const ownerLink = (val, filterId) =>
+    val ? `<span class="cro-owner-link" onclick="document.getElementById('${filterId}').value='${val.replace(/'/g,"\\'")}';applyTableFilters()">${escHtml(val)}</span>`
+        : '—';
+  const seCell = (val, filterId) => val
+    ? `<span class="cro-owner-link" onclick="document.getElementById('${filterId}').value='${val.replace(/'/g,"\\'")}';applyTableFilters()" style="font-weight:500"><span style="font-size:10px;margin-right:3px">⚙️</span>${escHtml(val)}</span>`
+    : '—';
+  const today  = new Date();
+
   if (currentPipelineTab === 'active') {
-    // Active = not Live Completed
     let rows = allPipelineRows.filter(r => (r['Status']||'').trim() !== 'Live Completed' && baseFilter(r));
     if (rag) rows = rows.filter(r => {
       const ragStat = ragLabel((r['Projected Go-Live Status']||'').trim() || 'Unknown');
@@ -2800,32 +2969,39 @@ function applyTableFilters() {
 
     const tbody = document.getElementById('pipeline-tbody');
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No records match the current filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="cro-empty">No records match the current filters</td></tr>';
     } else {
       tbody.innerHTML = rows.map(r => {
         const ragStat      = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
         const effectiveRag = (r['Status']||'').trim() === 'Blocked' ? 'Blocked' : ragStat;
-        const rc  = ragClass(effectiveRag);
-        const rev = parseRev(r['Opportunity Net Revenue (converted)']);
+        const rc     = ragClass(effectiveRag);
+        const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
         const opType = r['Type of Opportunity'] || '';
+        const reg    = extractRegion(r['Global Region']);
+        const glDate = (r['Projected Go-Live Date'] || '').trim();
+        const glObj  = glDate ? parseDate(glDate) : null;
+        const isOverdue = glObj && glObj < today;
+        const subSt  = (r['Sub Status'] || r['Status'] || '').trim();
+        const notes  = (r['Current Status'] || r['current_status_notes'] || '').trim();
         return `<tr>
-          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
-          <td>${escHtml(r['Implementation Owner'] || '—')}</td>
-          <td>${escHtml(extractRegion(r['Global Region']))}</td>
-          <td><span class="truncate" title="${escHtml(r['Sub Status']||r['Status'])}" style="max-width:160px">${escHtml(truncate(r['Sub Status']||r['Status']||'—',30))}</span></td>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:190px">${escHtml(truncate(r['Opportunity Name'], 38))}</span></td>
+          <td>${seCell(r['Implementation Owner'], 'filter-se')}</td>
+          <td>${ownerLink(r['Opportunity Owner Name'], 'filter-opp-owner')}</td>
+          <td>${regionPill(reg)}</td>
+          <td>${escHtml(truncate(subSt||'—',28))}</td>
+          <td${isOverdue?' class="cro-go-live-red"':''}>${escHtml(glDate || '—')}</td>
           <td>${escHtml(r['Committed QTR'] || '—')}</td>
           <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
           <td><span class="badge badge-${rc}">${escHtml(effectiveRag)}</span></td>
           <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+          <td><span class="cro-status-cell">${escHtml(notes || '—')}</span></td>
         </tr>`;
       }).join('');
     }
     document.getElementById('pipeline-count').textContent = `Showing ${rows.length} active records`;
 
-  } else {
-    // Live Completed tab
+  } else if (currentPipelineTab === 'live') {
     let rows = allPipelineRows.filter(r => (r['Status']||'').trim() === 'Live Completed' && baseFilter(r));
-    // Sort by Actual Live Date descending
     rows.sort((a,b) => {
       const da = parseDate(a['Actual Live Date']), db = parseDate(b['Actual Live Date']);
       if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
@@ -2834,26 +3010,76 @@ function applyTableFilters() {
 
     const tbody = document.getElementById('live-tbody');
     if (rows.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No live records match the current filters</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="cro-empty">No live records match the current filters</td></tr>';
     } else {
       tbody.innerHTML = rows.map(r => {
         const rev     = parseRev(r['Opportunity Net Revenue (converted)']);
         const opType  = r['Type of Opportunity'] || '';
         const days    = parseInt(r['Number of days in implementation'] || '0') || null;
         const actDate = (r['Actual Live Date'] || '').trim();
+        const reg     = extractRegion(r['Global Region']);
+        const notes   = (r['Current Status'] || r['current_status_notes'] || '').trim();
         return `<tr>
-          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
-          <td>${escHtml(r['Implementation Owner'] || '—')}</td>
-          <td>${escHtml(extractRegion(r['Global Region']))}</td>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 38))}</span></td>
+          <td>${seCell(r['Implementation Owner'], 'filter-se')}</td>
+          <td>${ownerLink(r['Opportunity Owner Name'], 'filter-opp-owner')}</td>
+          <td>${regionPill(reg)}</td>
           <td style="font-weight:600;color:var(--green)">${escHtml(actDate || '—')}</td>
           <td>${escHtml(r['Committed QTR'] || '—')}</td>
           <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
           <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
           <td style="text-align:right">${days ? `${days}d` : '—'}</td>
+          <td><span class="cro-status-cell">${escHtml(notes || '—')}</span></td>
         </tr>`;
       }).join('');
     }
     document.getElementById('pipeline-count').textContent = `Showing ${rows.length} live records`;
+
+  } else {
+    // Presales tab
+    const presales = presalesData || [];
+    let rows = presales.filter(r => {
+      if (se && (r['Presales Engineer'] || '') !== se) return false;
+      if (owner && (r['Opportunity Owner Name'] || '') !== owner) return false;
+      if (region && extractRegion(r['Global Region']) !== region) return false;
+      if (type && (r['Type of Opportunity'] || '') !== type) return false;
+      if (search) {
+        const hay = [r['Opportunity Name'], r['Presales Engineer'], r['Opportunity Owner Name'],
+                     r['Global Region'], r['Sub Status']].join(' ').toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+    rows.sort((a,b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']));
+
+    const tbody = document.getElementById('presales-tbody');
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9" class="cro-empty">No presales records match the current filters</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => {
+        const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
+        const prob   = parseFloat(r['Opportunity: Probability (%)']) || 0;
+        const stage  = (r['Opportunity: Stage'] || '').trim();
+        const stageColor = stage === 'Qualifying' ? 'badge-blue' : stage === 'Proposal' ? 'badge-blue' : stage === 'Negotiation' ? 'badge-amber' : stage === 'Contracting' ? 'badge-green' : stage === 'Won' ? 'badge-green' : 'badge-grey';
+        const opType = r['Type of Opportunity'] || '';
+        const reg    = extractRegion(r['Global Region']);
+        return `<tr>
+          <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 38))}</span></td>
+          <td>${seCell(r['Presales Engineer'], 'filter-se')}</td>
+          <td>${ownerLink(r['Opportunity Owner Name'], 'filter-opp-owner')}</td>
+          <td><span class="badge ${stageColor}">${escHtml(stage || '—')}</span></td>
+          <td style="text-align:center">
+            <span style="color:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--sub)'}">${prob}%</span>
+            <div class="prog-bar"><div class="prog-fill" style="width:${prob}%;background:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--red)'}"></div></div>
+          </td>
+          <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
+          <td>${regionPill(reg)}</td>
+          <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
+          <td>${escHtml(r['Sub Status'] || '—')}</td>
+        </tr>`;
+      }).join('');
+    }
+    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} presales records`;
   }
 }
 
@@ -2879,7 +3105,7 @@ function renderRiskRadar() {
       const text = truncate(blocker, 200);
       return `<div class="risk-item">
         <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
-        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
         ${text ? `<div class="ri-text">${escHtml(text)}</div>` : ''}
       </div>`;
     }).join('');
@@ -2900,7 +3126,7 @@ function renderRiskRadar() {
         : truncate(r['Current Status'] || '', 150);
       return `<div class="risk-item amber">
         <div class="ri-name">${escHtml(r['Opportunity Name'] || '—')}</div>
-        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
+        <div class="ri-sub">SE: ${escHtml(r['Implementation Owner'] || '—')} | Owner: ${escHtml(r['Opportunity Owner Name'] || '—')} | ${escHtml(extractRegion(r['Global Region']))} | ${escHtml(r['Committed QTR'] || '—')}</div>
         ${risk ? `<div class="ri-text">${escHtml(truncate(risk, 200))}</div>` : ''}
       </div>`;
     }).join('');
@@ -2958,6 +3184,7 @@ function renderNextQuarter() {
       <div class="pc-name">${escHtml(truncate(r['Opportunity Name'], 50))}</div>
       <div class="pc-revenue">${rev > 0 ? fmtRev(rev) : 'TBD'}</div>
       <div class="pc-row">SE: <span>${escHtml(r['Implementation Owner'] || '—')}</span></div>
+      <div class="pc-row">Owner: <span>${escHtml(r['Opportunity Owner Name'] || '—')}</span></div>
       <div class="pc-row">Region: <span>${escHtml(extractRegion(r['Global Region']))}</span></div>
       <div class="pc-row">Committed QTR: <span>${escHtml(r['Committed QTR'] || 'Not Set')}</span></div>
       <div class="pc-row" style="margin-top:8px">
@@ -2980,14 +3207,15 @@ function daysDiff(d) {
 }
 
 function wvCard(row, daysLabel, daysClass) {
-  const name = row['Opportunity Name'] || row['Install Record: Implementation Name'] || 'Unnamed';
-  const se = row['Implementation Owner'] || '—';
+  const name  = row['Opportunity Name'] || row['Install Record: Implementation Name'] || 'Unnamed';
+  const se    = row['Implementation Owner'] || '—';
+  const oppOwner = row['Opportunity Owner Name'] || '—';
   const region = (row['Global Region'] || '').split('|')[0].trim() || '—';
-  const qtr = row['Committed QTR'] || '—';
-  const rev = parseRev(row['Opportunity Net Revenue (converted)']);
-  const rag = (row['Projected Go-Live Status'] || '').trim();
+  const qtr   = row['Committed QTR'] || '—';
+  const rev   = parseRev(row['Opportunity Net Revenue (converted)']);
+  const rag   = (row['Projected Go-Live Status'] || '').trim();
   const substatus = (row['Sub Status'] || '').trim();
-  const risk = (row['Implementation Risk'] || '').trim() || (row['Implementation Blocker'] || '').trim();
+  const risk  = (row['Implementation Risk'] || '').trim() || (row['Implementation Blocker'] || '').trim();
   const glDate = row['Projected Go-Live Date'] || '—';
   const ragBadge = rag ? `<span class="badge ${rag === 'On Track' ? 'badge-green' : rag === 'At Risk' ? 'badge-amber' : 'badge-red'}">${rag || 'Unknown'}</span>` : '<span class="badge badge-grey">Unknown</span>';
   const riskHtml = risk ? `<div class="wv-risk">⚠️ ${risk.length > 100 ? risk.slice(0, 100) + '…' : risk}</div>` : '';
@@ -2996,6 +3224,7 @@ function wvCard(row, daysLabel, daysClass) {
     <div class="wv-rag">${ragBadge}</div>
     <div class="wv-meta">
       <span>👤 ${se}</span>
+      <span>🏢 ${oppOwner}</span>
       <span>🌏 ${region}</span>
       <span>📅 ${qtr}</span>
       ${rev > 0 ? `<span>💰 $${(rev/1000).toFixed(0)}k</span>` : ''}
@@ -3107,11 +3336,13 @@ function renderWeeklyView() {
       const glDate  = row['Projected Go-Live Date'] || '—';
       const notes   = (row['Current Status'] || '').trim();
       const notesHtml = notes ? `<div class="wv-risk" style="color:#475569">📝 ${notes.length > 100 ? notes.slice(0,100)+'…' : notes}</div>` : '';
+      const oppOwnerLive = row['Opportunity Owner Name'] || '—';
       return `<div class="wv-card" style="border-left:3px solid #16a34a">
         <div class="wv-name">${escHtml(name)}</div>
         <div class="wv-rag"><span class="badge badge-green">Live Completed</span></div>
         <div class="wv-meta">
           <span>👤 ${escHtml(se)}</span>
+          <span>🏢 ${escHtml(oppOwnerLive)}</span>
           <span>🌏 ${escHtml(region)}</span>
           <span>📅 ${escHtml(qtr)}</span>
           ${rev > 0 ? `<span>💰 $${(rev/1000).toFixed(0)}k</span>` : ''}
@@ -3446,29 +3677,8 @@ function renderPresales() {
     }
   });
 
-  // Table
-  const tbody = document.getElementById('presales-tbody');
-  const sorted = [...presales].sort((a, b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']));
-  tbody.innerHTML = sorted.map(r => {
-    const rev = parseRev(r['Opportunity Net Revenue (converted)']);
-    const prob = parseFloat(r['Opportunity: Probability (%)']) || 0;
-    const stage = (r['Opportunity: Stage'] || '').trim();
-    const stageColor = stage === 'Qualifying' ? 'badge-blue' : stage === 'Proposal' ? 'badge-blue' : stage === 'Negotiation' ? 'badge-amber' : stage === 'Contracting' ? 'badge-green' : stage === 'Won' ? 'badge-green' : 'badge-grey';
-    const opType = r['Type of Opportunity'] || '';
-    return `<tr>
-      <td><span class="truncate" title="${escHtml(r['Opportunity Name'])}" style="max-width:200px">${escHtml(truncate(r['Opportunity Name'], 40))}</span></td>
-      <td>${escHtml(r['Presales Engineer'] || '—')}</td>
-      <td><span class="badge ${stageColor}">${escHtml(stage || '—')}</span></td>
-      <td style="text-align:center">
-        <span style="color:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--sub)'}">${prob}%</span>
-        <div class="prog-bar"><div class="prog-fill" style="width:${prob}%;background:${prob >= 70 ? 'var(--green)' : prob >= 40 ? 'var(--amber)' : 'var(--red)'}"></div></div>
-      </td>
-      <td style="text-align:right;font-weight:600">${rev > 0 ? fmtRev(rev) : '—'}</td>
-      <td>${escHtml(extractRegion(r['Global Region']))}</td>
-      <td>${opType ? `<span class="badge ${opType==='Frontbook'?'badge-fb':'badge-bb'}">${escHtml(opType.substring(0,2))}</span>` : '—'}</td>
-      <td>${escHtml(r['Sub Status'] || '—')}</td>
-    </tr>`;
-  }).join('');
+  // Table rendered by applyTableFilters() to support shared geo/owner/type filters
+  if (currentPipelineTab === 'presales') applyTableFilters();
 }
 
 // =====================================================
@@ -3576,11 +3786,13 @@ function renderHLGroups(type, containerId) {
         ? `<div class="wv-risk" style="border-left-color:${sm.border}">📝 ${escHtml(item.details)}</div>`
         : '';
 
+      const oppOwner = row['Opportunity Owner Name'] || '—';
       return `<div class="wv-card">
         <div class="wv-name">${escHtml(item.name)}</div>
         <div class="wv-rag">${badge}</div>
         <div class="wv-meta">
           <span>👤 ${escHtml(item.se)}</span>
+          <span>🏢 ${escHtml(oppOwner)}</span>
           <span>🌏 ${escHtml(item.region)}</span>
           <span>📅 ${escHtml(qtr)}</span>
           ${item.rev > 0 ? `<span>💰 ${item.revFmt}</span>` : ''}
