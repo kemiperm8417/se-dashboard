@@ -1853,6 +1853,9 @@ function handleStoreUpload(event) {
   reader.onload = function(e) {
     try {
       pipelineStore = JSON.parse(e.target.result);
+      // Strip any blank-name records that may have been stored in previous imports
+      if (pipelineStore.active_records)   pipelineStore.active_records   = pipelineStore.active_records.filter(r => (r.opportunity_name||'').trim());
+      if (pipelineStore.presales_records) pipelineStore.presales_records = pipelineStore.presales_records.filter(r => (r.opportunity_name||'').trim());
       const el = document.getElementById('store-status');
       el.textContent = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
       el.className = 'store-status loaded';
@@ -1970,9 +1973,9 @@ function detectGoLiveChanges(type, newRows) {
 function openMergeModal(type, newRows, fileName) {
   const changes = detectGoLiveChanges(type, newRows);
   const storeCount = (type === 'active' || type === 'live')
-    ? (pipelineStore.active_records||[]).length
-    : (pipelineStore.presales_records||[]).length;
-  const newCount  = newRows.length;
+    ? (pipelineStore.active_records||[]).filter(r => (r.opportunity_name||'').trim()).length
+    : (pipelineStore.presales_records||[]).filter(r => (r.opportunity_name||'').trim()).length;
+  const newCount  = newRows.filter(r => (r['Opportunity Name']||'').trim()).length;
   const changed   = changes.filter(c => c.status === 'changed').length;
   const added     = changes.filter(c => c.status === 'new').length;
 
@@ -5333,6 +5336,8 @@ function closeSidebar() {
 function autoLoadStore(jsonText) {
   try {
     pipelineStore = JSON.parse(jsonText);
+    if (pipelineStore.active_records)   pipelineStore.active_records   = pipelineStore.active_records.filter(r => (r.opportunity_name||'').trim());
+    if (pipelineStore.presales_records) pipelineStore.presales_records = pipelineStore.presales_records.filter(r => (r.opportunity_name||'').trim());
     const el = document.getElementById('store-status');
     el.textContent = `✅ Store auto-loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
     el.className = 'store-status loaded';
