@@ -1194,12 +1194,19 @@
   <!-- PLACEHOLDER -->
   <div id="placeholder">
     <div class="big-icon">📊</div>
-    <h2>No data loaded yet</h2>
-    <p>Upload your CSV files using the buttons in the header to populate the dashboard. Files can be uploaded in any order — the dashboard will auto-detect the file type.</p>
-    <div class="upload-hint">
-      <span class="hint-chip">📁 Active Records CSV</span>
-      <span class="hint-chip">📁 Live Records CSV</span>
-      <span class="hint-chip">📁 Presales Records CSV</span>
+    <h2 id="placeholder-title">Loading data…</h2>
+    <p id="placeholder-msg">Looking for <code>SE_Pipeline_Data.json</code> in the same folder…</p>
+    <div id="placeholder-upload" style="display:none;margin-top:16px">
+      <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--accent);color:#fff;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px">
+        📂 Load SE_Pipeline_Data.json
+        <input type="file" accept=".json" style="display:none" onchange="handleStoreUpload(event)">
+      </label>
+      <p style="font-size:12px;color:var(--sub);margin-top:8px">Or upload individual CSV files using the buttons in the header.</p>
+      <div class="upload-hint" style="margin-top:8px">
+        <span class="hint-chip">📁 Active Records CSV</span>
+        <span class="hint-chip">📁 Live Records CSV</span>
+        <span class="hint-chip">📁 Presales Records CSV</span>
+      </div>
     </div>
   </div>
 
@@ -5243,6 +5250,71 @@ function closeSidebar() {
   document.getElementById('sidebar-overlay').classList.remove('open');
   document.body.style.overflow = '';
 }
+
+// =====================================================
+// AUTO-LOAD: try to fetch SE_Pipeline_Data.json from
+// the same folder as the HTML file on page load.
+// Falls back to manual upload prompt if unavailable.
+// =====================================================
+function autoLoadStore(jsonText) {
+  try {
+    pipelineStore = JSON.parse(jsonText);
+    const el = document.getElementById('store-status');
+    el.textContent = `✅ Store auto-loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
+    el.className = 'store-status loaded';
+    document.getElementById('btn-download-json').style.display = '';
+    document.getElementById('btn-download-md').style.display   = '';
+    if (!activeData && pipelineStore.active_records?.length) {
+      _rawActiveData = storeRecordsToCSVRows(
+        pipelineStore.active_records.filter(r => r.record_type !== 'live'), 'active');
+      _rawLiveData   = storeRecordsToCSVRows(
+        pipelineStore.active_records.filter(r => r.record_type === 'live'), 'active');
+      rebuildActiveData();
+    }
+    if (!presalesData && pipelineStore.presales_records?.length) {
+      presalesData = storeRecordsToCSVRows(pipelineStore.presales_records, 'presales');
+    }
+    if (activeData || presalesData) {
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      renderDashboard();
+    } else {
+      showUploadPrompt('Data store loaded but contains no records. Upload CSV files to continue.');
+    }
+  } catch(err) {
+    showUploadPrompt('Failed to parse JSON store: ' + err.message);
+  }
+}
+
+function showUploadPrompt(msg) {
+  document.getElementById('placeholder-title').textContent = 'No data loaded';
+  document.getElementById('placeholder-msg').textContent = msg || 'Place SE_Pipeline_Data.json in the same folder as this file, or upload it manually.';
+  document.getElementById('placeholder-upload').style.display = '';
+}
+
+// Candidate filenames to try, in order
+const AUTO_LOAD_CANDIDATES = [
+  'SE_Pipeline_Data.json',
+  'se_pipeline_data.json',
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Try candidates sequentially; stop at first success
+  (async function tryAutoLoad() {
+    for (const filename of AUTO_LOAD_CANDIDATES) {
+      try {
+        const resp = await fetch(filename, { cache: 'no-cache' });
+        if (resp.ok) {
+          const text = await resp.text();
+          autoLoadStore(text);
+          return;
+        }
+      } catch(_) { /* file not found or blocked by browser */ }
+    }
+    // All candidates failed — show upload prompt
+    showUploadPrompt('SE_Pipeline_Data.json not found in the same folder. Upload it manually to load the dashboard.');
+  })();
+});
 </script>
 </body>
 </html>
