@@ -625,7 +625,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 4px 2px;
+    padding: 6px 4px 8px;
     gap: 12px;
     flex-wrap: wrap;
   }
@@ -1568,6 +1568,21 @@
         <span id="pipeline-count" class="filter-count"></span>
       </div>
 
+      <!-- Shared pagination bar -->
+      <div id="pagination-bar" class="pagination-bar">
+        <div class="pag-left">
+          <span class="pag-label">Rows per page:</span>
+          <select id="page-size-sel" onchange="setPageSize(this.value)">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="0">All</option>
+          </select>
+          <span id="pag-info" class="pag-info"></span>
+        </div>
+        <div id="pag-pages" class="pag-pages"></div>
+      </div>
+
       <!-- All Projects table -->
       <div id="pl-all-wrap" class="cro-table-scroll">
         <table id="all-tbl" class="cro-tbl">
@@ -1647,21 +1662,6 @@
         </table>
       </div>
 
-      <!-- Shared pagination bar -->
-      <div id="pagination-bar" class="pagination-bar">
-        <div class="pag-left">
-          <span class="pag-label">Rows per page:</span>
-          <select id="page-size-sel" onchange="setPageSize(this.value)">
-            <option value="10" selected>10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-            <option value="0">All</option>
-          </select>
-          <span id="pag-info" class="pag-info"></span>
-        </div>
-        <div id="pag-pages" class="pag-pages"></div>
-      </div>
-
     </div><!-- /pipeline-table section -->
 
     <!-- SECTION 5: RISK RADAR -->
@@ -1739,13 +1739,32 @@
     <!-- SECTION 8: SE BANDWIDTH -->
     <div id="se-bandwidth" class="section anchor">
       <div class="section-title"><span class="icon">👥</span> SE Bandwidth Metrics</div>
+      <!-- KPI strip -->
+      <div class="exec-kpi-row" style="margin-bottom:18px">
+        <div class="exec-kpi">
+          <div class="val" id="bw-kpi-total">—</div>
+          <div class="lbl">SEs tracked</div>
+        </div>
+        <div class="exec-kpi" style="border-left:3px solid var(--red)">
+          <div class="val" style="color:var(--red)" id="bw-kpi-overload">—</div>
+          <div class="lbl">Overloaded (score ≥8)</div>
+        </div>
+        <div class="exec-kpi" style="border-left:3px solid var(--green)">
+          <div class="val" style="color:var(--green)" id="bw-kpi-healthy">—</div>
+          <div class="lbl">Healthy (score &lt;5)</div>
+        </div>
+        <div class="exec-kpi" style="border-left:3px solid var(--amber)">
+          <div class="val" style="color:var(--amber)" id="bw-kpi-imminent">—</div>
+          <div class="lbl">Imminent go-lives (≤14d)</div>
+        </div>
+      </div>
       <div class="chart-grid">
         <div class="chart-card" style="grid-column: span 1;">
-          <h3>Total Project Load per SE</h3>
+          <h3>Weighted Load Score per SE</h3>
           <canvas id="seLoadChart"></canvas>
         </div>
         <div class="chart-card">
-          <h3>Pipeline Value per SE ($M)</h3>
+          <h3>Go-Live Pressure per SE</h3>
           <canvas id="seValueChart"></canvas>
         </div>
       </div>
@@ -1754,14 +1773,15 @@
           <table id="bw-table">
             <thead>
               <tr>
-                <th onclick="sortTable('bw-table',0)">SE Name</th>
-                <th onclick="sortTable('bw-table',1)">Active (cap 15)</th>
-                <th onclick="sortTable('bw-table',2)">Presales (cap 20)</th>
-                <th onclick="sortTable('bw-table',3)">Total</th>
-                <th onclick="sortTable('bw-table',4)">Pipeline Value</th>
-                <th onclick="sortTable('bw-table',5)">At Risk</th>
-                <th onclick="sortTable('bw-table',6)">Blocked</th>
-                <th>Load</th>
+                <th onclick="sortTable('bw-table',0)">SE Name &amp; Segments</th>
+                <th onclick="sortTable('bw-table',1)" style="text-align:center">Active</th>
+                <th onclick="sortTable('bw-table',2)" style="text-align:center">Presales</th>
+                <th onclick="sortTable('bw-table',3)">Load Score</th>
+                <th onclick="sortTable('bw-table',4)" style="text-align:center">Imminent</th>
+                <th onclick="sortTable('bw-table',5)" style="text-align:center">Near-term</th>
+                <th onclick="sortTable('bw-table',6)" style="text-align:center">At Risk</th>
+                <th onclick="sortTable('bw-table',7)" style="text-align:center">Blocked</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody id="bw-tbody"></tbody>
@@ -1769,8 +1789,10 @@
         </div>
       </div>
       <div style="margin-top:8px;font-size:11px;color:var(--sub)">
-        Active Pipeline — 🔴 Overloaded: &gt;15 &nbsp;|&nbsp; 🟡 High: 10–15 &nbsp;|&nbsp; 🟢 Healthy: &lt;10 &nbsp;&nbsp;&nbsp;
-        Presales Pipeline — 🔴 Overloaded: &gt;20 &nbsp;|&nbsp; 🟡 High: 15–20 &nbsp;|&nbsp; 🟢 Healthy: &lt;15
+        Load Score = Σ(Platform Weight × RAG Modifier) for active projects + 0.5 per presales &nbsp;|&nbsp;
+        Platform: NiumOne/Enterprise=3, Mid-Market=2, SMB=1 &nbsp;|&nbsp;
+        RAG: Blocked×1.5, At Risk×1.2, On Track×1.0 &nbsp;|&nbsp;
+        🔴 Overloaded: ≥8 &nbsp;|&nbsp; 🟡 High: 5–7 &nbsp;|&nbsp; 🟢 Healthy: &lt;5
       </div>
     </div>
 
@@ -1956,7 +1978,16 @@
         Load a data store (<strong>SE_Pipeline_Data.json</strong>) via <a href="#settings" onclick="showPage('settings');return false" style="color:var(--accent);font-weight:600">Settings</a> to view the full audit trail and change history.
       </div>
       <div id="audit-content" style="display:none">
-        <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;" id="audit-summary-chips"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;flex:1;" id="audit-summary-chips"></div>
+          <button class="btn-store" onclick="exportAuditCSV()" title="Export audit trail to CSV" style="flex-shrink:0">⬇️ Export CSV</button>
+        </div>
+        <div style="margin-bottom:14px">
+          <input type="text" id="audit-search" placeholder="🔍  Search opportunity, SE, region, status…"
+            oninput="renderAuditTrail()"
+            style="width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--card2);color:var(--text);outline:none;transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+        </div>
         <div class="tab-bar">
           <button class="tab-btn active" onclick="auditTab('changes',this)">📝 Changes</button>
           <button class="tab-btn" onclick="auditTab('all',this)">📋 All Changed Records</button>
@@ -2740,6 +2771,54 @@ function auditTab(tab, btn) {
   btn.classList.add('active');
 }
 
+function exportAuditCSV() {
+  if (!pipelineStore) return;
+  const active = pipelineStore.active_records || [];
+
+  // One row per history entry (date change or status change)
+  const rows = [];
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+
+  for (const rec of active) {
+    const name   = rec.opportunity_name   || '';
+    const se     = rec.se_owner           || '';
+    const region = (rec.global_region     || '').split('|')[0].trim();
+    const rag    = rec.rag_status         || '';
+    const status = rec.status             || '';
+
+    const dateHist   = rec.projected_go_live_date_history || [];
+    const statusHist = rec.current_status_history         || [];
+
+    // Only export records that have actual changes (history length > 1)
+    for (let i = 1; i < dateHist.length; i++) {
+      rows.push([
+        q(name), q(se), q(region), q(rag), q(status),
+        q('Projected Go-Live Date'),
+        q(dateHist[i-1].date || ''),
+        q(dateHist[i].date   || ''),
+        q(dateHist[i].recorded_on || ''),
+        q(dateHist[i].source || '')
+      ].join(','));
+    }
+    for (let i = 1; i < statusHist.length; i++) {
+      rows.push([
+        q(name), q(se), q(region), q(rag), q(status),
+        q('Current Status'),
+        q(statusHist[i-1].value || ''),
+        q(statusHist[i].value   || ''),
+        q(statusHist[i].recorded_on || ''),
+        q(statusHist[i].source || '')
+      ].join(','));
+    }
+  }
+
+  const header = ['Opportunity Name','SE Owner','Region','RAG Status','Project Status',
+                  'Change Type','Previous Value','New Value','Recorded On','Source'].map(h => '"' + h + '"').join(',');
+  const csv    = [header, ...rows].join('\n');
+  const date   = pipelineStore._meta?.last_updated_on || new Date().toISOString().slice(0,10);
+  triggerDownload(new Blob([csv], { type: 'text/csv' }), `Audit_Trail_${date}.csv`);
+}
+
 function renderAuditTrail() {
   const noStore = document.getElementById('audit-no-store');
   const content = document.getElementById('audit-content');
@@ -2755,9 +2834,20 @@ function renderAuditTrail() {
   const hasStatusChange = r => (r.current_status_history||[]).length > 1;
   const hasAnyChange    = r => hasDateChange(r) || hasStatusChange(r);
 
-  const withDateChanges   = active.filter(hasDateChange);
-  const withStatusChanges = active.filter(hasStatusChange);
-  const withAnyChanges    = active.filter(hasAnyChange);
+  const q = ((document.getElementById('audit-search')?.value) || '').toLowerCase().trim();
+  const matchesSearch = r => {
+    if (!q) return true;
+    const hay = [
+      r.opportunity_name, r.se_owner, r.global_region, r.rag_status, r.status,
+      ...(r.projected_go_live_date_history||[]).map(h => h.date + ' ' + h.source),
+      ...(r.current_status_history||[]).map(h => h.value + ' ' + h.source)
+    ].join(' ').toLowerCase();
+    return hay.includes(q);
+  };
+
+  const withDateChanges   = active.filter(r => hasDateChange(r)   && matchesSearch(r));
+  const withStatusChanges = active.filter(r => hasStatusChange(r) && matchesSearch(r));
+  const withAnyChanges    = active.filter(r => hasAnyChange(r)    && matchesSearch(r));
   const totalImports      = changelog.length;
 
   // Summary chips
@@ -2847,9 +2937,12 @@ function renderAuditTrail() {
     }).join('');
   }
 
-  // Tab 3: change log
+  // Tab 3: change log (also filtered by search)
   const clEl = document.getElementById('audit-changelog-list');
-  clEl.innerHTML = [...changelog].reverse().map(c => `
+  const filteredLog = q
+    ? [...changelog].filter(c => (c.description + ' ' + c.action + ' ' + c.timestamp).toLowerCase().includes(q))
+    : [...changelog];
+  clEl.innerHTML = filteredLog.reverse().map(c => `
     <div class="changelog-item">
       <div class="cl-time">${c.timestamp}</div>
       <div class="cl-action">${c.action.toUpperCase()}</div>
@@ -4476,50 +4569,111 @@ function renderSEBandwidth() {
   const active = activeData || [];
   const presales = presalesData || [];
 
-  const SE_NAMES = ['Saviour Agius', 'Nixon Philip', 'Kemi Chua', 'Su Yeian Low', 'Darshan Singh', 'Aniket Mirvankar', 'David Chen', 'Anurag Mahajan'];
+  // ── Complexity weights (Platform Segment substring match) ──────────────────
+  const PLATFORM_WEIGHTS = { niumone: 3, enterprise: 3, 'mid-market': 2, midmarket: 2, smb: 1, startup: 1 };
+  const RAG_MODIFIERS    = { 'blocked': 1.5, 'at risk': 1.2, 'on track': 1.0 };
+  const OVERLOAD_SCORE   = 8;
+  const HIGH_SCORE       = 5;
+  const IMMINENT_DAYS    = 14;
+  const NEARTERM_DAYS    = 30;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
 
-  // Build from data
-  const activeSEs = [...new Set(active.map(r => r['Implementation Owner'] || '').filter(Boolean))];
-  const presalesSEs = [...new Set(presales.map(r => r['Presales Engineer'] || '').filter(Boolean))];
+  function platformWeight(seg) {
+    const k = (seg || '').toLowerCase().trim();
+    for (const [kw, w] of Object.entries(PLATFORM_WEIGHTS)) if (k.includes(kw)) return w;
+    return 1;
+  }
+  function ragMod(rag) { return RAG_MODIFIERS[(rag || '').toLowerCase().trim()] || 1.0; }
+
+  function parseDateLocal(s) {
+    if (!s) return null;
+    const p = s.trim().split(' ')[0].split('/');
+    if (p.length !== 3) return null;
+    const [d, m, y] = p.map(Number);
+    const year = y < 100 ? 2000 + y : y;
+    const dt = new Date(year, m - 1, d);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+
+  function pressureWindow(dateStr) {
+    const dt = parseDateLocal(dateStr);
+    if (!dt) return 'none';
+    const days = Math.floor((dt - today) / 86400000);
+    if (days <= IMMINENT_DAYS) return 'imminent';
+    if (days <= NEARTERM_DAYS) return 'nearterm';
+    return 'pipeline';
+  }
+
+  function loadStatus(score) {
+    if (score >= OVERLOAD_SCORE) return 'over';
+    if (score >= HIGH_SCORE)     return 'warn';
+    return 'ok';
+  }
+
+  // ── Build SE roster from data ──────────────────────────────────────────────
+  const SE_NAMES = ['Saviour Agius', 'Nixon Philip', 'Kemi Chua', 'Su Yeian Low', 'Darshan Singh', 'Aniket Mirvankar', 'David Chen', 'Anurag Mahajan'];
+  const activeSEs   = [...new Set(active.map(r => (r['Implementation Owner'] || '').trim()).filter(Boolean))];
+  const presalesSEs = [...new Set(presales.map(r => (r['Presales Engineer'] || '').trim()).filter(Boolean))];
   const allSEs = [...new Set([...SE_NAMES, ...activeSEs, ...presalesSEs])].filter(Boolean).sort();
 
   const seData = {};
   allSEs.forEach(se => {
-    seData[se] = { active: 0, presalesCount: 0, pipelineVal: 0, atRisk: 0, blocked: 0 };
+    seData[se] = { active: 0, presalesCount: 0, pipelineVal: 0, atRisk: 0, blocked: 0,
+                   activeLoad: 0, presalesLoad: 0, imminent: 0, nearterm: 0, segments: {} };
   });
 
   active.forEach(r => {
-    const se = r['Implementation Owner'] || '';
+    const se = (r['Implementation Owner'] || '').trim();
     if (!se || !seData[se]) return;
+    const rag    = (r['Projected Go-Live Status'] || '').trim();
+    const status = (r['Status'] || '').trim();
+    const seg    = (r['Platform Segment'] || '').trim();
+    const gl     = r['Projected Go-Live Date'] || '';
+
     seData[se].active++;
     seData[se].pipelineVal += parseRev(r['Opportunity Net Revenue (converted)']);
-    const rag = (r['Projected Go-Live Status'] || '').trim();
-    const status = (r['Status'] || '').trim();
-    if (rag === 'At Risk') seData[se].atRisk++;
-    if (rag === 'Blocked' || status === 'Blocked') seData[se].blocked++;
+    if (rag === 'At Risk')                          seData[se].atRisk++;
+    if (rag === 'Blocked' || status === 'Blocked')  seData[se].blocked++;
+
+    // Weighted load contribution
+    seData[se].activeLoad += platformWeight(seg) * ragMod(rag);
+
+    // Platform segment breakdown
+    const segKey = seg || 'Unknown';
+    seData[se].segments[segKey] = (seData[se].segments[segKey] || 0) + 1;
+
+    // Go-live pressure
+    const pw = pressureWindow(gl);
+    if (pw === 'imminent') seData[se].imminent++;
+    else if (pw === 'nearterm') seData[se].nearterm++;
   });
 
   presales.forEach(r => {
-    const se = r['Presales Engineer'] || '';
+    const se = (r['Presales Engineer'] || '').trim();
     if (!se || !seData[se]) return;
     seData[se].presalesCount++;
-    seData[se].pipelineVal += parseRev(r['Opportunity Net Revenue (converted)']);
+    seData[se].presalesLoad += 0.5;
+    seData[se].pipelineVal += parseRev(r['Opportunity Net Revenue'] || r['Opportunity Net Revenue (converted)'] || '0');
   });
 
-  // Filter to SEs with data
-  const activeSEList = allSEs.filter(se => seData[se].active + seData[se].presalesCount > 0);
+  // Compute total load score; sort by score desc
+  allSEs.forEach(se => {
+    seData[se].totalLoad = Math.round((seData[se].activeLoad + seData[se].presalesLoad) * 10) / 10;
+  });
+  const activeSEList = allSEs
+    .filter(se => seData[se].active + seData[se].presalesCount > 0)
+    .sort((a, b) => seData[b].totalLoad - seData[a].totalLoad);
 
-  // Thresholds
-  const ACTIVE_MAX = 15;    // > 15 overloaded, 10-15 high, ≤ 9 healthy
-  const PRESALES_MAX = 20;  // > 20 overloaded, 15-20 high, ≤ 14 healthy
+  // ── KPI summary strip ──────────────────────────────────────────────────────
+  const overloadedCount = activeSEList.filter(se => seData[se].totalLoad >= OVERLOAD_SCORE).length;
+  const healthyCount    = activeSEList.filter(se => seData[se].totalLoad < HIGH_SCORE).length;
+  const totalImminent   = activeSEList.reduce((s, se) => s + seData[se].imminent, 0);
+  document.getElementById('bw-kpi-total').textContent    = activeSEList.length;
+  document.getElementById('bw-kpi-overload').textContent = overloadedCount;
+  document.getElementById('bw-kpi-healthy').textContent  = healthyCount;
+  document.getElementById('bw-kpi-imminent').textContent = totalImminent;
 
-  function seLoadStatus(activeCount, presalesCount) {
-    if (activeCount > ACTIVE_MAX || presalesCount > PRESALES_MAX) return 'over';
-    if (activeCount >= 10 || presalesCount >= 15) return 'warn';
-    return 'ok';
-  }
-
-  // Bar chart
+  // ── Chart 1: Load Score (stacked active + presales, coloured by status) ───
   destroyChart('seLoadChart');
   charts['seLoadChart'] = new Chart(document.getElementById('seLoadChart').getContext('2d'), {
     type: 'bar',
@@ -4527,131 +4681,135 @@ function renderSEBandwidth() {
       labels: activeSEList,
       datasets: [
         {
-          label: `Active (max ${ACTIVE_MAX})`,
-          data: activeSEList.map(se => seData[se].active),
-          backgroundColor: activeSEList.map(se => seData[se].active > ACTIVE_MAX ? 'rgba(220,38,38,0.75)' : seData[se].active >= 10 ? 'rgba(217,119,6,0.75)' : 'rgba(37,99,235,0.7)'),
-          borderRadius: 4
+          label: 'Active Load',
+          data: activeSEList.map(se => +seData[se].activeLoad.toFixed(1)),
+          backgroundColor: activeSEList.map(se => {
+            const s = loadStatus(seData[se].totalLoad);
+            return s === 'over' ? 'rgba(220,38,38,0.8)' : s === 'warn' ? 'rgba(217,119,6,0.8)' : 'rgba(37,99,235,0.75)';
+          }),
+          borderRadius: 4,
+          datalabels: { display: false }
         },
         {
-          label: `Presales (max ${PRESALES_MAX})`,
-          data: activeSEList.map(se => seData[se].presalesCount),
-          backgroundColor: activeSEList.map(se => seData[se].presalesCount > PRESALES_MAX ? 'rgba(220,38,38,0.5)' : seData[se].presalesCount >= 15 ? 'rgba(217,119,6,0.5)' : 'rgba(139,92,246,0.5)'),
-          borderRadius: 4
+          label: 'Presales Load',
+          data: activeSEList.map(se => +seData[se].presalesLoad.toFixed(1)),
+          backgroundColor: activeSEList.map(se => {
+            const s = loadStatus(seData[se].totalLoad);
+            return s === 'over' ? 'rgba(220,38,38,0.35)' : s === 'warn' ? 'rgba(217,119,6,0.35)' : 'rgba(139,92,246,0.5)';
+          }),
+          borderRadius: 4,
+          datalabels: {
+            display: true,
+            anchor: 'end', align: 'top', offset: 2, clip: false,
+            color: '#64748b',
+            font: { weight: '700', size: 11 },
+            formatter: (v, ctx) => seData[activeSEList[ctx.dataIndex]].totalLoad
+          }
         }
       ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: true,
       plugins: {
         legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 11 } } },
         tooltip: {
           callbacks: {
-            afterLabel: function(ctx) {
-              const se = activeSEList[ctx.dataIndex];
-              if (ctx.datasetIndex === 0) return `Capacity: ${seData[se].active}/${ACTIVE_MAX}`;
-              return `Capacity: ${seData[se].presalesCount}/${PRESALES_MAX}`;
+            afterBody: ctx => {
+              const d = seData[activeSEList[ctx[0].dataIndex]];
+              return [`Total load score: ${d.totalLoad}`, `Active projects: ${d.active}`, `Presales: ${d.presalesCount}`];
             }
           }
-        },
-        datalabels: {
-          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          anchor: 'end',
-          align: 'top', offset: 2, clip: false,
-          color: '#94a3b8',
-          font: { weight: '600', size: 11 },
-          formatter: v => v
         }
       },
-      layout: { padding: { top: 20 } },
+      layout: { padding: { top: 24 } },
       scales: {
-        x: { stacked: false, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
-        y: { stacked: false, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#e2e8f0' } }
+        x: { stacked: true, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+        y: { stacked: true, ticks: { color: '#64748b' }, grid: { color: '#e2e8f0' },
+             title: { display: true, text: 'Weighted Load Score', color: '#64748b', font: { size: 11 } } }
       }
     }
   });
 
+  // ── Chart 2: Go-Live Pressure ──────────────────────────────────────────────
   destroyChart('seValueChart');
   charts['seValueChart'] = new Chart(document.getElementById('seValueChart').getContext('2d'), {
     type: 'bar',
     data: {
       labels: activeSEList,
-      datasets: [{
-        label: 'Pipeline Value ($M)',
-        data: activeSEList.map(se => +(seData[se].pipelineVal/1e6).toFixed(2)),
-        backgroundColor: 'rgba(59,130,246,0.7)',
-        borderRadius: 4
-      }]
+      datasets: [
+        {
+          label: `Imminent (≤${IMMINENT_DAYS}d)`,
+          data: activeSEList.map(se => seData[se].imminent),
+          backgroundColor: 'rgba(220,38,38,0.75)',
+          borderRadius: 4,
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor: 'center', align: 'center',
+            color: '#fff', font: { weight: '700', size: 11 }, formatter: v => v
+          }
+        },
+        {
+          label: `Near-term (≤${NEARTERM_DAYS}d)`,
+          data: activeSEList.map(se => seData[se].nearterm),
+          backgroundColor: 'rgba(217,119,6,0.7)',
+          borderRadius: 4,
+          datalabels: {
+            display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor: 'center', align: 'center',
+            color: '#fff', font: { weight: '700', size: 11 }, formatter: v => v
+          }
+        }
+      ]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: true,
+      responsive: true, maintainAspectRatio: true,
       plugins: {
-        legend: { display: false },
-        datalabels: {
-          display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          anchor: 'end',
-          align: 'top', offset: 2, clip: false,
-          color: '#94a3b8',
-          font: { weight: '600', size: 11 },
-          formatter: v => `$${v}M`
-        }
+        legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 11 } } },
+        datalabels: { display: false }
       },
-      layout: { padding: { top: 20 } },
+      layout: { padding: { top: 16 } },
       scales: {
-        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
-        y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } }
+        x: { stacked: true, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
+        y: { stacked: true, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#e2e8f0' },
+             title: { display: true, text: 'Projects', color: '#64748b', font: { size: 11 } } }
       }
     }
   });
 
-  // Table
+  // ── Table ──────────────────────────────────────────────────────────────────
   const tbody = document.getElementById('bw-tbody');
   tbody.innerHTML = activeSEList.map(se => {
     const d = seData[se];
-    const total = d.active + d.presalesCount;
-    const status = seLoadStatus(d.active, d.presalesCount);
-    const rowCls = status === 'over' ? 'bw-over' : status === 'warn' ? 'bw-warn' : 'bw-ok';
+    const status  = loadStatus(d.totalLoad);
+    const rowCls  = status === 'over' ? 'bw-over' : status === 'warn' ? 'bw-warn' : 'bw-ok';
     const loadBadge = status === 'over' ? '<span class="badge badge-red">Overloaded</span>' :
                       status === 'warn' ? '<span class="badge badge-amber">High</span>' :
                       '<span class="badge badge-green">Healthy</span>';
 
-    // Capacity progress bars
-    const activePct  = Math.min(100, (d.active / ACTIVE_MAX) * 100);
-    const activeColor = d.active > ACTIVE_MAX ? 'var(--red)' : d.active >= 10 ? 'var(--amber)' : 'var(--accent)';
-    const presalesPct  = Math.min(100, (d.presalesCount / PRESALES_MAX) * 100);
-    const presalesColor = d.presalesCount > PRESALES_MAX ? 'var(--red)' : d.presalesCount >= 15 ? 'var(--amber)' : '#8b5cf6';
-
-    const activeCell = `
+    const scoreColor = status === 'over' ? 'var(--red)' : status === 'warn' ? 'var(--amber)' : 'var(--accent)';
+    const scorePct   = Math.min(100, (d.totalLoad / (OVERLOAD_SCORE * 1.5)) * 100);
+    const scoreCell  = `
       <div style="display:flex;align-items:center;gap:6px">
-        <span style="min-width:20px;text-align:center;font-weight:600">${d.active}</span>
+        <span style="min-width:30px;font-weight:700;font-size:13px;color:${scoreColor}">${d.totalLoad}</span>
         <div style="flex:1;min-width:60px">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px">
-            <span></span><span>${d.active}/${ACTIVE_MAX}</span>
-          </div>
-          <div class="prog-bar"><div class="prog-fill" style="width:${activePct}%;background:${activeColor}"></div></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${scorePct}%;background:${scoreColor}"></div></div>
         </div>
       </div>`;
 
-    const presalesCell = `
-      <div style="display:flex;align-items:center;gap:6px">
-        <span style="min-width:20px;text-align:center;font-weight:600">${d.presalesCount}</span>
-        <div style="flex:1;min-width:60px">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-bottom:2px">
-            <span></span><span>${d.presalesCount}/${PRESALES_MAX}</span>
-          </div>
-          <div class="prog-bar"><div class="prog-fill" style="width:${presalesPct}%;background:${presalesColor}"></div></div>
-        </div>
-      </div>`;
+    const segPills = Object.entries(d.segments)
+      .sort((a, b) => b[1] - a[1])
+      .map(([seg, cnt]) => `<span class="region-pill" style="font-size:10px">${escHtml(seg)} ×${cnt}</span>`)
+      .join(' ');
 
     return `<tr class="${rowCls}">
-      <td><strong>${escHtml(se)}</strong></td>
-      <td style="min-width:140px">${activeCell}</td>
-      <td style="min-width:140px">${presalesCell}</td>
-      <td style="text-align:center;font-weight:700">${total}</td>
-      <td style="text-align:right">${fmtRev(d.pipelineVal)}</td>
-      <td style="text-align:center">${d.atRisk > 0 ? `<span style="color:var(--amber);font-weight:600">${d.atRisk}</span>` : '0'}</td>
-      <td style="text-align:center">${d.blocked > 0 ? `<span style="color:var(--red);font-weight:600">${d.blocked}</span>` : '0'}</td>
+      <td><strong>${escHtml(se)}</strong><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px">${segPills}</div></td>
+      <td style="text-align:center;font-weight:600">${d.active}</td>
+      <td style="text-align:center;font-weight:600">${d.presalesCount}</td>
+      <td style="min-width:130px">${scoreCell}</td>
+      <td style="text-align:center">${d.imminent > 0 ? `<span style="color:var(--red);font-weight:600">${d.imminent}</span>` : '<span style="color:var(--sub)">—</span>'}</td>
+      <td style="text-align:center">${d.nearterm > 0 ? `<span style="color:var(--amber);font-weight:600">${d.nearterm}</span>` : '<span style="color:var(--sub)">—</span>'}</td>
+      <td style="text-align:center">${d.atRisk   > 0 ? `<span style="color:var(--amber);font-weight:600">${d.atRisk}</span>`   : '0'}</td>
+      <td style="text-align:center">${d.blocked  > 0 ? `<span style="color:var(--red);font-weight:600">${d.blocked}</span>`    : '0'}</td>
       <td>${loadBadge}</td>
     </tr>`;
   }).join('');
