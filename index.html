@@ -140,6 +140,64 @@
   }
   #sidebar nav .nav-group { padding: 4px 0; }
 
+  /* Sidebar collapse button */
+  .sidebar-collapse-btn {
+    background: none;
+    border: none;
+    color: var(--sidebar-label);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar-collapse-btn:hover { color: #f9fafb; background: var(--sidebar-hover-bg); }
+
+  /* Collapsed state */
+  #sidebar { transition: width 0.22s ease; }
+  #main    { transition: margin-left 0.22s ease, max-width 0.22s ease; }
+
+  body.sidebar-collapsed #sidebar { width: 56px; overflow: visible; }
+  body.sidebar-collapsed #main {
+    margin-left: 56px;
+    max-width: calc(100vw - 56px);
+  }
+  body.sidebar-collapsed #sidebar .logo { padding: 20px 0 16px; justify-content: center; }
+  body.sidebar-collapsed #sidebar .logo-text { display: none; }
+  body.sidebar-collapsed #sidebar .logo .sidebar-collapse-btn { display: none; }
+  body.sidebar-collapsed #sidebar nav a {
+    justify-content: center;
+    padding: 10px 0;
+    margin: 1px 4px;
+  }
+  body.sidebar-collapsed #sidebar nav a .nav-label { display: none; }
+  body.sidebar-collapsed #sidebar nav a .nav-icon { font-size: 17px; opacity: 1; }
+  body.sidebar-collapsed #sidebar nav .section-label { display: none; }
+  body.sidebar-collapsed #sidebar nav a::before { display: none; }
+
+  /* Expand button shown in header when collapsed */
+  #sidebar-expand-btn {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--sub);
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  #sidebar-expand-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+  body.sidebar-collapsed #sidebar-expand-btn { display: flex; }
+
   /* ═══════════════════════════════════════════════
      MAIN
   ═══════════════════════════════════════════════ */
@@ -185,7 +243,121 @@
     white-space: nowrap;
     flex-shrink: 0;
   }
-  #header .upload-area { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; padding: 6px 0; }
+  .header-settings-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--sub);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .header-settings-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+  .header-data-status {
+    font-size: 11px;
+    color: var(--sub);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-light);
+    cursor: pointer;
+    flex-shrink: 1;
+    display: none;
+  }
+  .header-data-status.visible { display: block; }
+  /* Settings page */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 24px;
+    margin-top: 8px;
+  }
+  .settings-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .settings-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .settings-card .settings-desc {
+    font-size: 12px;
+    color: var(--sub);
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+  .settings-upload-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .settings-upload-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .settings-upload-item:hover { border-color: var(--accent); background: var(--hover); }
+  .settings-upload-item input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .settings-upload-item .sui-icon { font-size: 20px; flex-shrink: 0; }
+  .settings-upload-item .sui-text { flex: 1; }
+  .settings-upload-item .sui-label { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+  .settings-upload-item .sui-sub { font-size: 11px; color: var(--sub); }
+  .settings-upload-item .sui-check { color: var(--green); font-size: 16px; display: none; flex-shrink: 0; }
+  .settings-upload-item.loaded { border-color: var(--green); background: var(--green-bg); }
+  .settings-upload-item.loaded .sui-check { display: block; }
+  .settings-divider { height: 1px; background: var(--border); margin: 18px 0; }
+  .settings-action-row { display: flex; flex-direction: column; gap: 10px; }
+  .settings-action-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.15s;
+    text-align: left;
+    width: 100%;
+  }
+  .settings-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .settings-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .settings-action-btn .sab-icon { font-size: 18px; flex-shrink: 0; }
+  .settings-action-btn .sab-sub { font-size: 11px; color: var(--sub); font-weight: 400; display: block; margin-top: 1px; }
+  .settings-action-btn:hover .sab-sub { color: inherit; opacity: 0.7; }
+  .settings-store-status {
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--sub);
+    line-height: 1.5;
+  }
+  .settings-store-status.loaded { border-color: var(--green); color: var(--green); background: var(--green-bg); }
   .upload-btn {
     display: flex;
     align-items: center;
@@ -415,6 +587,80 @@
   }
   .filters select:focus, .filters input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.08); }
   .filter-label { font-size: 12px; color: var(--sub); font-weight: 500; }
+  .filter-search-input {
+    flex: 1 1 200px;
+    min-width: 160px;
+    max-width: 320px;
+    padding: 7px 12px !important;
+    font-size: 13px !important;
+  }
+  .filter-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .reset-filters-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--sub);
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .reset-filters-btn:hover { background: #fee2e2; border-color: #f87171; color: #dc2626; }
+  .filter-count {
+    font-size: 12px;
+    color: var(--sub);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 4px 2px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .pag-left { display: flex; align-items: center; gap: 8px; }
+  .pag-label { font-size: 12px; color: var(--sub); }
+  #page-size-sel {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pag-info { font-size: 12px; color: var(--sub); }
+  .pag-pages { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .pag-btn {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    min-width: 32px;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .pag-btn:hover:not(:disabled) { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .pag-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .pag-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pag-ellipsis { font-size: 12px; color: var(--sub); padding: 0 2px; }
 
   /* ═══════════════════════════════════════════════
      RISK CARDS
@@ -852,6 +1098,8 @@
   .audit-arrow { color: var(--sub2); font-size: 10px; }
   .audit-source { font-size: 10px; color: var(--sub2); }
   .audit-changed { color: var(--amber); font-size: 10px; font-weight: 700; }
+  .audit-change-group { }
+  .audit-change-label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
   .changelog-item {
     padding: 11px 16px; border-left: 3px solid var(--accent); margin-bottom: 8px;
     background: var(--card); border: 1px solid var(--border); border-left-width: 3px;
@@ -984,8 +1232,7 @@
      RESPONSIVE — 1280px (upload buttons go icon-only)
   ═══════════════════════════════════════════════ */
   @media (max-width: 1280px) {
-    .upload-text { display: none; }
-    .upload-btn { padding: 8px 10px; gap: 4px; }
+    .header-data-status { max-width: 160px; }
     #header .title-block h1 { max-width: 260px; }
   }
 
@@ -1072,8 +1319,7 @@
     .section { padding: 14px 12px; }
     .section-title { font-size: 14px; }
     #header { padding: 8px 12px; gap: 8px; }
-    .upload-area { gap: 4px; }
-    .upload-btn { padding: 7px 8px; }
+    .header-data-status { display: none !important; }
     .tab-bar { gap: 3px; }
     .tab-btn { padding: 6px 9px; font-size: 11px; }
     .store-bar { padding: 6px 12px; flex-wrap: wrap; }
@@ -1092,8 +1338,8 @@
   @media print {
     #sidebar { display: none; }
     #main { margin-left: 0; }
-    #header .upload-area { display: none; }
-    .store-bar { display: none; }
+    .header-settings-btn { display: none; }
+    .header-data-status { display: none !important; }
     body { background: white; color: black; font-family: Georgia, serif; }
     .kpi-card, .chart-card, .table-wrap, .exec-card { border: 1px solid #ccc; box-shadow: none; }
     #leadership { page-break-before: always; }
@@ -1114,22 +1360,25 @@
       PS Dashboard
       <span>Professional Services</span>
     </div>
+    <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="collapseSidebar()" title="Collapse sidebar">‹</button>
   </div>
   <nav>
     <div class="section-label">Overview</div>
-    <a href="#overview" onclick="showPage('overview');return false"><span class="nav-icon">🏠</span> Overview</a>
+    <a href="#overview" onclick="showPage('overview');return false" title="Overview"><span class="nav-icon">🏠</span><span class="nav-label"> Overview</span></a>
     <div class="section-label">Detail Views</div>
-    <a href="#pipeline-table" onclick="showPage('pipeline-table');return false"><span class="nav-icon">📋</span> All Projects</a>
-    <a href="#risk-radar" onclick="showPage('risk-radar');return false"><span class="nav-icon">🚨</span> Risk Radar</a>
-    <a href="#next-quarter" onclick="showPage('next-quarter');return false"><span class="nav-icon">📅</span> Next Quarter</a>
+    <a href="#pipeline-table" onclick="showPage('pipeline-table');return false" title="All Projects"><span class="nav-icon">📋</span><span class="nav-label"> All Projects</span></a>
+    <a href="#risk-radar" onclick="showPage('risk-radar');return false" title="Risk Radar"><span class="nav-icon">🚨</span><span class="nav-label"> Risk Radar</span></a>
+    <a href="#next-quarter" onclick="showPage('next-quarter');return false" title="Next Quarter"><span class="nav-icon">📅</span><span class="nav-label"> Next Quarter</span></a>
     <div class="section-label">Analytics</div>
-    <a href="#golive-trends" onclick="showPage('golive-trends');return false"><span class="nav-icon">📈</span> Go-Live Trends</a>
-    <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false"><span class="nav-icon">🗂️</span> FB vs BB</a>
-    <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false"><span class="nav-icon">👥</span> SE Bandwidth</a>
+    <a href="#golive-trends" onclick="showPage('golive-trends');return false" title="Go-Live Trends"><span class="nav-icon">📈</span><span class="nav-label"> Go-Live Trends</span></a>
+    <a href="#frontbook-backbook" onclick="showPage('frontbook-backbook');return false" title="FB vs BB"><span class="nav-icon">🗂️</span><span class="nav-label"> FB vs BB</span></a>
+    <a href="#se-bandwidth" onclick="showPage('se-bandwidth');return false" title="SE Bandwidth"><span class="nav-icon">👥</span><span class="nav-label"> SE Bandwidth</span></a>
     <div class="section-label">Reports</div>
-    <a href="#highlights" onclick="showPage('highlights');return false"><span class="nav-icon">✨</span> Weekly Summary</a>
-    <a href="#leadership" onclick="showPage('leadership');return false"><span class="nav-icon">📋</span> Summary</a>
-    <a href="#audit-trail" onclick="showPage('audit-trail');return false"><span class="nav-icon">🔍</span> Audit Trail</a>
+    <a href="#highlights" onclick="showPage('highlights');return false" title="Weekly Summary"><span class="nav-icon">✨</span><span class="nav-label"> Weekly Summary</span></a>
+    <a href="#leadership" onclick="showPage('leadership');return false" title="Summary"><span class="nav-icon">📋</span><span class="nav-label"> Summary</span></a>
+    <a href="#audit-trail" onclick="showPage('audit-trail');return false" title="Audit Trail"><span class="nav-icon">🔍</span><span class="nav-label"> Audit Trail</span></a>
+    <div class="section-label">System</div>
+    <a href="#settings" onclick="showPage('settings');return false" title="Settings"><span class="nav-icon">⚙️</span><span class="nav-label"> Settings</span></a>
   </nav>
 </nav>
 
@@ -1139,42 +1388,14 @@
   <!-- HEADER -->
   <div id="header">
     <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Open navigation">☰</button>
+    <button id="sidebar-expand-btn" onclick="collapseSidebar()" title="Expand sidebar">›</button>
     <div class="title-block">
       <h1>Professional Services Dashboard</h1>
-      <div class="date-badge">📅 As of <span id="date-display">31 March 2026</span></div>
+      <div class="date-badge">📅 As of <span id="date-display">—</span></div>
     </div>
-    <div class="upload-area">
-      <label class="upload-btn" id="btn-active">
-        <span>📁</span>
-        <span class="upload-text">Upload Active Records</span>
-        <span class="check">✓</span>
-        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'active')">
-      </label>
-      <label class="upload-btn" id="btn-live">
-        <span>📁</span>
-        <span class="upload-text">Upload Live Records</span>
-        <span class="check">✓</span>
-        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'live')">
-      </label>
-      <label class="upload-btn" id="btn-presales">
-        <span>📁</span>
-        <span class="upload-text">Upload Presales Records</span>
-        <span class="check">✓</span>
-        <input type="file" accept=".csv" onchange="handleFileUpload(event, 'presales')">
-      </label>
-    </div>
-  </div>
-
-  <!-- STORE BAR -->
-  <div class="store-bar">
-    <label class="btn-store" title="Load SE_Pipeline_Data.json to enable merge/update mode and audit trail">
-      🗄️ Load Data Store (.json)
-      <input type="file" accept=".json" style="display:none" onchange="handleStoreUpload(event)">
-    </label>
-    <span class="store-status" id="store-status">No data store loaded — upload SE_Pipeline_Data.json to enable merge &amp; audit trail</span>
-    <span style="flex:1"></span>
-    <button class="btn-store" id="btn-download-json" style="display:none" onclick="downloadStore('json')">⬇️ Download JSON Store</button>
-    <button class="btn-store" id="btn-download-md"   style="display:none" onclick="downloadStore('md')">⬇️ Download MD Snapshot</button>
+    <div style="flex:1"></div>
+    <div id="header-data-status" class="header-data-status" title="Open Settings to manage data"></div>
+    <button class="header-settings-btn" onclick="showPage('settings')" title="Settings — Data Management">⚙️</button>
   </div>
 
   <!-- MERGE MODAL -->
@@ -1313,43 +1534,38 @@
       <div class="section-title"><span class="icon">📋</span> All Projects</div>
 
       <!-- Region summary cards (always visible) -->
-      <div class="region-cards" id="region-cards-bar" style="margin-bottom:4px"></div>
+      <div class="region-cards" id="region-cards-bar" style="margin-bottom:20px"></div>
 
       <!-- Tab bar -->
       <div class="pl-tab-bar">
         <button id="tab-btn-all"      class="pl-tab active" onclick="setPipelineTab('all')">📋 All Projects</button>
-        <button id="tab-btn-active"   class="pl-tab"        onclick="setPipelineTab('active')">⚙️ Active</button>
         <button id="tab-btn-live"     class="pl-tab"        onclick="setPipelineTab('live')">✅ Live</button>
+        <button id="tab-btn-active"   class="pl-tab"        onclick="setPipelineTab('active')">⚙️ Active</button>
         <button id="tab-btn-presales" class="pl-tab"        onclick="setPipelineTab('presales')">🔭 Presales</button>
         <div id="pl-tab-counts" style="margin-left:auto;font-size:12px;color:var(--sub);align-self:center"></div>
       </div>
 
-      <!-- Shared filters -->
+      <!-- Filters — category is in the tabs above; region is in the cards above -->
       <div class="filters" id="table-filters">
-        <span class="filter-label">Filter:</span>
-        <select id="filter-category" onchange="applyTableFilters()" style="display:none">
-          <option value="">All Categories</option>
-          <option value="active">⚙️ Active</option>
-          <option value="live">✅ Live</option>
-          <option value="presales">🔭 Presales</option>
-        </select>
-        <select id="filter-se" onchange="applyTableFilters()"><option value="">All SEs</option></select>
-        <select id="filter-opp-owner" onchange="applyTableFilters()"><option value="">All Opp Owners</option></select>
-        <select id="filter-rag" onchange="applyTableFilters()">
+        <input type="text" id="filter-search" placeholder="🔍  Search projects, SE, owner…" oninput="applyTableFilters()" class="filter-search-input">
+        <div class="filter-divider"></div>
+        <select id="filter-se"        onchange="applyTableFilters()"><option value="">All SEs</option></select>
+        <select id="filter-opp-owner" onchange="applyTableFilters()"><option value="">All Owners</option></select>
+        <select id="filter-rag"       onchange="applyTableFilters()">
           <option value="">All RAG</option>
-          <option value="On Track">On Track</option>
-          <option value="At Risk">At Risk</option>
-          <option value="Blocked">Blocked</option>
-          <option value="Unknown">Unknown</option>
+          <option value="On Track">🟢 On Track</option>
+          <option value="At Risk">🟡 At Risk</option>
+          <option value="Blocked">🔴 Blocked</option>
+          <option value="Unknown">⚪ Unknown</option>
         </select>
-        <select id="filter-region" onchange="applyTableFilters()"><option value="">All Regions</option></select>
-        <select id="filter-qtr" onchange="applyTableFilters()"><option value="">All Quarters</option></select>
+        <select id="filter-qtr"  onchange="applyTableFilters()"><option value="">All Quarters</option></select>
         <select id="filter-type" onchange="applyTableFilters()">
           <option value="">All Types</option>
           <option value="Frontbook">Frontbook</option>
           <option value="Backbook">Backbook</option>
         </select>
-        <input type="text" id="filter-search" placeholder="Search..." oninput="applyTableFilters()" style="min-width:150px">
+        <button id="reset-filters-btn" class="reset-filters-btn" onclick="resetTableFilters()" style="display:none">✕ Reset</button>
+        <span id="pipeline-count" class="filter-count"></span>
       </div>
 
       <!-- All Projects table -->
@@ -1431,7 +1647,21 @@
         </table>
       </div>
 
-      <div id="pipeline-count" style="margin-top:8px;font-size:12px;color:var(--sub)"></div>
+      <!-- Shared pagination bar -->
+      <div id="pagination-bar" class="pagination-bar">
+        <div class="pag-left">
+          <span class="pag-label">Rows per page:</span>
+          <select id="page-size-sel" onchange="setPageSize(this.value)">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="0">All</option>
+          </select>
+          <span id="pag-info" class="pag-info"></span>
+        </div>
+        <div id="pag-pages" class="pag-pages"></div>
+      </div>
+
     </div><!-- /pipeline-table section -->
 
     <!-- SECTION 5: RISK RADAR -->
@@ -1643,17 +1873,93 @@
       </div>
     </div>
 
+    <!-- SECTION: SETTINGS -->
+    <div id="settings" class="section anchor">
+      <div class="section-title"><span class="icon">⚙️</span> Settings — Data Management</div>
+
+      <div class="settings-grid">
+
+        <!-- Card 1: CSV Uploads -->
+        <div class="settings-card">
+          <h3>📁 Upload CSV Files</h3>
+          <p class="settings-desc">Upload Salesforce CSV exports to populate the dashboard. Each file can be merged into the existing data store or used directly without a store.</p>
+          <div class="settings-upload-row">
+            <label class="settings-upload-item" id="btn-active">
+              <span class="sui-icon">⚙️</span>
+              <span class="sui-text">
+                <span class="sui-label">Active Records</span>
+                <span class="sui-sub">In-progress implementation projects</span>
+              </span>
+              <span class="sui-check">✓</span>
+              <input type="file" accept=".csv" onchange="handleFileUpload(event, 'active')">
+            </label>
+            <label class="settings-upload-item" id="btn-live">
+              <span class="sui-icon">✅</span>
+              <span class="sui-text">
+                <span class="sui-label">Live Records</span>
+                <span class="sui-sub">Completed go-live projects</span>
+              </span>
+              <span class="sui-check">✓</span>
+              <input type="file" accept=".csv" onchange="handleFileUpload(event, 'live')">
+            </label>
+            <label class="settings-upload-item" id="btn-presales">
+              <span class="sui-icon">🔭</span>
+              <span class="sui-text">
+                <span class="sui-label">Presales Records</span>
+                <span class="sui-sub">Pre-implementation pipeline</span>
+              </span>
+              <span class="sui-check">✓</span>
+              <input type="file" accept=".csv" onchange="handleFileUpload(event, 'presales')">
+            </label>
+          </div>
+        </div>
+
+        <!-- Card 2: Data Store -->
+        <div class="settings-card">
+          <h3>🗄️ Data Store</h3>
+          <p class="settings-desc">Load the JSON data store to enable merge mode, audit trail, and go-live date history tracking. Download snapshots to back up your data.</p>
+          <div class="settings-action-row">
+            <label class="settings-action-btn">
+              <span class="sab-icon">📂</span>
+              <span>
+                Load Data Store (.json)
+                <span class="sab-sub">Enables merge mode and audit trail</span>
+              </span>
+              <input type="file" accept=".json" style="display:none" onchange="handleStoreUpload(event)">
+            </label>
+            <div class="settings-store-status" id="store-status">No data store loaded — load SE_Pipeline_Data.json to enable merge &amp; audit trail</div>
+            <div class="settings-divider"></div>
+            <button class="settings-action-btn" id="btn-download-json" style="display:none" onclick="downloadStore('json')">
+              <span class="sab-icon">⬇️</span>
+              <span>
+                Download JSON Store
+                <span class="sab-sub">Full store with history and audit trail</span>
+              </span>
+            </button>
+            <button class="settings-action-btn" id="btn-download-md" style="display:none" onclick="downloadStore('md')">
+              <span class="sab-icon">📄</span>
+              <span>
+                Download MD Snapshot
+                <span class="sab-sub">Human-readable markdown report</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- SECTION: AUDIT TRAIL -->
     <div id="audit-trail" class="section anchor">
       <div class="section-title"><span class="icon">🔍</span> Audit Trail — Projected Go-Live Date History</div>
       <div id="audit-no-store" style="color:var(--sub);font-size:13px;padding:16px 0;">
-        Load a data store (<strong>SE_Pipeline_Data.json</strong>) using the bar above to view the full audit trail and change history.
+        Load a data store (<strong>SE_Pipeline_Data.json</strong>) via <a href="#settings" onclick="showPage('settings');return false" style="color:var(--accent);font-weight:600">Settings</a> to view the full audit trail and change history.
       </div>
       <div id="audit-content" style="display:none">
         <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;" id="audit-summary-chips"></div>
         <div class="tab-bar">
-          <button class="tab-btn active" onclick="auditTab('changes',this)">📝 Go-Live Date Changes</button>
-          <button class="tab-btn" onclick="auditTab('all',this)">📋 All Tracked Records</button>
+          <button class="tab-btn active" onclick="auditTab('changes',this)">📝 Changes</button>
+          <button class="tab-btn" onclick="auditTab('all',this)">📋 All Changed Records</button>
           <button class="tab-btn" onclick="auditTab('changelog',this)">📜 Import Change Log</button>
         </div>
         <div id="audit-panel-changes">
@@ -1661,7 +1967,7 @@
             <table class="audit-table" id="audit-changes-tbl">
               <thead><tr>
                 <th>Opportunity</th><th>SE Owner</th><th>Region</th>
-                <th>Go-Live Date History</th><th>Changes</th><th>Current RAG</th>
+                <th>Change History</th><th>Summary</th>
               </tr></thead>
               <tbody id="audit-changes-tbody"></tbody>
             </table>
@@ -1672,7 +1978,7 @@
             <table class="audit-table" id="audit-all-tbl">
               <thead><tr>
                 <th>Opportunity</th><th>SE Owner</th><th>Status</th>
-                <th>Current Go-Live</th><th>Recorded On</th><th>Source File</th>
+                <th>Go-Live Date Changes</th><th>Current Status Changes</th><th>RAG</th>
               </tr></thead>
               <tbody id="audit-all-tbody"></tbody>
             </table>
@@ -1898,9 +2204,11 @@ function handleStoreUpload(event) {
       // Strip any blank-name records that may have been stored in previous imports
       if (pipelineStore.active_records)   pipelineStore.active_records   = pipelineStore.active_records.filter(r => (r.opportunity_name||'').trim());
       if (pipelineStore.presales_records) pipelineStore.presales_records = pipelineStore.presales_records.filter(r => (r.opportunity_name||'').trim());
+      migrateStoreDates(pipelineStore);
       const el = document.getElementById('store-status');
       el.textContent = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
-      el.className = 'store-status loaded';
+      el.className = 'settings-store-status loaded';
+      updateDateDisplay();
       document.getElementById('btn-download-json').style.display = '';
       document.getElementById('btn-download-md').style.display   = '';
       // Populate dashboard from store if no CSVs loaded yet
@@ -1991,6 +2299,45 @@ function storeRecordsToCSVRows(records, type) {
 // MERGE MODAL
 // =====================================================
 function normName(n) { return (n||'').trim().toLowerCase(); }
+
+// Normalize all date strings already stored in the store and deduplicate consecutive same-date history entries
+function migrateStoreDates(store) {
+  for (const rec of (store.active_records || [])) {
+    if (rec.projected_go_live_date) rec.projected_go_live_date = normalizeDateStr(rec.projected_go_live_date);
+    // Normalize each history entry date
+    for (const h of (rec.projected_go_live_date_history || [])) {
+      if (h.date) h.date = normalizeDateStr(h.date);
+    }
+    // Remove consecutive duplicate dates (same date recorded multiple times from formatting variants)
+    const hist = rec.projected_go_live_date_history || [];
+    if (hist.length > 1) {
+      const deduped = [hist[0]];
+      for (let i = 1; i < hist.length; i++) {
+        if (hist[i].date !== deduped[deduped.length - 1].date) deduped.push(hist[i]);
+      }
+      rec.projected_go_live_date_history = deduped;
+    }
+  }
+}
+
+// Normalize a date string to DD/MM/YYYY regardless of input format (d/m/yy, dd/mm/yyyy, yyyy-mm-dd …)
+function normalizeDateStr(raw) {
+  if (!raw) return '';
+  const s = raw.trim();
+  // dd/mm/yy or d/m/yy  →  expand 2-digit year
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (m) {
+    const y = parseInt(m[3]) < 50 ? '20' + m[3] : '19' + m[3];
+    return m[1].padStart(2,'0') + '/' + m[2].padStart(2,'0') + '/' + y;
+  }
+  // dd/mm/yyyy or d/m/yyyy
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return m[1].padStart(2,'0') + '/' + m[2].padStart(2,'0') + '/' + m[3];
+  // yyyy-mm-dd (ISO)
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return m[3] + '/' + m[2] + '/' + m[1];
+  return s; // unrecognised — store as-is
+}
 
 function detectGoLiveChanges(type, newRows) {
   if ((type !== 'active' && type !== 'live') || !pipelineStore) return [];
@@ -2098,7 +2445,7 @@ function confirmImport(mode) {
       const existingMap = {};
       for (const r of targetExisting) existingMap[normName(r.opportunity_name)] = r;
 
-      let updated = 0, added = 0, dateChanges = 0;
+      let updated = 0, added = 0, dateChanges = 0, statusChanges = 0;
       const newRecords = rawData.map(row => {
         const name = (row['Opportunity Name']||'').trim();
         const stored = existingMap[normName(name)];
@@ -2106,6 +2453,7 @@ function confirmImport(mode) {
           updated++;
           const newRec = buildStoreRecord(row, type, existingMap, now, 'merge', fileName);
           if (newRec.projected_go_live_date_history.length > (stored.projected_go_live_date_history||[]).length) dateChanges++;
+          if (newRec.current_status_history.length > (stored.current_status_history||[]).length) statusChanges++;
           return newRec;
         } else {
           added++;
@@ -2115,7 +2463,7 @@ function confirmImport(mode) {
       const newNames = new Set(rawData.map(r => normName(r['Opportunity Name']||'')));
       const kept = targetExisting.filter(r => !newNames.has(normName(r.opportunity_name)));
       pipelineStore.active_records = [...otherExisting, ...newRecords, ...kept];
-      pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
+      pipelineStore.change_log.push({ timestamp: nowISO, action: 'merge', description: `Merge of ${type} records from ${fileName}: ${updated} updated, ${added} added, ${dateChanges} go-live date changes, ${statusChanges} status changes, ${kept.length} existing records not in CSV retained`, uploaded_by: 'user' });
     } else {
       const existingArr = pipelineStore.presales_records || [];
       const existingMap = {};
@@ -2171,13 +2519,22 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
   const stored = existingMap[normName(name)];
 
   if (type === 'active' || type === 'live') {
-    const glDate = (row['Projected Go-Live Date']||'').trim();
+    const glDate = normalizeDateStr(row['Projected Go-Live Date']);
     const oldHistory = (stored?.projected_go_live_date_history) || [];
     const lastDate   = oldHistory.length ? oldHistory[oldHistory.length-1].date : null;
     const newHistory = [...oldHistory];
     if (glDate && glDate !== lastDate) {
       newHistory.push({ date: glDate, recorded_on: nowDate, source: `${mode} from ${fileName}`, changed_by: 'user' });
     }
+
+    const currentStatus = (row['Current Status']||'').trim().slice(0,400);
+    const oldStatusHistory = (stored?.current_status_history) || [];
+    const lastStatus = oldStatusHistory.length ? oldStatusHistory[oldStatusHistory.length-1].value : null;
+    const newStatusHistory = [...oldStatusHistory];
+    if (currentStatus && currentStatus !== lastStatus) {
+      newStatusHistory.push({ value: currentStatus, recorded_on: nowDate, source: `${mode} from ${fileName}`, changed_by: 'user' });
+    }
+
     return {
       opportunity_name:       name,
       implementation_name:    (row['Install Record: Implementation Name']||'').trim(),
@@ -2206,14 +2563,15 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
       last_activity_date:     (row['Install Record: Last Activity Date']||row['Install Record: Last Modified Date']||'').trim(),
       implementation_blocker: (row['Implementation Blocker']||'').trim(),
       implementation_risk:    (row['Implementation Risk']||'').trim(),
-      current_status_notes:   (row['Current Status']||'').trim().slice(0,400),
+      current_status_notes:   currentStatus,
       days_in_implementation: (row['Number of days in implementation']||'').trim(),
       days_in_cug:            (row['Number of days in CUG']||'').trim(),
       days_se_involved:       (row['Number of days SE involved']||'').trim(),
       days_open:              (row['Number of Days Open']||'').trim(),
       source_file:            fileName,
       record_type:            type,   // 'active' or 'live' — preserved for store split
-      projected_go_live_date_history: newHistory
+      projected_go_live_date_history: newHistory,
+      current_status_history:         newStatusHistory
     };
   } else {
     return {
@@ -2246,8 +2604,28 @@ function buildStoreRecord(row, type, existingMap, nowDate, mode, fileName) {
 function updateStoreStatusBar() {
   if (!pipelineStore) return;
   const el = document.getElementById('store-status');
-  el.textContent = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
-  el.className = 'store-status loaded';
+  const active   = pipelineStore.active_records?.length   || 0;
+  const presales = pipelineStore.presales_records?.length || 0;
+  const msg = `✅ Store loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${active} active + ${presales} presales records`;
+  el.textContent = msg;
+  el.className = 'settings-store-status loaded';
+  // Mirror a short status in the header badge
+  const badge = document.getElementById('header-data-status');
+  if (badge) {
+    badge.textContent = `🗄️ Store loaded · ${active + presales} records`;
+    badge.classList.add('visible');
+  }
+  updateDateDisplay();
+}
+
+function updateDateDisplay() {
+  const raw = pipelineStore?._meta?.last_updated_on;
+  const el  = document.getElementById('date-display');
+  if (!el) return;
+  if (!raw) { el.textContent = '—'; return; }
+  const [y, m, d] = raw.split('-').map(Number);
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  el.textContent = `${d} ${months[m-1]} ${y}`;
 }
 
 // =====================================================
@@ -2363,65 +2741,111 @@ function auditTab(tab, btn) {
 }
 
 function renderAuditTrail() {
-  const noStore  = document.getElementById('audit-no-store');
-  const content  = document.getElementById('audit-content');
+  const noStore = document.getElementById('audit-no-store');
+  const content = document.getElementById('audit-content');
   if (!pipelineStore) { noStore.style.display=''; content.style.display='none'; return; }
   noStore.style.display = 'none';
   content.style.display = '';
 
-  const active   = pipelineStore.active_records   || [];
-  const changelog = pipelineStore.change_log || [];
+  const active    = pipelineStore.active_records || [];
+  const changelog = pipelineStore.change_log     || [];
+
+  // A record has changes if either tracked field has >1 history entry
+  const hasDateChange   = r => (r.projected_go_live_date_history||[]).length > 1;
+  const hasStatusChange = r => (r.current_status_history||[]).length > 1;
+  const hasAnyChange    = r => hasDateChange(r) || hasStatusChange(r);
+
+  const withDateChanges   = active.filter(hasDateChange);
+  const withStatusChanges = active.filter(hasStatusChange);
+  const withAnyChanges    = active.filter(hasAnyChange);
+  const totalImports      = changelog.length;
 
   // Summary chips
-  const withChanges = active.filter(r => (r.projected_go_live_date_history||[]).length > 1);
-  const totalImports = changelog.length;
   document.getElementById('audit-summary-chips').innerHTML = `
-    <div class="wv-summary-chip"><strong>${active.length}</strong> active records tracked</div>
-    <div class="wv-summary-chip" style="color:var(--amber)"><strong>${withChanges.length}</strong> go-live date changes</div>
-    <div class="wv-summary-chip" style="color:var(--accent)"><strong>${totalImports}</strong> import events</div>
-    <div class="wv-summary-chip" style="color:var(--sub)">Store v${pipelineStore._meta?.version||1} · Updated ${pipelineStore._meta?.last_updated_on||'—'}</div>
+    <div class="wv-summary-chip"><strong>${active.length}</strong> records tracked</div>
+    <div class="wv-summary-chip" style="color:var(--amber)"><strong>${withDateChanges.length}</strong> go-live date changes</div>
+    <div class="wv-summary-chip" style="color:var(--accent)"><strong>${withStatusChanges.length}</strong> status changes</div>
+    <div class="wv-summary-chip" style="color:var(--sub)"><strong>${totalImports}</strong> import events · Store v${pipelineStore._meta?.version||1} · Updated ${pipelineStore._meta?.last_updated_on||'—'}</div>
   `;
 
-  // Tab 1: records with date changes (history length > 1)
-  const changedRecs = active.filter(r => (r.projected_go_live_date_history||[]).length > 1);
+  // Helper: render a history list (date entries or status entries)
+  function renderDateHist(hist) {
+    return hist.map((h, i) => `
+      <div class="audit-history-line">
+        <span class="audit-date-tag ${i===hist.length-1?'current':''}">${escHtml(h.date||'(none)')}</span>
+        ${i < hist.length-1 ? '<span class="audit-arrow">→</span>' : ''}
+        <span class="audit-source">recorded ${h.recorded_on} · ${h.source}</span>
+      </div>`).join('');
+  }
+  function renderStatusHist(hist) {
+    return hist.map((h, i) => `
+      <div class="audit-history-line" style="align-items:flex-start">
+        <span class="audit-date-tag ${i===hist.length-1?'current':''}" style="min-width:80px;margin-top:2px">
+          ${h.recorded_on}
+        </span>
+        ${i < hist.length-1 ? '<span class="audit-arrow" style="margin-top:2px">→</span>' : ''}
+        <span class="audit-source" style="white-space:normal;max-width:420px;line-height:1.4">${escHtml(h.value||'(empty)')}</span>
+      </div>`).join('');
+  }
+
+  // Tab 1: records with changes in Go-Live Date OR Current Status
   const tbody1 = document.getElementById('audit-changes-tbody');
-  if (!changedRecs.length) {
-    tbody1.innerHTML = `<tr><td colspan="6" style="color:var(--sub);font-style:italic;padding:16px">No go-live date changes recorded yet. They will appear here after a subsequent CSV merge.</td></tr>`;
+  if (!withAnyChanges.length) {
+    tbody1.innerHTML = `<tr><td colspan="5" style="color:var(--sub);font-style:italic;padding:16px">No changes recorded yet. Changes to Projected Go-Live Date or Current Status will appear here after a subsequent CSV merge.</td></tr>`;
   } else {
-    tbody1.innerHTML = changedRecs.map(r => {
-      const hist = (r.projected_go_live_date_history||[]);
-      const histHtml = hist.map((h,i) => `
-        <div class="audit-history-line">
-          <span class="audit-date-tag ${i===hist.length-1?'current':''}">${h.date||'(none)'}</span>
-          ${i<hist.length-1?'<span class="audit-arrow">→</span>':''}
-          <span class="audit-source">recorded ${h.recorded_on} · ${h.source}</span>
-        </div>`).join('');
-      const rag = r.rag_status||'';
+    tbody1.innerHTML = withAnyChanges.map(r => {
+      const rag = r.rag_status || '';
+      const dateHist   = r.projected_go_live_date_history || [];
+      const statusHist = r.current_status_history         || [];
+      const changeCount = (hasDateChange(r) ? 1 : 0) + (hasStatusChange(r) ? 1 : 0);
+
+      const changesHtml = `
+        ${dateHist.length > 1 ? `
+          <div class="audit-change-group">
+            <div class="audit-change-label">📅 Projected Go-Live Date</div>
+            ${renderDateHist(dateHist)}
+          </div>` : ''}
+        ${statusHist.length > 1 ? `
+          <div class="audit-change-group" style="margin-top:${dateHist.length > 1 ? '10px' : '0'}">
+            <div class="audit-change-label">📝 Current Status</div>
+            ${renderStatusHist(statusHist)}
+          </div>` : ''}
+      `;
+
       return `<tr>
-        <td><strong>${escHtml(r.opportunity_name)}</strong></td>
-        <td>${escHtml(r.se_owner)||'—'}</td>
-        <td>${escHtml((r.global_region||'').split('|')[0].trim())}</td>
-        <td>${histHtml}</td>
-        <td><span class="audit-changed">${hist.length} entries</span></td>
-        <td><span class="badge badge-${rag==='On Track'?'green':rag==='At Risk'?'amber':rag==='Blocked'?'red':'grey'}">${rag||'—'}</span></td>
+        <td style="vertical-align:top"><strong>${escHtml(r.opportunity_name)}</strong></td>
+        <td style="vertical-align:top">${escHtml(r.se_owner)||'—'}</td>
+        <td style="vertical-align:top">${escHtml((r.global_region||'').split('|')[0].trim())}</td>
+        <td style="vertical-align:top">${changesHtml}</td>
+        <td style="vertical-align:top">
+          <span class="audit-changed">${changeCount} field${changeCount!==1?'s':''} changed</span><br>
+          <span class="badge badge-${rag==='On Track'?'green':rag==='At Risk'?'amber':rag==='Blocked'?'red':'grey'}" style="margin-top:4px">${rag||'—'}</span>
+        </td>
       </tr>`;
     }).join('');
   }
 
-  // Tab 2: all tracked records
+  // Tab 2: only records that have at least one change (either field)
   const tbody2 = document.getElementById('audit-all-tbody');
-  tbody2.innerHTML = active.map(r => {
-    const hist = r.projected_go_live_date_history||[];
-    const first = hist[0];
-    return `<tr>
-      <td>${escHtml(r.opportunity_name)}</td>
-      <td>${escHtml(r.se_owner)||'—'}</td>
-      <td><span class="badge badge-${r.status==='Live Completed'?'green':r.status==='Blocked'?'red':'grey'}">${escHtml(r.status)||'—'}</span></td>
-      <td><code>${escHtml(r.projected_go_live_date)||'—'}</code></td>
-      <td>${first?.recorded_on||'—'}</td>
-      <td style="color:var(--sub);font-size:11px">${escHtml(first?.source||'—')}</td>
-    </tr>`;
-  }).join('');
+  if (!withAnyChanges.length) {
+    tbody2.innerHTML = `<tr><td colspan="6" style="color:var(--sub);font-style:italic;padding:16px">No tracked changes yet.</td></tr>`;
+  } else {
+    tbody2.innerHTML = withAnyChanges.map(r => {
+      const dateHist   = r.projected_go_live_date_history || [];
+      const statusHist = r.current_status_history         || [];
+      const latestDate   = dateHist.length   ? dateHist[dateHist.length-1].recorded_on   : '—';
+      const latestStatus = statusHist.length ? statusHist[statusHist.length-1].recorded_on : '—';
+      const rag = r.rag_status || '';
+      return `<tr>
+        <td>${escHtml(r.opportunity_name)}</td>
+        <td>${escHtml(r.se_owner)||'—'}</td>
+        <td><span class="badge badge-${r.status==='Live Completed'?'green':r.status==='Blocked'?'red':'grey'}">${escHtml(r.status)||'—'}</span></td>
+        <td>${dateHist.length > 1 ? `<code>${escHtml(r.projected_go_live_date||'—')}</code><br><span style="font-size:10px;color:var(--sub)">${dateHist.length} entries · last ${latestDate}</span>` : '<span style="color:var(--sub)">—</span>'}</td>
+        <td>${statusHist.length > 1 ? `<span style="font-size:11px">${escHtml((r.current_status_notes||'').slice(0,60))}${r.current_status_notes?.length>60?'…':''}</span><br><span style="font-size:10px;color:var(--sub)">${statusHist.length} entries · last ${latestStatus}</span>` : '<span style="color:var(--sub)">—</span>'}</td>
+        <td><span class="badge badge-${rag==='On Track'?'green':rag==='At Risk'?'amber':rag==='Blocked'?'red':'grey'}">${rag||'—'}</span></td>
+      </tr>`;
+    }).join('');
+  }
 
   // Tab 3: change log
   const clEl = document.getElementById('audit-changelog-list');
@@ -2935,6 +3359,8 @@ function renderPipelineHealth() {
 let allPipelineRows    = [];
 let currentPipelineTab = 'all'; // 'all' | 'active' | 'live' | 'presales'
 let currentGeoFilter   = '';       // '' = All, or region string
+let _pageSize          = 10;       // rows per page (0 = all)
+let _currentPage       = 1;
 
 // Region color palette
 const REGION_COLORS = ['#9333ea','#f59e0b','#16a34a','#3b82f6','#06b6d4','#ef4444','#f97316','#8b5cf6'];
@@ -3053,8 +3479,7 @@ function setPipelineTab(tab) {
   document.getElementById('pl-active-wrap').style.display    = tab === 'active'   ? '' : 'none';
   document.getElementById('pl-live-wrap').style.display      = tab === 'live'     ? '' : 'none';
   document.getElementById('pl-presales-wrap').style.display  = tab === 'presales' ? '' : 'none';
-  // Show Category filter only on All tab; RAG filter hides for presales; QTR hides for presales
-  document.getElementById('filter-category').style.display = tab === 'all'      ? '' : 'none';
+  // RAG filter hides for presales; QTR hides for presales
   document.getElementById('filter-rag').style.display       = tab === 'presales' ? 'none' : '';
   document.getElementById('filter-qtr').style.display       = tab === 'presales' ? 'none' : '';
   applyTableFilters();
@@ -3091,11 +3516,6 @@ function renderPipelineTable() {
   ownerSel.innerHTML = '<option value="">All Opp Owners</option>' + oppOwners.map(o => `<option value="${escHtml(o)}">${escHtml(o)}</option>`).join('');
   ownerSel.value = curOwner;
 
-  const regSel = document.getElementById('filter-region');
-  const curReg = regSel.value;
-  regSel.innerHTML = '<option value="">All Regions</option>' + regions.map(r => `<option value="${escHtml(r)}">${escHtml(r)}</option>`).join('');
-  regSel.value = curReg;
-
   const qtrSel = document.getElementById('filter-qtr');
   const curQtr = qtrSel.value;
   qtrSel.innerHTML = '<option value="">All Quarters</option>' + qtrs.map(q => `<option value="${escHtml(q)}">${escHtml(q)}</option>`).join('');
@@ -3114,11 +3534,37 @@ function renderPipelineTable() {
   setPipelineTab(currentPipelineTab);
 }
 
-function applyTableFilters() {
+function resetTableFilters() {
+  document.getElementById('filter-search').value = '';
+  document.getElementById('filter-se').value = '';
+  document.getElementById('filter-opp-owner').value = '';
+  document.getElementById('filter-rag').value = '';
+  document.getElementById('filter-qtr').value = '';
+  document.getElementById('filter-type').value = '';
+  currentGeoFilter = '';
+  // Clear active state on region cards
+  document.querySelectorAll('.cro-region-card').forEach(c => c.classList.remove('active'));
+  applyTableFilters();
+}
+
+function updateResetBtn() {
+  const active = currentGeoFilter ||
+    document.getElementById('filter-search').value ||
+    document.getElementById('filter-se').value ||
+    document.getElementById('filter-opp-owner').value ||
+    document.getElementById('filter-rag').value ||
+    document.getElementById('filter-qtr').value ||
+    document.getElementById('filter-type').value;
+  document.getElementById('reset-filters-btn').style.display = active ? '' : 'none';
+}
+
+function applyTableFilters(resetPage = true) {
+  if (resetPage) _currentPage = 1;
+  updateResetBtn();
   const se       = document.getElementById('filter-se').value;
   const owner    = document.getElementById('filter-opp-owner').value;
   const rag      = document.getElementById('filter-rag').value;
-  const region   = document.getElementById('filter-region').value || currentGeoFilter;
+  const region   = currentGeoFilter;
   const qtr      = document.getElementById('filter-qtr').value;
   const type     = document.getElementById('filter-type').value;
   const search   = (document.getElementById('filter-search').value || '').toLowerCase();
@@ -3151,8 +3597,6 @@ function applyTableFilters() {
     : '—';
   const today  = new Date();
 
-  const category = document.getElementById('filter-category').value;
-
   if (currentPipelineTab === 'all') {
     // Combine all three sources, tagging each with its category
     const active   = allPipelineRows || [];
@@ -3164,7 +3608,6 @@ function applyTableFilters() {
     const presalesRows = presales.map(r => ({ ...r, _cat: 'presales' }));
 
     let rows = [...activeRows, ...liveRows, ...presalesRows].filter(r => {
-      if (category && r._cat !== category) return false;
       // SE field differs by category
       const seVal = r._cat === 'presales' ? (r['Presales Engineer']||'') : (r['Implementation Owner']||'');
       if (se && seVal !== se) return false;
@@ -3192,11 +3635,14 @@ function applyTableFilters() {
       presales: '<span class="badge" style="background:rgba(147,51,234,.1);color:#7c3aed;font-size:10px">Presales</span>',
     };
 
+    const totalRows = rows.length;
+    const pageRows = _pageSize > 0 ? rows.slice((_currentPage-1)*_pageSize, _currentPage*_pageSize) : rows;
+    renderPaginationBar(totalRows);
     const tbody = document.getElementById('all-tbody');
-    if (rows.length === 0) {
+    if (pageRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="12" class="cro-empty">No records match the current filters</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => {
+      tbody.innerHTML = pageRows.map(r => {
         const reg    = extractRegion(r['Global Region']);
         const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
         const opType = r['Type of Opportunity'] || '';
@@ -3246,7 +3692,9 @@ function applyTableFilters() {
         </tr>`;
       }).join('');
     }
-    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} records`;
+    document.getElementById('pipeline-count').textContent = _pageSize > 0
+      ? `Showing ${pageRows.length} of ${totalRows} records`
+      : `Showing all ${totalRows} records`;
 
   } else if (currentPipelineTab === 'active') {
     let rows = allPipelineRows.filter(r => (r['Status']||'').trim() !== 'Live Completed' && baseFilter(r));
@@ -3255,11 +3703,14 @@ function applyTableFilters() {
       return ragStat === rag;
     });
 
+    const totalRows = rows.length;
+    const pageRows = _pageSize > 0 ? rows.slice((_currentPage-1)*_pageSize, _currentPage*_pageSize) : rows;
+    renderPaginationBar(totalRows);
     const tbody = document.getElementById('pipeline-tbody');
-    if (rows.length === 0) {
+    if (pageRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="11" class="cro-empty">No records match the current filters</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => {
+      tbody.innerHTML = pageRows.map(r => {
         const ragStat      = (r['Projected Go-Live Status'] || '').trim() || 'Unknown';
         const effectiveRag = (r['Status']||'').trim() === 'Blocked' ? 'Blocked' : ragStat;
         const rc     = ragClass(effectiveRag);
@@ -3286,7 +3737,9 @@ function applyTableFilters() {
         </tr>`;
       }).join('');
     }
-    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} active records`;
+    document.getElementById('pipeline-count').textContent = _pageSize > 0
+      ? `Showing ${pageRows.length} of ${totalRows} active records`
+      : `Showing all ${totalRows} active records`;
 
   } else if (currentPipelineTab === 'live') {
     let rows = allPipelineRows.filter(r => (r['Status']||'').trim() === 'Live Completed' && baseFilter(r));
@@ -3296,11 +3749,14 @@ function applyTableFilters() {
       return db - da;
     });
 
+    const totalRows = rows.length;
+    const pageRows = _pageSize > 0 ? rows.slice((_currentPage-1)*_pageSize, _currentPage*_pageSize) : rows;
+    renderPaginationBar(totalRows);
     const tbody = document.getElementById('live-tbody');
-    if (rows.length === 0) {
+    if (pageRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" class="cro-empty">No live records match the current filters</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => {
+      tbody.innerHTML = pageRows.map(r => {
         const rev     = parseRev(r['Opportunity Net Revenue (converted)']);
         const opType  = r['Type of Opportunity'] || '';
         const days    = parseInt(r['Number of days in implementation'] || '0') || null;
@@ -3321,7 +3777,9 @@ function applyTableFilters() {
         </tr>`;
       }).join('');
     }
-    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} live records`;
+    document.getElementById('pipeline-count').textContent = _pageSize > 0
+      ? `Showing ${pageRows.length} of ${totalRows} live records`
+      : `Showing all ${totalRows} live records`;
 
   } else {
     // Presales tab
@@ -3340,11 +3798,14 @@ function applyTableFilters() {
     });
     rows.sort((a,b) => parseRev(b['Opportunity Net Revenue (converted)']) - parseRev(a['Opportunity Net Revenue (converted)']));
 
+    const totalRows = rows.length;
+    const pageRows = _pageSize > 0 ? rows.slice((_currentPage-1)*_pageSize, _currentPage*_pageSize) : rows;
+    renderPaginationBar(totalRows);
     const tbody = document.getElementById('presales-tbody');
-    if (rows.length === 0) {
+    if (pageRows.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" class="cro-empty">No presales records match the current filters</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => {
+      tbody.innerHTML = pageRows.map(r => {
         const rev    = parseRev(r['Opportunity Net Revenue (converted)']);
         const prob   = parseFloat(r['Opportunity: Probability (%)']) || 0;
         const stage  = (r['Opportunity: Stage'] || '').trim();
@@ -3370,8 +3831,70 @@ function applyTableFilters() {
         </tr>`;
       }).join('');
     }
-    document.getElementById('pipeline-count').textContent = `Showing ${rows.length} presales records`;
+    document.getElementById('pipeline-count').textContent = _pageSize > 0
+      ? `Showing ${pageRows.length} of ${totalRows} presales records`
+      : `Showing all ${totalRows} presales records`;
   }
+}
+
+function renderPaginationBar(total) {
+  const infoEl  = document.getElementById('pag-info');
+  const pagesEl = document.getElementById('pag-pages');
+  if (!infoEl || !pagesEl) return;
+
+  if (total === 0) {
+    infoEl.textContent = '0 records';
+    pagesEl.innerHTML  = '';
+    return;
+  }
+  if (_pageSize === 0) {
+    infoEl.textContent = `${total} records`;
+    pagesEl.innerHTML  = '';
+    return;
+  }
+
+  const totalPages = Math.ceil(total / _pageSize);
+  // Clamp currentPage
+  if (_currentPage > totalPages) _currentPage = totalPages;
+  const start = (_currentPage - 1) * _pageSize + 1;
+  const end   = Math.min(_currentPage * _pageSize, total);
+  infoEl.textContent = `${start}–${end} of ${total}`;
+
+  // Build page numbers with ellipsis
+  const pageNums = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pageNums.push(i);
+  } else {
+    pageNums.push(1);
+    if (_currentPage > 3)            pageNums.push('…');
+    for (let i = Math.max(2, _currentPage - 1); i <= Math.min(totalPages - 1, _currentPage + 1); i++) pageNums.push(i);
+    if (_currentPage < totalPages - 2) pageNums.push('…');
+    pageNums.push(totalPages);
+  }
+
+  let html = `<button class="pag-btn" onclick="goToPage(${_currentPage-1})" ${_currentPage===1?'disabled':''}>&lsaquo;</button>`;
+  for (const p of pageNums) {
+    if (p === '…') {
+      html += `<span class="pag-ellipsis">…</span>`;
+    } else {
+      html += `<button class="pag-btn${p===_currentPage?' active':''}" onclick="goToPage(${p})">${p}</button>`;
+    }
+  }
+  html += `<button class="pag-btn" onclick="goToPage(${_currentPage+1})" ${_currentPage===totalPages?'disabled':''}>&rsaquo;</button>`;
+  pagesEl.innerHTML = html;
+}
+
+function goToPage(n) {
+  _currentPage = n;
+  applyTableFilters(false);
+  // Scroll table back into view
+  document.getElementById('table-filters')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setPageSize(val) {
+  _pageSize = parseInt(val) || 0;
+  _currentPage = 1;
+  applyTableFilters(false);
 }
 
 // =====================================================
@@ -3822,11 +4345,12 @@ function renderFBBB() {
         legend: legendOpts,
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          anchor: 'end', align: 'top',
+          anchor: 'end', align: 'top', offset: 2, clip: false,
           color: '#94a3b8', font: { weight: '600', size: 11 },
           formatter: v => v
         }
       },
+      layout: { padding: { top: 20 } },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
@@ -3851,11 +4375,12 @@ function renderFBBB() {
         legend: legendOpts,
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          anchor: 'end', align: 'top',
+          anchor: 'end', align: 'top', offset: 2, clip: false,
           color: '#94a3b8', font: { weight: '600', size: 11 },
           formatter: v => `$${v}M`
         }
       },
+      layout: { padding: { top: 20 } },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: gridColor }, beginAtZero: true }
@@ -3880,11 +4405,12 @@ function renderFBBB() {
         legend: legendOpts,
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
-          anchor: 'end', align: 'top',
+          anchor: 'end', align: 'top', offset: 2, clip: false,
           color: '#94a3b8', font: { weight: '600', size: 11 },
           formatter: v => v
         }
       },
+      layout: { padding: { top: 20 } },
       scales: {
         x: { ticks: { color: '#64748b' }, grid: { color: gridColor } },
         y: { ticks: { color: '#64748b', precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
@@ -4031,12 +4557,13 @@ function renderSEBandwidth() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           anchor: 'end',
-          align: 'top',
+          align: 'top', offset: 2, clip: false,
           color: '#94a3b8',
           font: { weight: '600', size: 11 },
           formatter: v => v
         }
       },
+      layout: { padding: { top: 20 } },
       scales: {
         x: { stacked: false, ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
         y: { stacked: false, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: '#e2e8f0' } }
@@ -4064,12 +4591,13 @@ function renderSEBandwidth() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           anchor: 'end',
-          align: 'top',
+          align: 'top', offset: 2, clip: false,
           color: '#94a3b8',
           font: { weight: '600', size: 11 },
           formatter: v => `$${v}M`
         }
       },
+      layout: { padding: { top: 20 } },
       scales: {
         x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#e2e8f0' } },
         y: { ticks: { color: '#64748b', callback: v => '$' + v + 'M' }, grid: { color: '#e2e8f0' } }
@@ -4488,12 +5016,15 @@ function renderMoMChart() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           anchor: stacked ? 'center' : 'end',
-          align: stacked ? 'center' : 'top',
+          align: stacked ? 'center' : 'end',
+          offset: stacked ? 0 : 4,
+          clip: false,
           color: stacked ? '#fff' : '#6b7280',
           font: { weight: '600', size: 11 },
           formatter: v => v
         }
       },
+      layout: { padding: { top: 24 } },
       scales: {
         x: { stacked, grid:{ display:false }, ticks:{ color:'#6b7280', font:{size:11} } },
         y: { stacked, beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, stepSize:1, callback: v => Number.isInteger(v)?v:'' }, grid:{ color:'#f3f4f6' } }
@@ -4564,23 +5095,19 @@ function renderTTLAnalysis() {
       data: {
         labels: platRows.map(r => r.plat),
         datasets: [
-          { label:'Median TTL', data: platRows.map(r => r.med), backgroundColor: barColors, borderRadius:5 },
-          { label:'Avg TTL',    data: platRows.map(r => r.avg), backgroundColor: barColors.map(c=>c+'55'), borderRadius:3, type:'line', borderColor: barColors, fill:false, pointRadius:4 }
+          { label:'Median TTL', data: platRows.map(r => r.med), backgroundColor: barColors, borderRadius:5,
+            datalabels: { display: true, anchor: 'center', align: 'center', color: '#fff', font: { weight: '700', size: 10 }, formatter: v => `${v}d` } },
+          { label:'Avg TTL',    data: platRows.map(r => r.avg), backgroundColor: barColors.map(c=>c+'55'), borderRadius:3, type:'line', borderColor: barColors, fill:false, pointRadius:4,
+            datalabels: { display: true, anchor: 'end', align: 'top', offset: 4, color: '#6b7280', font: { weight: '600', size: 10 }, formatter: v => `${v}d` } }
         ]
       },
       options: {
         responsive:true, maintainAspectRatio:false,
         plugins:{
           legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } },
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] != null && ctx.dataset.data[ctx.dataIndex] > 0,
-            anchor: 'end',
-            align: 'top',
-            color: '#6b7280',
-            font: { weight: '600', size: 10 },
-            formatter: v => `${v}d`
-          }
+          datalabels: { display: false }
         },
+        layout: { padding: { top: 20 } },
         scales:{
           x:{ ticks:{ color:'#6b7280', font:{size:10}, maxRotation:35 }, grid:{ display:false } },
           y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
@@ -4609,23 +5136,19 @@ function renderTTLAnalysis() {
       data: {
         labels: mos.map(moLabel),
         datasets: [
-          { label:'Median TTL (working days)', data: mos.map(k => median(moMap[k])), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.08)', fill:true, tension:0.35, pointRadius:5, pointBackgroundColor:'#6366f1', borderWidth:2 },
-          { label:'Avg TTL',                   data: mos.map(k => Math.round(moMap[k].reduce((s,v)=>s+v,0)/moMap[k].length)), borderColor:'#f59e0b', backgroundColor:'transparent', tension:0.35, pointRadius:4, borderDash:[5,4], borderWidth:2 }
+          { label:'Median TTL (working days)', data: mos.map(k => median(moMap[k])), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.08)', fill:true, tension:0.35, pointRadius:5, pointBackgroundColor:'#6366f1', borderWidth:2,
+            datalabels: { display: true, anchor: 'top', align: 'top', offset: 4, color: '#6366f1', font: { weight: '600', size: 10 }, formatter: v => v != null ? `${v}d` : '' } },
+          { label:'Avg TTL',                   data: mos.map(k => Math.round(moMap[k].reduce((s,v)=>s+v,0)/moMap[k].length)), borderColor:'#f59e0b', backgroundColor:'transparent', tension:0.35, pointRadius:4, borderDash:[5,4], borderWidth:2,
+            datalabels: { display: true, anchor: 'end', align: 'bottom', offset: 4, color: '#f59e0b', font: { weight: '600', size: 10 }, formatter: v => v != null ? `${v}d` : '' } }
         ]
       },
       options: {
         responsive:true, maintainAspectRatio:false,
         plugins:{
           legend:{ position:'bottom', labels:{ color:'#374151', font:{size:11} } },
-          datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex] != null,
-            anchor: 'top',
-            align: 'top',
-            color: ctx => ctx.dataset.borderColor,
-            font: { weight: '600', size: 10 },
-            formatter: v => v != null ? `${v}d` : ''
-          }
+          datalabels: { display: false }
         },
+        layout: { padding: { top: 20, bottom: 10 } },
         scales:{
           x:{ ticks:{ color:'#6b7280', font:{size:11} }, grid:{ color:'#f3f4f6' } },
           y:{ beginAtZero:true, ticks:{ color:'#6b7280', font:{size:11}, callback: v=>`${v}d` }, grid:{ color:'#f3f4f6' } }
@@ -5692,6 +6215,14 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
+function collapseSidebar() {
+  document.body.classList.toggle('sidebar-collapsed');
+  // Resize charts so they fill the new width
+  setTimeout(() => {
+    Object.values(charts).forEach(c => { try { c.resize(); } catch(e){} });
+  }, 240);
+}
+
 // =====================================================
 // AUTO-LOAD: try to fetch SE_Pipeline_Data.json from
 // the same folder as the HTML file on page load.
@@ -5702,9 +6233,11 @@ function autoLoadStore(jsonText) {
     pipelineStore = JSON.parse(jsonText);
     if (pipelineStore.active_records)   pipelineStore.active_records   = pipelineStore.active_records.filter(r => (r.opportunity_name||'').trim());
     if (pipelineStore.presales_records) pipelineStore.presales_records = pipelineStore.presales_records.filter(r => (r.opportunity_name||'').trim());
+    migrateStoreDates(pipelineStore);
     const el = document.getElementById('store-status');
     el.textContent = `✅ Store auto-loaded — v${pipelineStore._meta?.version||1}, last updated ${pipelineStore._meta?.last_updated_on||'unknown'}, ${pipelineStore.active_records?.length||0} active + ${pipelineStore.presales_records?.length||0} presales records`;
-    el.className = 'store-status loaded';
+    el.className = 'settings-store-status loaded';
+    updateDateDisplay();
     document.getElementById('btn-download-json').style.display = '';
     document.getElementById('btn-download-md').style.display   = '';
     if (!activeData && pipelineStore.active_records?.length) {
