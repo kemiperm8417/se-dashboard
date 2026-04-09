@@ -825,9 +825,11 @@
     display:inline-block; font-size:11px; font-weight:700;
     padding:2px 8px; border-radius:20px; white-space:nowrap; flex-shrink:0;
   }
-  .lts-move-badge.added  { background:var(--green-bg); color:var(--green); }
-  .lts-move-badge.moved  { background:var(--red-bg); color:var(--red); }
+  .lts-move-badge.added   { background:var(--green-bg); color:var(--green); }
+  .lts-move-badge.moved   { background:var(--red-bg); color:var(--red); }
+  .lts-move-badge.initial { background:var(--accent-light); color:var(--accent); }
   .lts-move-names { font-size:11.5px; color:var(--text); line-height:1.6; }
+  .lts-move-divider { border:none; border-top:1px solid var(--border); margin:2px 0; }
 
   /* ═══════════════════════════════════════════════
      LEADERSHIP / SUMMARY REPORT
@@ -3260,8 +3262,28 @@ function renderQ1Tracker() {
   h += `</div>`;
 
   // LTS movement detail
-  if (addedCount > 0 || movedOutCount > 0) {
+  {
     h += `<div class="q1-lts-movement">`;
+
+    // Initial LTS baseline row (Q1-2026 uses fixed ORIGINAL_LTS_25; other quarters show full ltsCount as baseline)
+    if (QTR === 'Q1-2026') {
+      h += `<div class="lts-move-row">
+        <span class="lts-move-badge initial">${ORIGINAL_LTS_25.length} Initial LTS</span>
+        <span class="lts-move-names" style="color:var(--sub)">${ORIGINAL_LTS_25.map(escHtml).join(' · ')}</span>
+      </div>`;
+    } else {
+      // For other quarters, show all current LTS records as the baseline
+      const baseCount = ltsCount - addedCount;
+      const baseNames = ltsRecords.filter(r => !addedRecs.includes(r)).map(r => escHtml(r['Opportunity Name']));
+      h += `<div class="lts-move-row">
+        <span class="lts-move-badge initial">${baseCount > 0 ? baseCount : ltsCount} Initial LTS</span>
+        <span class="lts-move-names" style="color:var(--sub)">${baseNames.length ? baseNames.join(' · ') : '—'}</span>
+      </div>`;
+    }
+
+    if (addedCount > 0 || movedOutCount > 0) {
+      h += `<hr class="lts-move-divider">`;
+    }
     if (addedCount > 0) {
       h += `<div class="lts-move-row lts-added">
         <span class="lts-move-badge added">+${addedCount} Added</span>
