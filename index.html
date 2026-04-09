@@ -1482,13 +1482,20 @@
 
       <!-- MoM Go-Live Bar Chart -->
       <div class="chart-card" style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-          <h3 style="margin-bottom:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--sub);font-weight:700">Project Go-Lives — Month on Month</h3>
-          <div class="tab-bar" style="margin-bottom:0" id="mom-tab-bar">
-            <button class="tab-btn active" onclick="setMoMGroup('all',this)">All</button>
-            <button class="tab-btn" onclick="setMoMGroup('fbbb',this)">FB vs BB</button>
-            <button class="tab-btn" onclick="setMoMGroup('region',this)">By Region</button>
-            <button class="tab-btn" onclick="setMoMGroup('platform',this)">By Platform</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+          <h3 style="margin-bottom:0;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--sub);font-weight:700" id="mom-chart-title">Project Go-Lives — Monthly</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <div class="tab-bar" style="margin-bottom:0" id="mom-period-bar">
+              <button class="tab-btn active" onclick="setMoMPeriod('monthly',this)">Monthly</button>
+              <button class="tab-btn" onclick="setMoMPeriod('quarterly',this)">Quarterly</button>
+              <button class="tab-btn" onclick="setMoMPeriod('yearly',this)">Yearly</button>
+            </div>
+            <div class="tab-bar" style="margin-bottom:0" id="mom-tab-bar">
+              <button class="tab-btn active" onclick="setMoMGroup('all',this)">All</button>
+              <button class="tab-btn" onclick="setMoMGroup('fbbb',this)">FB vs BB</button>
+              <button class="tab-btn" onclick="setMoMGroup('region',this)">By Region</button>
+              <button class="tab-btn" onclick="setMoMGroup('platform',this)">By Platform</button>
+            </div>
           </div>
         </div>
         <div style="position:relative;height:300px"><canvas id="momChart"></canvas></div>
@@ -5101,7 +5108,23 @@ function moLabel(key) {
 }
 
 // ─── MoM Go-Live Chart ───────────────────────────────────────────────────────
-let _momGroup = 'all';
+let _momGroup  = 'all';
+let _momPeriod = 'monthly';
+
+function qtrKey(d)   { return `${d.getFullYear()}-Q${Math.floor(d.getMonth()/3)+1}`; }
+function qtrLabel(k) { const [y,q] = k.split('-'); return `${q} ${y}`; }
+function yrKey(d)    { return `${d.getFullYear()}`; }
+function yrLabel(k)  { return k; }
+
+function setMoMPeriod(period, btn) {
+  _momPeriod = period;
+  document.querySelectorAll('#mom-period-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const titles = { monthly: 'Monthly', quarterly: 'Quarterly', yearly: 'Yearly' };
+  const el = document.getElementById('mom-chart-title');
+  if (el) el.textContent = `Project Go-Lives — ${titles[period]}`;
+  renderMoMChart();
+}
 
 function setMoMGroup(group, btn) {
   _momGroup = group;
@@ -5122,40 +5145,44 @@ function renderMoMChart() {
     return;
   }
 
-  const monthSet = new Set();
-  liveRecs.forEach(r => { const d = parseDate(r['Actual Live Date']); if(d) monthSet.add(moKey(d)); });
-  const months = [...monthSet].sort();
-  const labels = months.map(moLabel);
+  // Build period keys and labels based on selected period
+  const keyFn   = _momPeriod === 'yearly' ? yrKey   : _momPeriod === 'quarterly' ? qtrKey   : moKey;
+  const labelFn = _momPeriod === 'yearly' ? yrLabel : _momPeriod === 'quarterly' ? qtrLabel : moLabel;
 
-  function countBy(mo, filter) {
+  const keySet = new Set();
+  liveRecs.forEach(r => { const d = parseDate(r['Actual Live Date']); if (d) keySet.add(keyFn(d)); });
+  const periods = [...keySet].sort();
+  const labels  = periods.map(labelFn);
+
+  function countBy(period, filter) {
     return liveRecs.filter(r => {
       const d = parseDate(r['Actual Live Date']);
-      return d && moKey(d) === mo && (!filter || filter(r));
+      return d && keyFn(d) === period && (!filter || filter(r));
     }).length;
   }
 
   let datasets;
   const REGION_COLORS = { APAC:'rgba(59,130,246,0.82)', MEA:'rgba(249,115,22,0.82)', Americas:'rgba(34,197,94,0.82)', Europe:'rgba(236,72,153,0.82)' };
-  const PLAT_COLORS = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#06b6d4','#84cc16','#f97316'];
+  const PLAT_COLORS   = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#06b6d4','#84cc16','#f97316'];
 
   if (_momGroup === 'all') {
-    datasets = [{ label:'Go-Lives', data: months.map(mo => countBy(mo)), backgroundColor:'rgba(99,102,241,0.8)', borderRadius:5, borderColor:'#4f46e5', borderWidth:1 }];
+    datasets = [{ label:'Go-Lives', data: periods.map(p => countBy(p)), backgroundColor:'rgba(99,102,241,0.8)', borderRadius:5, borderColor:'#4f46e5', borderWidth:1 }];
   } else if (_momGroup === 'fbbb') {
     datasets = [
-      { label:'Frontbook', data: months.map(mo => countBy(mo, r => isFrontbook(r))),  backgroundColor:'rgba(139,92,246,0.8)', borderRadius:4 },
-      { label:'Backbook',  data: months.map(mo => countBy(mo, r => isBackbook(r))),   backgroundColor:'rgba(20,184,166,0.8)',  borderRadius:4 },
+      { label:'Frontbook', data: periods.map(p => countBy(p, r => isFrontbook(r))), backgroundColor:'rgba(139,92,246,0.8)', borderRadius:4 },
+      { label:'Backbook',  data: periods.map(p => countBy(p, r => isBackbook(r))),  backgroundColor:'rgba(20,184,166,0.8)',  borderRadius:4 },
     ];
   } else if (_momGroup === 'region') {
     datasets = ['APAC','MEA','Americas','Europe'].map(reg => ({
       label: reg,
-      data: months.map(mo => countBy(mo, r => extractRegion(r['Global Region']) === reg)),
+      data: periods.map(p => countBy(p, r => extractRegion(r['Global Region']) === reg)),
       backgroundColor: REGION_COLORS[reg], borderRadius:3,
     }));
   } else { // platform
     const plats = [...new Set(liveRecs.map(r => getPlatformCategory(r)))].sort();
     datasets = plats.map((p, i) => ({
       label: p || 'Unknown',
-      data: months.map(mo => countBy(mo, r => getPlatformCategory(r) === p)),
+      data: periods.map(per => countBy(per, r => getPlatformCategory(r) === p)),
       backgroundColor: PLAT_COLORS[i % PLAT_COLORS.length], borderRadius:3,
     }));
   }
@@ -5174,7 +5201,7 @@ function renderMoMChart() {
         datalabels: {
           display: ctx => ctx.dataset.data[ctx.dataIndex] > 0,
           anchor: stacked ? 'center' : 'end',
-          align: stacked ? 'center' : 'end',
+          align:  stacked ? 'center' : 'end',
           offset: stacked ? 0 : 4,
           clip: false,
           color: stacked ? '#fff' : '#6b7280',
