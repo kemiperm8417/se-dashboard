@@ -2157,12 +2157,39 @@ function normalizePresalesRow(r) {
   return r;
 }
 
-// Returns display value for Committed QTR — presales records have no committed quarter
-function qtrDisplay(r) {
+// Convert a date object to a "Q#-YYYY" string
+function dateToQtr(d) {
+  if (!d) return null;
+  return `Q${Math.floor(d.getMonth() / 3) + 1}-${d.getFullYear()}`;
+}
+
+// Returns the effective quarter for a record:
+//   Live    → derived from Actual Live Date
+//   Active  → derived from Projected Go-Live Date, then Committed QTR, then 'Not Committed QTR'
+//   Presales → 'Not Committed QTR'
+function getEffectiveQtr(r) {
   const isPresales = (r._src === 'presales') || (r._cat === 'presales') || (r.record_type === 'presales');
   if (isPresales) return 'Not Committed QTR';
-  return (r['Committed QTR'] || '—');
+
+  const status = (r['Status'] || '').trim();
+  const isLive = status === 'Live Completed' || r._cat === 'live' || r.record_type === 'live';
+
+  if (isLive) {
+    const d = parseDate(r['Actual Live Date'] || r.actual_live_date || '');
+    if (d) return dateToQtr(d);
+    const cq = (r['Committed QTR'] || r.committed_qtr || '').trim();
+    return cq || 'Not Committed QTR';
+  }
+
+  // Active: Projected Go-Live Date → Committed QTR → Not Committed QTR
+  const projDate = parseDate(r['Projected Go-Live Date'] || r.projected_go_live_date || '');
+  if (projDate) return dateToQtr(projDate);
+  const cq = (r['Committed QTR'] || r.committed_qtr || '').trim();
+  return cq || 'Not Committed QTR';
 }
+
+// Alias kept for any legacy callsites
+function qtrDisplay(r) { return getEffectiveQtr(r); }
 
 // Consistent FB/BB classification — used by all chart and KPI functions
 function isFrontbook(r) {
@@ -3620,7 +3647,7 @@ function renderPipelineTable() {
     ...presales.map(r => extractRegion(r['Global Region']))
   ].filter(r => r && r !== 'Unknown'))].sort();
 
-  const qtrs = [...new Set(active.map(r => r['Committed QTR'] || '').filter(Boolean))].sort();
+  const qtrs = [...new Set((activeData||[]).map(r => getEffectiveQtr(r)).filter(q => q && q !== 'Not Committed QTR'))].sort();
 
   const seSel = document.getElementById('filter-se');
   const curSE = seSel.value;
@@ -3690,7 +3717,7 @@ function applyTableFilters(resetPage = true) {
     if (se && (r['Implementation Owner'] || '') !== se) return false;
     if (owner && (r['Opportunity Owner Name'] || '') !== owner) return false;
     if (region && extractRegion(r['Global Region']) !== region) return false;
-    if (qtr && (r['Committed QTR'] || '') !== qtr) return false;
+    if (qtr && getEffectiveQtr(r) !== qtr) return false;
     if (type && (r['Type of Opportunity'] || '') !== type) return false;
     if (search) {
       const hay = [r['Opportunity Name'], r['Implementation Owner'], r['Opportunity Owner Name'],
@@ -3729,7 +3756,7 @@ function applyTableFilters(resetPage = true) {
       if (se && seVal !== se) return false;
       if (owner && (r['Opportunity Owner Name']||'') !== owner) return false;
       if (region && extractRegion(r['Global Region']) !== region) return false;
-      if (qtr && r._cat !== 'presales' && (r['Committed QTR']||'') !== qtr) return false;
+      if (qtr && r._cat !== 'presales' && getEffectiveQtr(r) !== qtr) return false;
       if (type && (r['Type of Opportunity']||'') !== type) return false;
       if (rag && r._cat !== 'presales') {
         const rs = (r['Projected Go-Live Status']||'').trim() || 'Unknown';
