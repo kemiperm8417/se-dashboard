@@ -2098,11 +2098,15 @@ function parseRev(val) {
 
 function parseDate(str) {
   if (!str || str.trim() === '') return null;
-  // Try DD/MM/YYYY
-  let m = str.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  const s = str.trim().split(' ')[0]; // strip time component
+  // Try DD/MM/YYYY (4-digit year)
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+  // Try D/M/YY or DD/MM/YY (2-digit year → 20xx)
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (m) return new Date(2000 + parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
   // Try YYYY-MM-DD
-  m = str.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
   return null;
 }
